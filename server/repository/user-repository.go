@@ -165,6 +165,21 @@ func (r *UserStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 			panic(err)
 		}
 	}
+	if curVersion < 68 {
+		// Users are no longer bound to an auth provider implicitly on their
+		// first login. Bind accounts that have neither a password nor a
+		// binding to the organization's auth provider, provided there is
+		// exactly one, so existing identity-provider users keep working.
+		if _, err := GetDatabase().DB().Exec("UPDATE users SET auth_provider_id = ap.id " +
+			"FROM auth_providers ap " +
+			"WHERE ap.organization_id = users.organization_id " +
+			"AND (users.auth_provider_id IS NULL OR users.auth_provider_id = '" + GetSettingsRepository().GetNullUUID() + "') " +
+			"AND (users.password IS NULL OR users.password = '') " +
+			"AND users.password_pending = FALSE " +
+			"AND (SELECT COUNT(*) FROM auth_providers x WHERE x.organization_id = users.organization_id) = 1"); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (r *UserStore) Create(e *User) error {

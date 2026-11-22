@@ -270,3 +270,37 @@ func TestSetUserPreference24HourTime(t *testing.T) {
 	CheckTestIsNil(t, err)
 	CheckTestBool(t, true, use24HourTime)
 }
+
+func TestUsersSchemaUpgradeBindsPasswordlessUsersToSingleProvider(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	p := &AuthProvider{OrganizationID: org.ID, Name: "P1", ProviderType: int(OAuth2)}
+	GetAuthProviderRepository().Create(p)
+
+	idpUser := &User{Email: "idp@test.com", OrganizationID: org.ID}
+	GetUserRepository().Create(idpUser)
+	pwUser := &User{Email: "pw@test.com", OrganizationID: org.ID, HashedPassword: NullString(GetUserRepository().GetHashedPassword("Secret123!"))}
+	GetUserRepository().Create(pwUser)
+	pendingUser := &User{Email: "pending@test.com", OrganizationID: org.ID, PasswordPending: true}
+	GetUserRepository().Create(pendingUser)
+
+	GetUserRepository().RunSchemaUpgrade(67, 68)
+
+	u, _ := GetUserRepository().GetOne(idpUser.ID)
+	CheckTestString(t, p.ID, string(u.AuthProviderID))
+	u, _ = GetUserRepository().GetOne(pwUser.ID)
+	CheckTestString(t, "", string(u.AuthProviderID))
+	u, _ = GetUserRepository().GetOne(pendingUser.ID)
+	CheckTestString(t, "", string(u.AuthProviderID))
+
+	// With several providers there is no unambiguous choice: stay unbound
+	ClearTestDB()
+	org = CreateTestOrg("test.com")
+	GetAuthProviderRepository().Create(&AuthProvider{OrganizationID: org.ID, Name: "A", ProviderType: int(OAuth2)})
+	GetAuthProviderRepository().Create(&AuthProvider{OrganizationID: org.ID, Name: "B", ProviderType: int(OAuth2)})
+	idpUser = &User{Email: "idp@test.com", OrganizationID: org.ID}
+	GetUserRepository().Create(idpUser)
+	GetUserRepository().RunSchemaUpgrade(67, 68)
+	u, _ = GetUserRepository().GetOne(idpUser.ID)
+	CheckTestString(t, "", string(u.AuthProviderID))
+}

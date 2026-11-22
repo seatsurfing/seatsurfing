@@ -779,7 +779,7 @@ func TestAuthProviderBinding(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
 }
 
-func TestAuthProviderBindingBackwardsCompatibility(t *testing.T) {
+func TestAuthProviderUnboundUserCannotLoginViaProvider(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 
@@ -791,16 +791,17 @@ func TestAuthProviderBindingBackwardsCompatibility(t *testing.T) {
 	}
 	GetAuthProviderRepository().Create(authProvider)
 
-	// Create user without auth provider binding (existing user scenario)
+	// Create user without auth provider binding (e.g. password user)
 	email := "olduser@test.com"
 	user := &User{
 		Email:          email,
 		OrganizationID: org.ID,
+		HashedPassword: NullString(GetUserRepository().GetHashedPassword(TestPassword)),
 		AuthProviderID: NullUUID(""),
 	}
 	GetUserRepository().Create(user)
 
-	// User logs in via OAuth - should bind to provider
+	// User tries to log in via OAuth - must be rejected
 	payloadAuthState := &AuthStateLoginPayload{
 		UserID:    email,
 		LoginType: "ui",
@@ -816,11 +817,11 @@ func TestAuthProviderBindingBackwardsCompatibility(t *testing.T) {
 
 	req := NewHTTPRequest("GET", "/auth/verify/"+authState.ID, "", nil)
 	res := ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
 
-	// Check user is now bound to provider
+	// Check user is still not bound to the provider
 	updatedUser, _ := GetUserRepository().GetByEmail(org.ID, email)
-	CheckTestString(t, authProvider.ID, string(updatedUser.AuthProviderID))
+	CheckTestString(t, "", string(updatedUser.AuthProviderID))
 }
 
 func TestAuthVerifyDuplicateRequestWithinGraceWindow(t *testing.T) {
