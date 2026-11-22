@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.143.1](https://github.com/seatsurfing/seatsurfing/compare/v1.143.0...v1.143.1) (2026-11-22)
+
+
+### 🐛 Bug Fixes
+
+* **booking-ui:** validate and encode ids from URLs before using them in request paths ([#2913](https://github.com/seatsurfing/seatsurfing/issues/2913)) ([455f2e5](https://github.com/seatsurfing/seatsurfing/commit/455f2e598fbaf1ceae47f57e19c181b718f13f2b))
+* **server:** require explicit auth provider binding for OAuth login ([#2912](https://github.com/seatsurfing/seatsurfing/issues/2912)) ([740c1f0](https://github.com/seatsurfing/seatsurfing/commit/740c1f0cf16a10ce8f6facb814758b5aa1d581f9))
+
 ## [1.143.0](https://github.com/seatsurfing/seatsurfing/compare/v1.142.1...v1.143.0) (2026-11-21)
 
 
