@@ -108,7 +108,7 @@
   "blockedFrom": "Gesperrt ab",
   "blockedUntil": "Gesperrt bis",
   "blockedPeriod": "Sperrzeitraum",
-  "blockedPeriodHint": "In diesem Zeitraum sind keine Buchungen möglich (jeweils einschließlich). Ist nur ein Datum gesetzt, ist der Zeitraum nach der anderen Seite offen.",
+  "blockedPeriodHintLocation": "In diesem Zeitraum sind keine Buchungen möglich (jeweils einschließlich). Ist nur ein Datum gesetzt, ist der Zeitraum nach der anderen Seite offen.",
   "blockedPeriodHintSpace": "In diesem Zeitraum sind keine Buchungen für diesen Platz möglich (jeweils einschließlich). Ist nur ein Datum gesetzt, ist der Zeitraum nach der anderen Seite offen. Gilt zusätzlich zum Sperrzeitraum des Bereichs.",
   "bookingConfirmed": "Deine Buchung wurde bestätigt!",
   "bookingDuration": "Buchungsdauer",

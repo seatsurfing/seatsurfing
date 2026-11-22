@@ -245,7 +245,7 @@ func TestBookingsLocationBlocked(t *testing.T) {
 	req := NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
-	CheckTestString(t, strconv.Itoa(ResponseCodeBookingBlocked), res.Header().Get("X-Error-Code"))
+	CheckTestString(t, strconv.Itoa(ResponseCodeBookingLocationBlocked), res.Header().Get("X-Error-Code"))
 
 	payload = "{\"spaceId\": \"" + space.ID + "\", \"enter\": \"2030-09-01T08:30:00Z\", \"leave\": \"2030-09-01T17:00:00Z\", \"subject\": \"Test Event\"}"
 	req = NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))

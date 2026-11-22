@@ -2496,7 +2496,7 @@ class EditLocation extends React.Component<Props, State> {
           <Form.Group as={Row}>
             <Form.Label column sm="2" htmlFor="location-blocked-from">
               {this.props.t("blockedPeriod")}
-              <HintTooltip hint={this.props.t("blockedPeriodHint")} />
+              <HintTooltip hint={this.props.t("blockedPeriodHintLocation")} />
             </Form.Label>
             <Col sm="4">
               <InputGroup>

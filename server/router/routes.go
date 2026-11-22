@@ -53,7 +53,7 @@ var (
 	ResponseCodeBookingInPast                    = service.BookingCodeInPast
 	ResponseCodeBookingInvalidSubject            = service.BookingCodeInvalidSubject
 	ResponseCodeBookingInvalidWeekday            = service.BookingCodeInvalidWeekday
-	ResponseCodeBookingBlocked                   = service.BookingCodeBlocked
+	ResponseCodeBookingLocationBlocked           = service.BookingCodeLocationBlocked
 	ResponseCodeBookingSpaceBlocked              = service.BookingCodeSpaceBlocked
 	ResponseCodeBookingInvalidAttributes         = service.BookingCodeInvalidAttributes
 	ResponseCodeBookingAttributeLimitReached     = service.BookingCodeAttributeLimitReached

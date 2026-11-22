@@ -50,7 +50,7 @@ const (
 	BookingCodeInPast                    = 1011
 	BookingCodeInvalidSubject            = 1012
 	BookingCodeInvalidWeekday            = 1013
-	BookingCodeBlocked                   = 1016
+	BookingCodeLocationBlocked           = 1016
 	BookingCodeSpaceBlocked              = 1017
 )
 
@@ -494,7 +494,7 @@ func (s *BookingService) CheckBooking(in *BookingInput, location *Location, requ
 		return false, BookingCodeInvalidWeekday
 	}
 	if GetLocationService().IsLocationBlocked(location, requestUser, in.Enter, in.Leave) {
-		return false, BookingCodeBlocked
+		return false, BookingCodeLocationBlocked
 	}
 	if in.SpaceID != "" {
 		space, err := GetSpaceRepository().GetOne(in.SpaceID)
