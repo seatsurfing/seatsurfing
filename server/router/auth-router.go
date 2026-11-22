@@ -888,27 +888,14 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		needUserUpdate := false
-
-		// Backwards compatibility: Set AuthProviderID if not yet set
-		authProviderIDStr := string(user.AuthProviderID)
-		nullUUID := GetSettingsRepository().GetNullUUID()
-		if authProviderIDStr == "" || authProviderIDStr == nullUUID {
-			user.AuthProviderID = NullUUID(provider.ID)
-			needUserUpdate = true
-		}
-
-		// Check if user is trying to log in with a different auth provider than bound to
-		if authProviderIDStr != "" && authProviderIDStr != nullUUID && authProviderIDStr != provider.ID {
-			log.Printf("User %s tried to login with provider %s but is bound to provider %s\n", user.ID, provider.ID, authProviderIDStr)
-			recordAuthEvent(r, &AuthEvent{User: user, AuthProviderID: provider.ID, Method: AuthMethodOAuth, ErrorCode: AuthErrorIdpProviderMismatch, ErrorDetail: "user is bound to auth provider " + authProviderIDStr})
+		// Only users bound to this auth provider may log in through it
+		if !service.GetAuthService().IsBoundToAuthProvider(user, provider) {
+			log.Printf("User %s tried to login with provider %s but is not bound to it (bound to: %q)\n", user.ID, provider.ID, string(user.AuthProviderID))
+			recordAuthEvent(r, &AuthEvent{User: user, AuthProviderID: provider.ID, Method: AuthMethodOAuth, ErrorCode: AuthErrorIdpProviderMismatch, ErrorDetail: "user is not bound to this auth provider"})
 			SendForbidden(w)
 			return
 		}
 
-		if needUserUpdate {
-			GetUserRepository().Update(user)
-		}
 	} else if err := uuid.Validate(payload.UserID); err == nil {
 		user, _ = GetUserRepository().GetOne(payload.UserID)
 	}
@@ -1064,18 +1051,10 @@ func (router *AuthRouter) callback(w http.ResponseWriter, r *http.Request) {
 	}
 	needUserUpdate := false
 
-	// Backwards compatibility: Set AuthProviderID if not yet set
-	authProviderIDStr := string(user.AuthProviderID)
-	nullUUID := GetSettingsRepository().GetNullUUID()
-	if authProviderIDStr == "" || authProviderIDStr == nullUUID {
-		user.AuthProviderID = NullUUID(provider.ID)
-		needUserUpdate = true
-	}
-
-	// Check if user is trying to log in with a different auth provider than bound to
-	if authProviderIDStr != "" && authProviderIDStr != nullUUID && authProviderIDStr != provider.ID {
-		log.Printf("User %s tried to login with provider %s but is bound to provider %s\n", user.ID, provider.ID, authProviderIDStr)
-		recordAuthEvent(r, &AuthEvent{User: user, AuthProviderID: provider.ID, Method: AuthMethodOAuth, ErrorCode: AuthErrorIdpProviderMismatch, ErrorDetail: "user is bound to auth provider " + authProviderIDStr})
+	// Only users bound to this auth provider may log in through it
+	if !service.GetAuthService().IsBoundToAuthProvider(user, provider) {
+		log.Printf("User %s tried to login with provider %s but is not bound to it (bound to: %q)\n", user.ID, provider.ID, string(user.AuthProviderID))
+		recordAuthEvent(r, &AuthEvent{User: user, AuthProviderID: provider.ID, Method: AuthMethodOAuth, ErrorCode: AuthErrorIdpProviderMismatch, ErrorDetail: "user is not bound to this auth provider"})
 		SendTemporaryRedirect(w, router.getRedirectFailedUrl(payload.LoginType, provider, "login"))
 		return
 	}
