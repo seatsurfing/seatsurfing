@@ -649,8 +649,8 @@ func TestPublicBookingGetSpacesReturnsBlockedPeriod(t *testing.T) {
 	var resBody *GetPublicBookableSpacesResponse
 	json.Unmarshal(res.Body.Bytes(), &resBody)
 	CheckTestInt(t, 1, len(resBody.Spaces))
-	CheckTestString(t, "2030-01-02", resBody.Spaces[0].BlockedFrom)
-	CheckTestString(t, "", resBody.Spaces[0].BlockedUntil)
+	CheckTestString(t, "2030-01-02", resBody.Spaces[0].LocationBlockedFrom)
+	CheckTestString(t, "", resBody.Spaces[0].LocationBlockedUntil)
 }
 
 func TestPublicBookingGetSpacesReturnsSpaceBlockedPeriod(t *testing.T) {
@@ -670,7 +670,7 @@ func TestPublicBookingGetSpacesReturnsSpaceBlockedPeriod(t *testing.T) {
 	var resBody *GetPublicBookableSpacesResponse
 	json.Unmarshal(res.Body.Bytes(), &resBody)
 	CheckTestInt(t, 1, len(resBody.Spaces))
-	CheckTestString(t, "", resBody.Spaces[0].BlockedFrom)
+	CheckTestString(t, "", resBody.Spaces[0].LocationBlockedFrom)
 	CheckTestString(t, "", resBody.Spaces[0].SpaceBlockedFrom)
 	CheckTestString(t, "2030-01-02", resBody.Spaces[0].SpaceBlockedUntil)
 }

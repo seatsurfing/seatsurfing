@@ -110,7 +110,7 @@ func (s *SpaceService) GetAvailabilityForUser(user *User, location *Location, sp
 		!locations.IsLocationBlocked(location, user, enter, leave)
 	blockExempt := false
 	for _, e := range list {
-		if hasBlockedPeriod(&e.Space) {
+		if spaceHasBlockedPeriod(&e.Space) {
 			blockExempt = hasNoAdminRestrictions(user, location.OrganizationID)
 			break
 		}
@@ -263,18 +263,18 @@ func (s *SpaceService) isPublicLocationSlotAvailable(location *Location, enter, 
 // the space's own blocked period (see IsLocationBlocked). location is the
 // space's location, whose organization settings apply.
 func (s *SpaceService) IsSpaceBlocked(space *Space, location *Location, user *User, enter, leave time.Time) bool {
-	if !hasBlockedPeriod(space) || hasNoAdminRestrictions(user, location.OrganizationID) {
+	if !spaceHasBlockedPeriod(space) || hasNoAdminRestrictions(user, location.OrganizationID) {
 		return false
 	}
 	return isSpaceBlockedInPeriod(space, enter, leave)
 }
 
-func hasBlockedPeriod(space *Space) bool {
+func spaceHasBlockedPeriod(space *Space) bool {
 	return space.BlockedFrom != nil || space.BlockedUntil != nil
 }
 
 func isSpaceBlockedInPeriod(space *Space, enter, leave time.Time) bool {
-	return hasBlockedPeriod(space) && touchesPeriod(space.BlockedFrom, space.BlockedUntil, enter, leave)
+	return spaceHasBlockedPeriod(space) && touchesPeriod(space.BlockedFrom, space.BlockedUntil, enter, leave)
 }
 
 // IsApprovalRequired reports whether any of approvers belongs to space e.
