@@ -89,7 +89,7 @@ export default class AuthProvider extends Entity {
   }
 
   async delete(): Promise<void> {
-    return Ajax.delete(this.getBackendUrl() + encodeURIComponent(this.id)).then(
+    return Ajax.delete(this.getBackendUrl() + Ajax.path`${this.id}`).then(
       () => undefined,
     );
   }
@@ -115,17 +115,15 @@ export default class AuthProvider extends Entity {
   }
 
   static async listPublicForOrg(id: string): Promise<AuthProvider[]> {
-    return Ajax.get("/auth-provider/org/" + encodeURIComponent(id)).then(
-      (result) => {
-        let list: AuthProvider[] = [];
-        (result.json as []).forEach((item) => {
-          let e: AuthProvider = new AuthProvider();
-          e.deserialize(item);
-          list.push(e);
-        });
-        return list;
-      },
-    );
+    return Ajax.get(Ajax.path`/auth-provider/org/${id}`).then((result) => {
+      let list: AuthProvider[] = [];
+      (result.json as []).forEach((item) => {
+        let e: AuthProvider = new AuthProvider();
+        e.deserialize(item);
+        list.push(e);
+      });
+      return list;
+    });
   }
 }
 
@@ -146,17 +144,16 @@ export class AuthProviderMapping {
   }
 
   static async list(authProviderId: string): Promise<AuthProviderMapping[]> {
-    return Ajax.get(
-      "/auth-provider/" + encodeURIComponent(authProviderId) + "/mapping",
-    ).then((result) =>
-      (result.json as any[]).map(
-        (item) =>
-          new AuthProviderMapping(
-            item.claimValue,
-            item.targetType,
-            item.targetId,
-          ),
-      ),
+    return Ajax.get(Ajax.path`/auth-provider/${authProviderId}/mapping`).then(
+      (result) =>
+        (result.json as any[]).map(
+          (item) =>
+            new AuthProviderMapping(
+              item.claimValue,
+              item.targetType,
+              item.targetId,
+            ),
+        ),
     );
   }
 
@@ -164,11 +161,8 @@ export class AuthProviderMapping {
     authProviderId: string,
     mappings: AuthProviderMapping[],
   ): Promise<void> {
-    return Ajax.putData(
-      "/auth-provider/" + encodeURIComponent(authProviderId) + "/mapping",
-      {
-        mappings: mappings,
-      },
-    ).then(() => undefined);
+    return Ajax.putData(Ajax.path`/auth-provider/${authProviderId}/mapping`, {
+      mappings: mappings,
+    }).then(() => undefined);
   }
 }

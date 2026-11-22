@@ -82,14 +82,14 @@ export default class UserPreference extends Entity {
   static async setOne(name: string, value: string): Promise<void> {
     const payload = { value: value };
     await Ajax.putData(
-      `${Navigation.PATH_API_USER_PREFERENCES}${encodeURIComponent(name)}`,
+      Navigation.PATH_API_USER_PREFERENCES + Ajax.path`${name}`,
       payload,
     );
   }
 
   static async getOne(name: string): Promise<string> {
     const res = await Ajax.get(
-      `${Navigation.PATH_API_USER_PREFERENCES}${encodeURIComponent(name)}`,
+      Navigation.PATH_API_USER_PREFERENCES + Ajax.path`${name}`,
     );
     return res.json;
   }

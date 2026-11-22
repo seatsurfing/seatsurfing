@@ -47,11 +47,7 @@ class CompleteOrgDeletion extends React.Component<Props, State> {
       code: this.state.code,
     };
 
-    Ajax.postData(
-      "/organization/deleteorg/" + encodeURIComponent(id),
-      payload,
-      () => true,
-    )
+    Ajax.postData(Ajax.path`/organization/deleteorg/${id}`, payload, () => true)
       .then((res) => {
         if (res.status >= 200 && res.status <= 299) {
           this.setState({ loading: false, complete: true, success: true });

@@ -41,7 +41,7 @@ class InitPasswordReset extends React.Component<Props, State> {
     let res;
     try {
       res = await Ajax.get(
-        `${Navigation.PATH_API_AUTH_ORG}${encodeURIComponent(domain)}`,
+        Navigation.PATH_API_AUTH_ORG + Ajax.path`${domain}`,
         () => true,
       );
     } catch {

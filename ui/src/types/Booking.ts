@@ -109,7 +109,7 @@ export default class Booking extends Entity {
   }
 
   async delete(): Promise<void> {
-    await Ajax.delete(this.getBackendUrl() + encodeURIComponent(this.id));
+    await Ajax.delete(this.getBackendUrl() + Ajax.path`${this.id}`);
   }
 
   async approve(approved: boolean): Promise<void> {
@@ -117,7 +117,7 @@ export default class Booking extends Entity {
       approved,
     };
     await Ajax.postData(
-      this.getBackendUrl() + encodeURIComponent(this.id) + "/approve",
+      this.getBackendUrl() + Ajax.path`${this.id}/approve`,
       payload,
     );
   }

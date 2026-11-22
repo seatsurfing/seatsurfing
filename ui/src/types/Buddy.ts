@@ -71,7 +71,7 @@ export default class Buddy extends Entity {
   }
 
   async delete(): Promise<void> {
-    return Ajax.delete(this.getBackendUrl() + encodeURIComponent(this.id)).then(
+    return Ajax.delete(this.getBackendUrl() + Ajax.path`${this.id}`).then(
       () => undefined,
     );
   }

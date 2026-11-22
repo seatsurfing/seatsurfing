@@ -23,7 +23,7 @@ export default class Session {
   }
 
   async delete(): Promise<void> {
-    await Ajax.get(`/auth/logout/${encodeURIComponent(this.id)}`);
+    await Ajax.get(Ajax.path`/auth/logout/${this.id}`);
   }
 
   static async list(): Promise<Session[]> {

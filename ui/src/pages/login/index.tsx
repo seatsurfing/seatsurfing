@@ -135,7 +135,7 @@ class Login extends React.Component<Props, State> {
 
   loadOrgDetails = () => {
     const domain = window.location.host.split(":").shift();
-    Ajax.get("/auth/org/" + encodeURIComponent(domain ?? ""), () => true)
+    Ajax.get(Ajax.path`/auth/org/${domain ?? ""}`, () => true)
       .then((res) => {
         this.applyOrg(res);
       })
@@ -403,10 +403,7 @@ class Login extends React.Component<Props, State> {
       inAuthProviderLogin: true,
     });
     let target =
-      Ajax.getBackendUrl() +
-      "/auth/" +
-      encodeURIComponent(providerId) +
-      "/login/ui/";
+      Ajax.getBackendUrl() + Ajax.path`/auth/${providerId}/login/ui/`;
     const redir = this.props.router.query["redir"] as string;
     if (redir) {
       target += "?redir=" + encodeURIComponent(redir);

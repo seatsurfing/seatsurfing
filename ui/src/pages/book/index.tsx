@@ -155,10 +155,7 @@ class PublicBooking extends React.Component<Props, State> {
     const domain = window.location.host.split(":").shift();
     let res;
     try {
-      res = await Ajax.get(
-        "/auth/org/" + encodeURIComponent(domain ?? ""),
-        () => true,
-      );
+      res = await Ajax.get(Ajax.path`/auth/org/${domain ?? ""}`, () => true);
     } catch {
       try {
         res = await Ajax.get("/auth/singleorg", () => true);
@@ -175,7 +172,7 @@ class PublicBooking extends React.Component<Props, State> {
     this.orgId = orgId;
     try {
       const res = await Ajax.get(
-        "/public-booking/" + encodeURIComponent(orgId) + "/spaces",
+        Ajax.path`/public-booking/${orgId}/spaces`,
         () => true,
       );
       const spaces: PublicBookableSpace[] = res.json.spaces || [];
@@ -245,11 +242,7 @@ class PublicBooking extends React.Component<Props, State> {
       this.setState({ mapData: null, mapLoading: true });
       try {
         const res = await Ajax.get(
-          "/public-booking/" +
-            encodeURIComponent(this.orgId) +
-            "/location/" +
-            encodeURIComponent(locationId) +
-            "/map",
+          Ajax.path`/public-booking/${this.orgId}/location/${locationId}/map`,
           () => true,
         );
         this.mapCache[locationId] = res.json;
@@ -432,9 +425,8 @@ class PublicBooking extends React.Component<Props, State> {
     let availability: { [spaceId: string]: boolean } | null = null;
     try {
       const res = await Ajax.get(
-        "/public-booking/" +
-          encodeURIComponent(this.orgId) +
-          "/availability?enter=" +
+        Ajax.path`/public-booking/${this.orgId}/availability` +
+          "?enter=" +
           encodeURIComponent(enter) +
           "&leave=" +
           encodeURIComponent(leave),
@@ -520,7 +512,7 @@ class PublicBooking extends React.Component<Props, State> {
     };
     try {
       await Ajax.postData(
-        "/public-booking/" + encodeURIComponent(this.orgId) + "/request",
+        Ajax.path`/public-booking/${this.orgId}/request`,
         payload,
         () => true,
       );

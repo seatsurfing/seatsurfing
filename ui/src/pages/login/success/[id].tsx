@@ -38,7 +38,7 @@ class LoginSuccess extends React.Component<Props, State> {
     const id = idParam;
     let request = verifyRequests.get(id);
     if (!request) {
-      request = Ajax.get("/auth/verify/" + encodeURIComponent(id), () => true);
+      request = Ajax.get(Ajax.path`/auth/verify/${id}`, () => true);
       verifyRequests.set(id, request);
     }
     try {

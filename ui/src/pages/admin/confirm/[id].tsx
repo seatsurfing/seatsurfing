@@ -39,7 +39,7 @@ class ConfirmSignup extends React.Component<Props, State> {
     // Only accept the expected UUID shape to prevent path confusion.
     if (typeof id === "string" && Validation.isUuid(id)) {
       Ajax.postData(
-        "/cloud-features/signup/confirm/" + encodeURIComponent(id),
+        Ajax.path`/cloud-features/signup/confirm/${id}`,
         null,
         () => true,
       )

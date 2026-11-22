@@ -86,9 +86,7 @@ export default class Location extends Entity {
 
   getMapUrl(bookingContext: boolean = false): string {
     return (
-      "/location/" +
-      this.id +
-      "/map" +
+      Ajax.path`/location/${this.id}/map` +
       Location.bookingContextQuery(bookingContext)
     );
   }
@@ -107,7 +105,7 @@ export default class Location extends Entity {
   }
 
   async delete(): Promise<void> {
-    return Ajax.delete(this.getBackendUrl() + encodeURIComponent(this.id)).then(
+    return Ajax.delete(this.getBackendUrl() + Ajax.path`${this.id}`).then(
       () => undefined,
     );
   }
@@ -126,21 +124,21 @@ export default class Location extends Entity {
 
   async setMap(file: File): Promise<void> {
     return Ajax.postData(
-      this.getBackendUrl() + encodeURIComponent(this.id) + "/map",
+      this.getBackendUrl() + Ajax.path`${this.id}/map`,
       file,
     ).then(() => undefined);
   }
 
   async getFloorPlanDesign(): Promise<string> {
     const result = await Ajax.get(
-      this.getBackendUrl() + encodeURIComponent(this.id) + "/floorplan-design",
+      this.getBackendUrl() + Ajax.path`${this.id}/floorplan-design`,
     );
     return result.json.designData as string;
   }
 
   async setFloorPlanDesign(designData: string): Promise<void> {
     await Ajax.postData(
-      this.getBackendUrl() + encodeURIComponent(this.id) + "/floorplan-design",
+      this.getBackendUrl() + Ajax.path`${this.id}/floorplan-design`,
       { designData },
     );
   }
@@ -150,8 +148,7 @@ export default class Location extends Entity {
   ): Promise<SpaceAttributeValue[]> {
     return Ajax.get(
       this.getBackendUrl() +
-        encodeURIComponent(this.id) +
-        "/attribute" +
+        Ajax.path`${this.id}/attribute` +
         Location.bookingContextQuery(bookingContext),
     ).then((result) => {
       const list: SpaceAttributeValue[] = [];
@@ -169,20 +166,14 @@ export default class Location extends Entity {
       value: value,
     };
     return Ajax.postData(
-      this.getBackendUrl() +
-        encodeURIComponent(this.id) +
-        "/attribute/" +
-        encodeURIComponent(attributeId),
+      this.getBackendUrl() + Ajax.path`${this.id}/attribute/${attributeId}`,
       payload,
     ).then(() => undefined);
   }
 
   async deleteAttribute(attributeId: string): Promise<void> {
     return Ajax.delete(
-      this.getBackendUrl() +
-        encodeURIComponent(this.id) +
-        "/attribute/" +
-        encodeURIComponent(attributeId),
+      this.getBackendUrl() + Ajax.path`${this.id}/attribute/${attributeId}`,
     ).then(() => undefined);
   }
 
