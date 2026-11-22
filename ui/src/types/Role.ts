@@ -79,6 +79,7 @@ export default class Role extends Entity {
   }
 
   static async get(id: string): Promise<Role> {
+    Ajax.requireUuid(id);
     return Ajax.get("/role/" + encodeURIComponent(id)).then((result) => {
       let e = new Role();
       e.deserialize(result.json);

@@ -34,11 +34,13 @@ class CompletePasswordReset extends React.Component<Props, State> {
   onPasswordSubmit = (e: any) => {
     e.preventDefault();
     const { id } = this.props.router.query;
-    if (
-      typeof id !== "string" ||
-      !Validation.isUuid(id) ||
-      this.state.newPassword.length < 8
-    ) {
+    if (this.state.newPassword.length < 8) {
+      return;
+    }
+    if (typeof id !== "string" || !Validation.isUuid(id)) {
+      // Never put an unvalidated ID into a request path: show the failure
+      // feedback instead of sending a request.
+      this.setState({ loading: false, complete: true, success: false });
       return;
     }
     this.setState({ loading: true, complete: false, success: false });

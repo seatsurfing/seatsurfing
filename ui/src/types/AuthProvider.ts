@@ -95,6 +95,7 @@ export default class AuthProvider extends Entity {
   }
 
   static async get(id: string): Promise<AuthProvider> {
+    Ajax.requireUuid(id);
     return Ajax.get("/auth-provider/" + encodeURIComponent(id)).then(
       (result) => {
         let e: AuthProvider = new AuthProvider();

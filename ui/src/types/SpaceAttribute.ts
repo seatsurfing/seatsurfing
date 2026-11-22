@@ -61,6 +61,7 @@ export default class SpaceAttribute extends Entity {
   }
 
   static async get(id: string): Promise<SpaceAttribute> {
+    Ajax.requireUuid(id);
     return Ajax.get("/space-attribute/" + encodeURIComponent(id)).then(
       (result) => {
         let e: SpaceAttribute = new SpaceAttribute();

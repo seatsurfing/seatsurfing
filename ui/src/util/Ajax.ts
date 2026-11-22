@@ -5,6 +5,7 @@ import AjaxCredentials from "./AjaxCredentials";
 import AjaxConfigPersister from "./AjaxConfigPersister";
 import AjaxConfigBrowserPersister from "./AjaxConfigBrowserPersister";
 import JwtDecoder from "./JwtDecoder";
+import Validation from "./Validation";
 
 interface AjaxResult {
   json: any;
@@ -107,6 +108,20 @@ export default class Ajax {
       } catch {}
       throw new AjaxError(response.status, appCode, body);
     }
+  }
+
+  /**
+   * Ids taken from the URL (route params) must never reach a request path
+   * unless they have the expected UUID shape: encoding alone does not stop
+   * path traversal ("..%2F" is cleaned and redirected by the server router).
+   * Behaves like a 404 for anything else, without sending a request.
+   */
+  static requireUuid(id: string): string {
+    if (typeof id !== "string" || !Validation.isUuid(id)) {
+      Ajax.handleGlobalError(404);
+      throw new AjaxError(404, 0);
+    }
+    return id;
   }
 
   private static handleGlobalError(httpStatus: number): void {

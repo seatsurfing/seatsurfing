@@ -73,6 +73,7 @@ export default class Group extends Entity {
   }
 
   static async get(id: string): Promise<Group> {
+    Ajax.requireUuid(id);
     return Ajax.get("/group/" + encodeURIComponent(id)).then((result) => {
       let e: Group = new Group();
       e.deserialize(result.json);

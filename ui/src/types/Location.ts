@@ -190,6 +190,7 @@ export default class Location extends Entity {
     id: string,
     bookingContext: boolean = false,
   ): Promise<Location> {
+    Ajax.requireUuid(id);
     return Ajax.get(
       "/location/" +
         encodeURIComponent(id) +

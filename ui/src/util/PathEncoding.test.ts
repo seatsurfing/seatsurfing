@@ -37,14 +37,6 @@ describe("entity helpers encode ids placed into request paths", () => {
   });
 
   it("does not leak raw separators for any covered call", async () => {
-    await User.get(EVIL).catch(() => {});
-    await Role.get(EVIL).catch(() => {});
-    await Group.get(EVIL).catch(() => {});
-    await Booking.get(EVIL).catch(() => {});
-    await Location.get(EVIL).catch(() => {});
-    await AuthProvider.get(EVIL).catch(() => {});
-    await SpaceAttribute.get(EVIL).catch(() => {});
-    await RecurringBooking.get(EVIL).catch(() => {});
     await User.adminResetTotp(EVIL).catch(() => {});
     await Role.getUserIds(EVIL).catch(() => {});
 
@@ -53,7 +45,7 @@ describe("entity helpers encode ids placed into request paths", () => {
     await user.delete().catch(() => {});
     await user.setPassword("x").catch(() => {});
 
-    expect(calls.length).toBeGreaterThanOrEqual(12);
+    expect(calls.length).toBeGreaterThanOrEqual(4);
     for (const url of calls) {
       expect(url).not.toContain("\\");
       expect(url).toContain(ENCODED);
@@ -64,5 +56,30 @@ describe("entity helpers encode ids placed into request paths", () => {
     const e: any = { id: EVIL, serialize: () => ({}) };
     await Ajax.saveEntity(e, "/user/");
     expect(calls).toEqual(["/user/" + ENCODED]);
+  });
+});
+
+describe("getters reject non-UUID ids without sending a request", () => {
+  // Encoded "../" is cleaned and redirected by the server router, so
+  // encoding alone is not enough for ids taken from the URL.
+  const TRAVERSAL = "../auth/logout/all";
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it.each<[string, () => Promise<unknown>]>([
+    ["User", () => User.get(TRAVERSAL)],
+    ["Role", () => Role.get(TRAVERSAL)],
+    ["Group", () => Group.get(TRAVERSAL)],
+    ["Booking", () => Booking.get(TRAVERSAL)],
+    ["Location", () => Location.get(TRAVERSAL)],
+    ["AuthProvider", () => AuthProvider.get(TRAVERSAL)],
+    ["SpaceAttribute", () => SpaceAttribute.get(TRAVERSAL)],
+    ["RecurringBooking", () => RecurringBooking.get(TRAVERSAL)],
+  ])("%s.get", async (_name, call) => {
+    const get = vi.spyOn(Ajax, "get");
+    await expect(call()).rejects.toThrow();
+    expect(get).not.toHaveBeenCalled();
   });
 });

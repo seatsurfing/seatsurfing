@@ -33,11 +33,13 @@ class CompleteOrgDeletion extends React.Component<Props, State> {
   onDeleteOrgSubmit = (e: any) => {
     e.preventDefault();
     const { id } = this.props.router.query;
-    if (
-      typeof id !== "string" ||
-      !Validation.isUuid(id) ||
-      this.state.code?.length < 6
-    ) {
+    if (this.state.code?.length < 6) {
+      return;
+    }
+    if (typeof id !== "string" || !Validation.isUuid(id)) {
+      // Never put an unvalidated ID into a request path: show the failure
+      // feedback instead of sending a request.
+      this.setState({ loading: false, complete: true, success: false });
       return;
     }
     this.setState({ loading: true, complete: false, success: false });
