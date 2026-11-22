@@ -46,6 +46,16 @@ function withId<T extends { id: string }>(e: T, id: string): T {
   return e;
 }
 
+// A Space needs a valid parent (location) id, otherwise requests are rejected
+// before the space id itself is ever validated.
+function spaceWithId(id: string): Space {
+  return Object.assign(new Space(), { id, locationId: "loc" });
+}
+
+function spaceInLocation(locationId: string): Space {
+  return Object.assign(new Space(), { id: "abc", locationId });
+}
+
 // Every method that puts an id (or other caller-supplied value) in a path.
 // Each entry receives a hostile value and must fail without any request.
 const CALLS: [string, (v: string) => unknown][] = [
@@ -115,25 +125,22 @@ const CALLS: [string, (v: string) => unknown][] = [
     (v) => Space.listSingleAvailability("abc", v, new Date(), new Date()),
   ],
   ["Space.bulkUpdate", (v) => Space.bulkUpdate(v, [], [], [])],
-  ["space.delete", (v) => withId(new Space(), v).delete()],
-  ["space.getApprovers", (v) => withId(new Space(), v).getApprovers()],
-  ["space.addApprovers", (v) => withId(new Space(), v).addApprovers([])],
-  ["space.removeApprovers", (v) => withId(new Space(), v).removeApprovers([])],
-  [
-    "space.getAllowedBookers",
-    (v) => withId(new Space(), v).getAllowedBookers(),
-  ],
-  [
-    "space.addAllowedBookers",
-    (v) => withId(new Space(), v).addAllowedBookers([]),
-  ],
+  ["space.delete", (v) => spaceWithId(v).delete()],
+  ["space.getApprovers", (v) => spaceWithId(v).getApprovers()],
+  ["space.addApprovers", (v) => spaceWithId(v).addApprovers([])],
+  ["space.removeApprovers", (v) => spaceWithId(v).removeApprovers([])],
+  ["space.getAllowedBookers", (v) => spaceWithId(v).getAllowedBookers()],
+  ["space.addAllowedBookers", (v) => spaceWithId(v).addAllowedBookers([])],
   [
     "space.removeAllowedBookers",
-    (v) => withId(new Space(), v).removeAllowedBookers([]),
+    (v) => spaceWithId(v).removeAllowedBookers([]),
   ],
-  ["space.getImageUrl", (v) => withId(new Space(), v).getImageUrl()],
-  ["space.getImage", (v) => withId(new Space(), v).getImage()],
-  ["space.deleteImage", (v) => withId(new Space(), v).deleteImage()],
+  ["space.delete (location)", (v) => spaceInLocation(v).delete()],
+  ["space.getApprovers (location)", (v) => spaceInLocation(v).getApprovers()],
+  ["space.getImage (location)", (v) => spaceInLocation(v).getImage()],
+  ["space.getImageUrl", (v) => spaceWithId(v).getImageUrl()],
+  ["space.getImage", (v) => spaceWithId(v).getImage()],
+  ["space.deleteImage", (v) => spaceWithId(v).deleteImage()],
   // Booking / recurring booking
   ["Booking.get", (v) => Booking.get(v)],
   ["booking.delete", (v) => withId(new Booking(), v).delete()],
