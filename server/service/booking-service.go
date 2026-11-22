@@ -501,7 +501,7 @@ func (s *BookingService) CheckBooking(in *BookingInput, location *Location, requ
 	if in.SpaceID != "" {
 		space, err := GetSpaceRepository().GetOne(in.SpaceID)
 		if err != nil || space == nil {
-			log.Println(err)
+			log.Println("space lookup failed:", in.SpaceID, err)
 			return &BookingError{Kind: BookingErrorInternal}
 		}
 		if GetSpaceService().IsSpaceBlocked(space, location, requestUser, in.Enter, in.Leave) {
