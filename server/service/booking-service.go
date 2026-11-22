@@ -270,8 +270,8 @@ func (s *BookingService) CommitCreate(requestUser *User, p *PreparedBooking) *Bo
 	defer releaseLock()
 
 	in := &BookingInput{SpaceID: e.SpaceID, Subject: e.Subject, Enter: e.Enter, Leave: e.Leave}
-	if valid, code := s.CheckBooking(in, p.Location, requestUser, "", 0); !valid {
-		return &BookingError{Kind: BookingErrorInvalid, Code: code}
+	if bErr := s.CheckBooking(in, p.Location, requestUser, "", 0); bErr != nil {
+		return bErr
 	}
 	conflicts, err := GetBookingRepository().GetConflicts(e.SpaceID, e.Enter, e.Leave, "")
 	if err != nil {
@@ -481,28 +481,34 @@ func (s *BookingService) validateBookingFilter(user *User, filter *BookingFilter
 // updated against all booking rules. in.Enter and in.Leave must already
 // carry the location's time zone; an empty in.SpaceID skips the space-level
 // checks. upcomingBookingsMarkup counts bookings about to be created in the
-// same request (recurring bookings). It returns false and a BookingCode* on
-// violation.
-func (s *BookingService) CheckBooking(in *BookingInput, location *Location, requestUser *User, bookingID string, upcomingBookingsMarkup int) (bool, int) {
+// same request (recurring bookings). It returns nil if the booking is valid,
+// a BookingErrorInvalid with a BookingCode* on violation, or a
+// BookingErrorInternal if a check could not be evaluated.
+func (s *BookingService) CheckBooking(in *BookingInput, location *Location, requestUser *User, bookingID string, upcomingBookingsMarkup int) *BookingError {
+	invalid := func(code int) *BookingError { return &BookingError{Kind: BookingErrorInvalid, Code: code} }
 	if valid, code := s.isValidBookingRequest(in, location, requestUser, location.OrganizationID, bookingID, upcomingBookingsMarkup); !valid {
-		return false, code
+		return invalid(code)
 	}
 	if !s.isValidConcurrent(in, location, bookingID) {
-		return false, BookingCodeLocationMaxConcurrent
+		return invalid(BookingCodeLocationMaxConcurrent)
 	}
 	if !GetLocationService().IsLocationWeekdayBookable(location, requestUser, in.Enter, in.Leave) {
-		return false, BookingCodeInvalidWeekday
+		return invalid(BookingCodeInvalidWeekday)
 	}
 	if GetLocationService().IsLocationBlocked(location, requestUser, in.Enter, in.Leave) {
-		return false, BookingCodeLocationBlocked
+		return invalid(BookingCodeLocationBlocked)
 	}
 	if in.SpaceID != "" {
 		space, err := GetSpaceRepository().GetOne(in.SpaceID)
-		if err == nil && GetSpaceService().IsSpaceBlocked(space, location, requestUser, in.Enter, in.Leave) {
-			return false, BookingCodeSpaceBlocked
+		if err != nil || space == nil {
+			log.Println(err)
+			return &BookingError{Kind: BookingErrorInternal}
+		}
+		if GetSpaceService().IsSpaceBlocked(space, location, requestUser, in.Enter, in.Leave) {
+			return invalid(BookingCodeSpaceBlocked)
 		}
 	}
-	return true, 0
+	return nil
 }
 
 func (s *BookingService) isValidBookingRequest(in *BookingInput, location *Location, user *User, orgID string, bookingID string, upcomingBookingsMarkup int) (bool, int) {
