@@ -229,7 +229,7 @@ class Settings extends React.Component<Props, State> {
   loadPublicBookingSpaces = async (orgId: string): Promise<void> => {
     try {
       const res = await Ajax.get(
-        "/public-booking/" + encodeURIComponent(orgId) + "/spaces",
+        Ajax.path`/public-booking/${orgId}/spaces`,
         () => true,
       );
       this.publicBookingSpaces = res.json.spaces || [];

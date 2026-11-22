@@ -90,11 +90,13 @@ export default class RecurringBooking extends Entity {
   }
 
   async delete(): Promise<void> {
-    return Ajax.delete(this.getBackendUrl() + this.id).then(() => undefined);
+    return Ajax.delete(this.getBackendUrl() + Ajax.path`${this.id}`).then(
+      () => undefined,
+    );
   }
 
   static async get(id: string): Promise<RecurringBooking> {
-    return Ajax.get("/recurring-booking/" + id).then((result) => {
+    return Ajax.get(Ajax.path`/recurring-booking/${id}`).then((result) => {
       let e: RecurringBooking = new RecurringBooking();
       e.deserialize(result.json);
       return e;

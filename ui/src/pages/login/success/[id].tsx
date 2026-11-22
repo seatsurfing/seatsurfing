@@ -30,10 +30,15 @@ class LoginSuccess extends React.Component<Props, State> {
     if (typeof idParam !== "string" || idParam.length === 0) {
       return;
     }
+    if (!Validation.isUuid(idParam)) {
+      // Never put an unvalidated ID into a request path.
+      this.props.router.push("/login/failed/");
+      return;
+    }
     const id = idParam;
     let request = verifyRequests.get(id);
     if (!request) {
-      request = Ajax.get("/auth/verify/" + id, () => true);
+      request = Ajax.get(Ajax.path`/auth/verify/${id}`, () => true);
       verifyRequests.set(id, request);
     }
     try {

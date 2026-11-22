@@ -54,7 +54,7 @@ class ConfirmPublicBooking extends React.Component<Props, State> {
     let request = confirmRequests.get(id);
     if (!request) {
       request = Ajax.postData(
-        "/public-booking/confirm/" + encodeURIComponent(id),
+        Ajax.path`/public-booking/confirm/${id}`,
         {},
         () => true,
       );
