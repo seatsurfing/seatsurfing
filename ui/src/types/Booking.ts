@@ -123,8 +123,7 @@ export default class Booking extends Entity {
   }
 
   static async get(id: string): Promise<Booking> {
-    Ajax.requireUuid(id);
-    const result = await Ajax.get("/booking/" + encodeURIComponent(id));
+    const result = await Ajax.get(Ajax.path`/booking/${id}`);
     const e: Booking = new Booking();
     e.deserialize(result.json);
     return e;

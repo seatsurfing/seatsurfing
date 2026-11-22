@@ -5,7 +5,6 @@ import AjaxCredentials from "./AjaxCredentials";
 import AjaxConfigPersister from "./AjaxConfigPersister";
 import AjaxConfigBrowserPersister from "./AjaxConfigBrowserPersister";
 import JwtDecoder from "./JwtDecoder";
-import Validation from "./Validation";
 
 interface AjaxResult {
   json: any;
@@ -111,17 +110,28 @@ export default class Ajax {
   }
 
   /**
-   * Ids taken from the URL (route params) must never reach a request path
-   * unless they have the expected UUID shape: encoding alone does not stop
-   * path traversal ("..%2F" is cleaned and redirected by the server router).
-   * Behaves like a 404 for anything else, without sending a request.
+   * Tagged template for building request paths from untrusted values:
+   * every interpolated value is URL-encoded, and empty values, dot segments
+   * ("." / "..") and values containing "/" or "\\" are rejected with a 404
+   * without sending a request. Encoding alone is not enough: the server
+   * router decodes "%2F" and cleans "../" before routing.
    */
-  static requireUuid(id: string): string {
-    if (typeof id !== "string" || !Validation.isUuid(id)) {
-      Ajax.handleGlobalError(404);
-      throw new AjaxError(404, 0);
-    }
-    return id;
+  static path(strings: TemplateStringsArray, ...values: string[]): string {
+    return strings.reduce((acc, s, i) => {
+      if (i === 0) return s;
+      const v = values[i - 1];
+      if (
+        typeof v !== "string" ||
+        v === "" ||
+        v === "." ||
+        v === ".." ||
+        v.includes("/") ||
+        v.includes("\\")
+      ) {
+        throw new AjaxError(404, 0);
+      }
+      return acc + encodeURIComponent(v) + s;
+    });
   }
 
   private static handleGlobalError(httpStatus: number): void {

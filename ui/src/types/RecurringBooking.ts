@@ -96,14 +96,11 @@ export default class RecurringBooking extends Entity {
   }
 
   static async get(id: string): Promise<RecurringBooking> {
-    Ajax.requireUuid(id);
-    return Ajax.get("/recurring-booking/" + encodeURIComponent(id)).then(
-      (result) => {
-        let e: RecurringBooking = new RecurringBooking();
-        e.deserialize(result.json);
-        return e;
-      },
-    );
+    return Ajax.get(Ajax.path`/recurring-booking/${id}`).then((result) => {
+      let e: RecurringBooking = new RecurringBooking();
+      e.deserialize(result.json);
+      return e;
+    });
   }
 }
 

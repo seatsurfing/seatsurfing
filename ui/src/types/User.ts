@@ -139,8 +139,7 @@ export default class User extends Entity {
   }
 
   static async get(id: string): Promise<User> {
-    Ajax.requireUuid(id);
-    return Ajax.get("/user/" + encodeURIComponent(id)).then((result) => {
+    return Ajax.get(Ajax.path`/user/${id}`).then((result) => {
       let e: User = new User();
       e.deserialize(result.json);
       return e;

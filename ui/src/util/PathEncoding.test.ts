@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import Ajax from "./Ajax";
+import AjaxError from "./AjaxError";
 import User from "@/types/User";
 import Role from "@/types/Role";
 import Group from "@/types/Group";
@@ -67,27 +68,42 @@ describe("entity helpers encode ids placed into request paths", () => {
   });
 });
 
-describe("getters reject non-UUID ids without sending a request", () => {
-  // Encoded "../" is cleaned and redirected by the server router, so
-  // encoding alone is not enough for ids taken from the URL.
-  const TRAVERSAL = "../auth/logout/all";
+describe("Ajax.path", () => {
+  it("encodes interpolated values", () => {
+    expect(Ajax.path`/user/${"a b+c"}/roles`).toBe("/user/a%20b%2Bc/roles");
+  });
 
+  it("returns static paths unchanged", () => {
+    expect(Ajax.path`/user/me`).toBe("/user/me");
+  });
+
+  it.each([[""], ["."], [".."], ["../auth/logout/all"], ["a/b"], [EVIL]])(
+    "rejects %j with a 404",
+    (value) => {
+      expect(() => Ajax.path`/user/${value}`).toThrow(AjaxError);
+    },
+  );
+});
+
+describe("getters reject traversal ids without sending a request", () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it.each<[string, () => Promise<unknown>]>([
-    ["User", () => User.get(TRAVERSAL)],
-    ["Role", () => Role.get(TRAVERSAL)],
-    ["Group", () => Group.get(TRAVERSAL)],
-    ["Booking", () => Booking.get(TRAVERSAL)],
-    ["Location", () => Location.get(TRAVERSAL)],
-    ["AuthProvider", () => AuthProvider.get(TRAVERSAL)],
-    ["SpaceAttribute", () => SpaceAttribute.get(TRAVERSAL)],
-    ["RecurringBooking", () => RecurringBooking.get(TRAVERSAL)],
+  it.each<[string, (id: string) => Promise<unknown>]>([
+    ["User", (id) => User.get(id)],
+    ["Role", (id) => Role.get(id)],
+    ["Group", (id) => Group.get(id)],
+    ["Booking", (id) => Booking.get(id)],
+    ["Location", (id) => Location.get(id)],
+    ["AuthProvider", (id) => AuthProvider.get(id)],
+    ["SpaceAttribute", (id) => SpaceAttribute.get(id)],
+    ["RecurringBooking", (id) => RecurringBooking.get(id)],
   ])("%s.get", async (_name, call) => {
     const get = vi.spyOn(Ajax, "get");
-    await expect(call()).rejects.toThrow();
+    for (const id of ["", ".", "..", "../auth/logout/all", EVIL]) {
+      await expect(call(id)).rejects.toBeInstanceOf(AjaxError);
+    }
     expect(get).not.toHaveBeenCalled();
   });
 });
