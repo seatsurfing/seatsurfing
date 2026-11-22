@@ -1467,7 +1467,13 @@ class Search extends React.Component<Props, State> {
 
   formatBlockedPeriod = (from: string, until: string): string => {
     const formatter = Formatting.getFormatterDate();
-    const format = (s: string) => (s ? formatter.format(new Date(s)) : "");
+    const format = (s: string) => formatter.format(new Date(s));
+    if (!until) {
+      return this.props.t("from") + " " + format(from);
+    }
+    if (!from) {
+      return this.props.t("end") + " " + format(until);
+    }
     return format(from) + " – " + format(until);
   };
 
