@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.143.2](https://github.com/seatsurfing/seatsurfing/compare/v1.143.1...v1.143.2) (2026-11-24)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump distroless/base-debian13 from `0e48b9b` to `8bf71f4` ([#2915](https://github.com/seatsurfing/seatsurfing/issues/2915)) ([df29de5](https://github.com/seatsurfing/seatsurfing/commit/df29de525f3dea827ac2c3835fdf63ce843539bc))
+* **deps:** bump github.com/valkey-io/valkey-go from 1.0.79 to 1.0.80 in /server in the minor-and-patch group ([#2917](https://github.com/seatsurfing/seatsurfing/issues/2917)) ([da104c3](https://github.com/seatsurfing/seatsurfing/commit/da104c3a2049bb9ce669d26c617c0dac9400adb2))
+
 ## [1.143.1](https://github.com/seatsurfing/seatsurfing/compare/v1.143.0...v1.143.1) (2026-11-22)
 
 
