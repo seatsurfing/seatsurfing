@@ -82,6 +82,7 @@ import SearchUtil from "@/util/SearchUtil";
 import BrowserUtil from "@/util/BrowserUtil";
 import RendererUtils from "@/util/RendererUtils";
 import SpaceApprovalIcon from "@/components/SpaceApprovalIcon";
+import SpacePhotoIcon from "@/components/SpacePhotoIcon";
 import ConfirmModal from "@/components/ConfirmModal";
 import AlertModal from "@/components/AlertModal";
 import PluginEmbed from "@/components/PluginEmbed";
@@ -1052,6 +1053,7 @@ class Search extends React.Component<Props, State> {
         ? " space-box-vertical"
         : "") +
       (this.isApprovalPending(bookings) ? " booking-pending" : "");
+    const hasImage = RuntimeConfig.INFOS.featureSpaceImages && item.hasImage;
     const showBookerNames =
       this.state.showBookerNamesOnMap && RuntimeConfig.INFOS.showNames;
     const bookedEntry = item.rawBookings[0];
@@ -1095,7 +1097,12 @@ class Search extends React.Component<Props, State> {
         onClick={() => this.onSpaceSelect(item)}
       >
         <div style={innerStyle}>
-          {item.approvalRequired && <SpaceApprovalIcon />}
+          {(item.approvalRequired || hasImage) && (
+            <div style={{ display: "flex", gap: "4px" }}>
+              {item.approvalRequired && <SpaceApprovalIcon />}
+              {hasImage && <SpacePhotoIcon />}
+            </div>
+          )}
           <p style={textStyle}>{labelText}</p>
         </div>
       </div>
