@@ -186,6 +186,7 @@
   "current": "Aktuell",
   "customLogoUrl": "Logo URL",
   "customLogoUrlHint": "Leer lassen, um das Standard-Logo zu nutzen",
+  "customLogoPreviewError": "Die URL verweist auf kein Bild oder das Bild konnte nicht geladen werden.",
   "daily": "täglich",
   "dailyBasisBooking": "Nur tageweise Buchung erlauben",
   "dangerZone": "Kritische Funktionen",
@@ -695,5 +696,8 @@
   "defaultBookingView": "Standard-Buchungsansicht",
   "list": "Liste",
   "disallowed": "nicht erlaubt",
-  "userHigherPrivilegesReadOnly": "Dieser Benutzer verfügt über Berechtigungen, die über deine eigenen hinausgehen, und kann daher nicht bearbeitet werden."
+  "userHigherPrivilegesReadOnly": "Dieser Benutzer verfügt über Berechtigungen, die über deine eigenen hinausgehen, und kann daher nicht bearbeitet werden.",
+  "preview": "Vorschau",
+  "imageDimensions": "{{width}} × {{height}} Pixel",
+  "openInNewTab": "In neuem Tab öffnen"
 }

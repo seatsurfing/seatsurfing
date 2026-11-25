@@ -18,3 +18,12 @@
   padding: 0.25rem 0.5rem;
   line-height: 1;
 }
+
+.custom-logo-preview {
+  padding: 0.5rem 1rem;
+}
+
+.custom-logo-preview > img {
+  height: 2rem;
+  max-width: 100%;
+}

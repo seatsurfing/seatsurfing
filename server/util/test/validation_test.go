@@ -256,3 +256,30 @@ func TestInvalidDomains(t *testing.T) {
 		CheckTestBool(t, ValidateDomain(input), false)
 	}
 }
+
+func TestValidHTTPSURLs(t *testing.T) {
+	inputs := []string{
+		"https://example.com",
+		"https://example.com/logo.png?v=1",
+		"HTTPS://example.com/logo.svg",
+	}
+	for _, input := range inputs {
+		CheckTestBool(t, true, ValidateHTTPSURL(input))
+	}
+}
+
+func TestInvalidHTTPSURLs(t *testing.T) {
+	inputs := []string{
+		"",
+		"http://example.com/logo.png",
+		"ftp://example.com/logo.png",
+		"//example.com/logo.png",
+		"/logo.png",
+		"https://",
+		"javascript:alert(1)",
+		"https://example.com/" + strings.Repeat("a", 256),
+	}
+	for _, input := range inputs {
+		CheckTestBool(t, false, ValidateHTTPSURL(input))
+	}
+}

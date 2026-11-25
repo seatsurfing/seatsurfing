@@ -55,6 +55,14 @@ func ValidateURL(s string) bool {
 	return err == nil && u.Scheme != "" && u.Host != ""
 }
 
+func ValidateHTTPSURL(s string) bool {
+	if !ValidateURL(s) {
+		return false
+	}
+	u, err := url.ParseRequestURI(s)
+	return err == nil && strings.EqualFold(u.Scheme, "https")
+}
+
 func ValidateColorHex(s string) bool {
 	return colorHexRegex.MatchString(s)
 }
