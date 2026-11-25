@@ -644,7 +644,11 @@ class PublicBooking extends React.Component<Props, State> {
     };
     const className =
       "space space-box" +
-      (selected ? "" : available ? " space-available" : " space-notavailable") +
+      (selected
+        ? ""
+        : available
+          ? " space-tinted space-available"
+          : " space-tinted space-notavailable") +
       (RendererUtils.isSpaceVertical(item.width, item.height, item.rotation)
         ? " space-box-vertical"
         : "");
