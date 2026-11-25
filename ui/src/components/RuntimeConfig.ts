@@ -65,6 +65,7 @@ interface RuntimeUserInfos {
   targetUtilizationHoursPerWeek: number;
   orgAnnouncement: string;
   defaultBookingView: string;
+  defaultLocationId: string;
 }
 
 export default class RuntimeConfig {
@@ -240,6 +241,7 @@ export default class RuntimeConfig {
       targetUtilizationHoursPerWeek: 0,
       orgAnnouncement: "",
       defaultBookingView: "map",
+      defaultLocationId: "",
     };
   };
 
@@ -345,6 +347,8 @@ export default class RuntimeConfig {
         RuntimeConfig.INFOS.subjectDefault = window.parseInt(s.value);
       if (s.name === Organization.PREF_DEFAULT_BOOKING_VIEW)
         RuntimeConfig.INFOS.defaultBookingView = s.value;
+      if (s.name === Organization.PREF_DEFAULT_LOCATION_ID)
+        RuntimeConfig.INFOS.defaultLocationId = s.value;
       if (s.name === Organization.PREF_ENFORCE_TOTP) {
         const enforceTotpSetting = window.parseInt(s.value);
         RuntimeConfig.INFOS.enforceTOTP =

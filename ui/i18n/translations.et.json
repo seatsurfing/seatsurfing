@@ -694,5 +694,9 @@
   "disallowed": "disallowed",
   "errorMapFileTooLarge": "The file must not be larger than 5 MB.",
   "mapFileHint": "PNG, JPEG, GIF or SVG, max. 5 MB",
-  "userHigherPrivilegesReadOnly": "This user holds permissions beyond your own and can therefore not be edited."
+  "userHigherPrivilegesReadOnly": "This user holds permissions beyond your own and can therefore not be edited.",
+  "defaultLocation": "Default area",
+  "defaultLocationAutomatic": "Automatic: first enabled area",
+  "defaultLocationHint": "Pre-selected on the booking page for users who have not set a preferred area.",
+  "orgDefaultLocation": "Organization default: {{name}}"
 }

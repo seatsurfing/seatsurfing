@@ -232,6 +232,9 @@ func (r *LocationStore) Delete(e *Location) error {
 	if _, err := GetDatabase().DB().Exec("DELETE FROM locations_allowed_bookers WHERE location_id = $1", e.ID); err != nil {
 		return err
 	}
+	if err := GetSettingsRepository().DeleteIfValue(e.OrganizationID, SettingDefaultLocationID.Name, e.ID); err != nil {
+		return err
+	}
 
 	_, err := GetDatabase().DB().Exec("DELETE FROM locations WHERE id = $1", e.ID)
 	return err
@@ -262,6 +265,9 @@ func (r *LocationStore) DeleteAll(organizationID string) error {
 		return err
 	}
 	if _, err := GetDatabase().DB().Exec("DELETE FROM spaces WHERE spaces.location_id IN (SELECT locations.id FROM locations WHERE locations.organization_id = $1)", organizationID); err != nil {
+		return err
+	}
+	if err := GetSettingsRepository().Delete(organizationID, SettingDefaultLocationID.Name); err != nil {
 		return err
 	}
 	_, err := GetDatabase().DB().Exec("DELETE FROM locations WHERE organization_id = $1", organizationID)

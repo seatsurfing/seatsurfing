@@ -695,5 +695,9 @@
   "defaultBookingView": "Standard-Buchungsansicht",
   "list": "Liste",
   "disallowed": "nicht erlaubt",
-  "userHigherPrivilegesReadOnly": "Dieser Benutzer verfügt über Berechtigungen, die über deine eigenen hinausgehen, und kann daher nicht bearbeitet werden."
+  "userHigherPrivilegesReadOnly": "Dieser Benutzer verfügt über Berechtigungen, die über deine eigenen hinausgehen, und kann daher nicht bearbeitet werden.",
+  "defaultLocation": "Standard-Bereich",
+  "defaultLocationHint": "Wird auf der Buchungsseite für Benutzer vorausgewählt, die keinen bevorzugten Bereich festgelegt haben.",
+  "defaultLocationAutomatic": "Automatisch: erster aktiver Bereich",
+  "orgDefaultLocation": "Standard der Organisation: {{name}}"
 }

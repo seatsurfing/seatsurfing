@@ -570,6 +570,14 @@ class Search extends React.Component<Props, State> {
     ) {
       return this.state.prefLocationId;
     }
+    const orgDefaultLocationId = RuntimeConfig.INFOS.defaultLocationId;
+    if (
+      orgDefaultLocationId &&
+      this.locations.find((e) => e.id === orgDefaultLocationId && e.enabled) !==
+        undefined
+    ) {
+      return orgDefaultLocationId;
+    }
     for (let location of this.locations) {
       if (location.enabled) {
         return location.id;

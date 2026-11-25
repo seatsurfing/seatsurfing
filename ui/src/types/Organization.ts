@@ -59,6 +59,7 @@ export default class Organization extends Entity {
   static readonly PREF_HIDE_DISALLOWED_LOCATIONS = "hide_disallowed_locations";
   static readonly PREF_ORG_ANNOUNCEMENT_TEXT = "org_announcement_text";
   static readonly PREF_DEFAULT_BOOKING_VIEW = "default_booking_view";
+  static readonly PREF_DEFAULT_LOCATION_ID = "default_location_id";
 
   name: string;
   contactFirstname: string;

@@ -344,6 +344,7 @@ var (
 	SettingOrgAnnouncementText            SettingName = SettingName{Name: "org_announcement_text", Type: SettingTypeString}
 	SettingOrgAnnouncementPermission      SettingName = SettingName{Name: "org_announcement_permission", Type: SettingTypeString}
 	SettingDefaultBookingView             SettingName = SettingName{Name: "default_booking_view", Type: SettingTypeString}
+	SettingDefaultLocationID              SettingName = SettingName{Name: "default_location_id", Type: SettingTypeString}
 )
 
 // ─── AccountType ─────────────────────────────────────────────────────────────
