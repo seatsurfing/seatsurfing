@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	. "github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	"github.com/seatsurfing/seatsurfing/server/service"
 	. "github.com/seatsurfing/seatsurfing/server/testutil"
@@ -20,6 +21,38 @@ func createTestRefreshTokenWithSession(t *testing.T, domain string) (*RefreshTok
 	token, err := service.GetRefreshTokenService().Issue(user.ID, session.ID)
 	CheckTestIsNil(t, err)
 	return token, session
+}
+
+func TestRefreshTokenServiceIssueLifetimeTooShort(t *testing.T) {
+	ClearTestDB()
+	config := GetConfig()
+	originalAccessTokenLifetime := config.AccesstokenLifetime
+	originalConfigRefreshTokenLifetime := config.RefreshTokenLifetime
+	originalServiceRefreshTokenLifetime := service.RefreshTokenLifetime
+	defer func() {
+		config.AccesstokenLifetime = originalAccessTokenLifetime
+		config.RefreshTokenLifetime = originalConfigRefreshTokenLifetime
+		service.RefreshTokenLifetime = originalServiceRefreshTokenLifetime
+	}()
+
+	config.AccesstokenLifetime = 15 * time.Minute
+	config.RefreshTokenLifetime = 10 * time.Minute
+	service.RefreshTokenLifetime = config.RefreshTokenLifetime
+
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	session := &Session{UserID: user.ID, Device: "test", Created: time.Now()}
+	if err := GetSessionRepository().Create(session); err != nil {
+		t.Fatal(err)
+	}
+
+	token, err := service.GetRefreshTokenService().Issue(user.ID, session.ID)
+	if !errors.Is(err, service.ErrRefreshTokenLifetimeTooShort) {
+		t.Fatalf("expected ErrRefreshTokenLifetimeTooShort, got %v", err)
+	}
+	if token != nil {
+		t.Fatalf("expected no refresh token, got %+v", token)
+	}
 }
 
 func TestRefreshTokenServiceIssue(t *testing.T) {
