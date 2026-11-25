@@ -219,8 +219,9 @@ class NavBar extends React.Component<Props, State> {
     return (
       <>
         <Navbar
-          bg="body-tertiary"
+          bg="body"
           fixed="top"
+          className="booking-navbar"
           expand={RuntimeConfig.EMBEDDED ? true : "lg"}
         >
           <Container fluid={true}>

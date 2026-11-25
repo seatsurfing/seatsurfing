@@ -8,7 +8,7 @@
   background-color: var(--bs-body-bg);
   background-clip: padding-box;
   border: 1px solid var(--bs-border-color);
-  border-radius: 0.25rem;
+  border-radius: var(--bs-border-radius);
   transition:
     border-color 0.15s ease-in-out,
     box-shadow 0.15s ease-in-out;
@@ -79,12 +79,11 @@
   padding: 20px;
   padding-bottom: 10px;
   padding-top: 0px;
-  border-radius: 10px;
-  border-bottom-left-radius: 0px;
-  border-bottom-right-radius: 0px;
-  box-shadow: 0px 0px 3px #555;
+  border-radius: var(--bs-border-radius-xl) var(--bs-border-radius-xl) 0 0;
+  border: 1px solid var(--bs-border-color);
+  border-bottom: none;
+  box-shadow: var(--ss-shadow);
   background-color: var(--bs-body-bg);
-  opacity: 0.95;
   transition: all 0.2s;
 }
 
@@ -137,19 +136,19 @@
 }
 
 .space-available {
-  background-color: rgba(48, 209, 88, 0.9) !important;
+  --space-color: #30d158;
 }
 
 .space-notavailable {
-  background-color: rgba(255, 69, 58, 0.9) !important;
+  --space-color: #ff453a;
 }
 
 .space-mydesk {
-  background-color: rgba(184, 37, 222, 0.9) !important;
+  --space-color: #b825de;
 }
 
 .space-buddy-desk {
-  background-color: rgba(36, 21, 197, 0.9) !important;
+  --space-color: #2415c5;
 }
 
 .space-list-item-div {
@@ -170,7 +169,7 @@
 .invalid-search-config {
   width: 100%;
   font-size: 0.875em;
-  color: #dc3545;
+  color: var(--bs-form-invalid-color);
 }
 
 /* Fixed below the navbar, centered and narrow enough to keep the map's zoom
@@ -185,7 +184,7 @@
   overflow-y: auto;
   margin: 0;
   z-index: 101;
-  box-shadow: 0 0 3px #555;
+  box-shadow: var(--ss-shadow);
 }
 
 .location-announcement-banner p:last-child,
@@ -201,14 +200,14 @@
 }
 
 .search-hint-banner {
-  opacity: 0.95;
   background-color: var(--bs-body-bg);
+  border: 1px solid var(--bs-border-color);
   border-bottom: none;
-  border-radius: 10px 10px 0 0;
+  border-radius: var(--bs-border-radius-xl) var(--bs-border-radius-xl) 0 0;
   width: 85%;
   margin: 0 auto -10px;
   padding: 10px 15px 10px;
-  box-shadow: 0 0 3px #555;
+  box-shadow: var(--ss-shadow);
 }
 
 .search-hint-banner .invalid-search-config {
@@ -292,7 +291,7 @@ form#filter-locations-form .row {
 .active-transparent:active,
 .active-transparent:focus {
   background-color: transparent !important;
-  color: #0d6efd !important;
+  color: var(--bs-primary) !important;
 }
 
 .public-booking-map {
@@ -342,4 +341,56 @@ form#filter-locations-form .row {
    up with the other fields. */
 .direct-link-selection > .d-flex > :first-child {
   margin-left: 0 !important;
+}
+
+.map-legend {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 10;
+  max-width: calc(100% - 460px);
+  margin: 0;
+  padding: 6px 12px;
+  list-style: none;
+  display: none;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px 14px;
+  font-size: 0.8125rem;
+  color: var(--bs-secondary-color);
+  background-color: var(--bs-body-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+  box-shadow: var(--ss-shadow-sm);
+}
+
+.map-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.map-legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  border: 2px solid var(--space-color);
+  background-color: color-mix(
+    in srgb,
+    var(--space-color) 22%,
+    var(--bs-body-bg)
+  );
+}
+
+.map-legend-count {
+  font-weight: 600;
+  color: var(--bs-body-color);
+  font-variant-numeric: tabular-nums;
+}
+
+@media only screen and (min-width: 768px) {
+  .map-legend {
+    display: flex;
+  }
 }

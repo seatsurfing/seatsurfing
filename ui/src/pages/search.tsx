@@ -88,6 +88,9 @@ import PluginEmbed from "@/components/PluginEmbed";
 import SpaceImageViewer from "@/components/SpaceImageViewer";
 import SpaceImageButton from "@/components/button/SpaceImageButton";
 
+type AvailabilityCategory =
+  "free" | "partial" | "booked" | "self" | "buddy" | "disallowed";
+
 interface State {
   earliestEnterDate: Date;
   enter: Date;
@@ -946,7 +949,30 @@ class Search extends React.Component<Props, State> {
     }
   };
 
-  getAvailabilityStyle = (item: Space, bookings: Booking[]) => {
+  getAvailabilityStyle = (item: Space, bookings: Booking[]) =>
+    this.getAvailabilityColor(this.getAvailabilityCategory(item, bookings));
+
+  getAvailabilityColor = (category: AvailabilityCategory) => {
+    switch (category) {
+      case "self":
+        return this.state.prefSelfBookedColor;
+      case "buddy":
+        return this.state.prefBuddyBookedColor;
+      case "disallowed":
+        return this.state.prefDisallowedColor;
+      case "partial":
+        return this.state.prefPartiallyBookedColor;
+      case "free":
+        return this.state.prefNotBookedColor;
+      default:
+        return this.state.prefBookedColor;
+    }
+  };
+
+  getAvailabilityCategory = (
+    item: Space,
+    bookings: Booking[],
+  ): AvailabilityCategory => {
     const myDesk = bookings.find(
       (b) => b.user.email === RuntimeConfig.INFOS.username,
     );
@@ -956,15 +982,15 @@ class Search extends React.Component<Props, State> {
     );
 
     if (myDesk) {
-      return this.state.prefSelfBookedColor;
+      return "self";
     }
 
     if (myBuddyDesk) {
-      return this.state.prefBuddyBookedColor;
+      return "buddy";
     }
 
     if (!item.allowed || !item.enabled) {
-      return this.state.prefDisallowedColor;
+      return "disallowed";
     }
 
     if (
@@ -1000,13 +1026,59 @@ class Search extends React.Component<Props, State> {
         (maxLeave.getTime() - leastEnter.getTime()) / 1000 / 60 / 60;
 
       if (hours < RuntimeConfig.INFOS.maxHoursPartiallyBooked) {
-        return this.state.prefPartiallyBookedColor;
+        return "partial";
       }
     }
 
-    return item.available
-      ? this.state.prefNotBookedColor
-      : this.state.prefBookedColor;
+    return item.available ? "free" : "booked";
+  };
+
+  renderMapLegend = () => {
+    const counts = new Map<AvailabilityCategory, number>();
+    this.data.forEach((item) => {
+      const category = this.getAvailabilityCategory(
+        item,
+        Booking.createFromRawArray(item.rawBookings),
+      );
+      counts.set(category, (counts.get(category) ?? 0) + 1);
+    });
+    const entries: { category: AvailabilityCategory; label: string }[] = [
+      { category: "free", label: "colorNotBooked" },
+      { category: "partial", label: "colorPartiallyBooked" },
+      { category: "booked", label: "colorAlreadyBooked" },
+      { category: "self", label: "colorSelfBooked" },
+      { category: "buddy", label: "colorBuddyBooked" },
+      { category: "disallowed", label: "colorDisallowed" },
+    ];
+    return (
+      <ul className="map-legend" aria-label={this.props.t("bookingcolors")}>
+        {entries
+          .filter(
+            (e) =>
+              e.category === "free" ||
+              e.category === "booked" ||
+              (counts.get(e.category) ?? 0) > 0,
+          )
+          .map((e) => (
+            <li key={e.category}>
+              <span
+                className="map-legend-swatch"
+                style={
+                  {
+                    ["--space-color" as string]: this.getAvailabilityColor(
+                      e.category,
+                    ),
+                  } as React.CSSProperties
+                }
+              ></span>
+              {this.props.t(e.label)}
+              <span className="map-legend-count">
+                {counts.get(e.category) ?? 0}
+              </span>
+            </li>
+          ))}
+      </ul>
+    );
   };
 
   isApprovalPending = (bookings: Booking[]) =>
@@ -1026,13 +1098,13 @@ class Search extends React.Component<Props, State> {
         (bookings && bookings.length > 0)
           ? "pointer"
           : "default",
-      backgroundColor: this.getAvailabilityStyle(item, bookings),
+      ["--space-color" as string]: this.getAvailabilityStyle(item, bookings),
       borderRadius: item.shape === "circle" ? "50%" : undefined,
       clipPath:
         item.shape === "trapezoid"
           ? "polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%)"
           : undefined,
-    };
+    } as React.CSSProperties;
     const textStyle: React.CSSProperties = {
       textAlign: "center",
       fontSize: RendererUtils.spaceFontSizePx(item.fontSize),
@@ -1047,7 +1119,7 @@ class Search extends React.Component<Props, State> {
       height: "100%",
     };
     const className =
-      "space space-box" +
+      "space space-box space-tinted" +
       (RendererUtils.isSpaceVertical(item.width, item.height, item.rotation)
         ? " space-box-vertical"
         : "") +
@@ -2436,6 +2508,7 @@ class Search extends React.Component<Props, State> {
               </>
             )}
           </TransformWrapper>
+          {this.renderMapLegend()}
         </div>
       );
     }
