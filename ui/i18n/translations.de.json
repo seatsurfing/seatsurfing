@@ -695,5 +695,6 @@
   "defaultBookingView": "Standard-Buchungsansicht",
   "list": "Liste",
   "disallowed": "nicht erlaubt",
-  "userHigherPrivilegesReadOnly": "Dieser Benutzer verfügt über Berechtigungen, die über deine eigenen hinausgehen, und kann daher nicht bearbeitet werden."
+  "userHigherPrivilegesReadOnly": "Dieser Benutzer verfügt über Berechtigungen, die über deine eigenen hinausgehen, und kann daher nicht bearbeitet werden.",
+  "noSpacesAvailable": "An diesem Standort sind keine Plätze verfügbar."
 }

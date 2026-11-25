@@ -433,6 +433,7 @@
   "noRecords": "No records found.",
   "noResults": "No results.",
   "noRolesDefined": "No roles have been defined yet.",
+  "noSpacesAvailable": "There are no spaces available at this location.",
   "none": "None",
   "normal": "Normal",
   "notFoundBody": "The requested resource was not found.",
