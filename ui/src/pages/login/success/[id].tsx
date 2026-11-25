@@ -51,7 +51,7 @@ class LoginSuccess extends React.Component<Props, State> {
           profilePageUrl: res.json.profilePageUrl,
         };
         Ajax.PERSISTER.persistRefreshTokenInLocalStorage(res.json.refreshToken);
-        Ajax.PERSISTER.updateCredentialsLocalStorage(credentials);
+        Ajax.PERSISTER.updateCredentialsSessionStorage(credentials);
         await RuntimeConfig.loadUserAndSettings();
         const redirParam = this.props.router.query["redir"] as string;
         const redirect =
