@@ -2316,9 +2316,15 @@ class Search extends React.Component<Props, State> {
       listOrMap = (
         <div className="container-signin" style={contentAreaStyle}>
           <Form className="form-signin">
-            <ListGroup className="space-list">
-              {this.data.map((item) => this.renderListItem(item))}
-            </ListGroup>
+            {this.data.length === 0 ? (
+              <div style={{ paddingBottom: "100px" }}>
+                {this.props.t("noSpacesAvailable")}
+              </div>
+            ) : (
+              <ListGroup className="space-list">
+                {this.data.map((item) => this.renderListItem(item))}
+              </ListGroup>
+            )}
           </Form>
         </div>
       );
