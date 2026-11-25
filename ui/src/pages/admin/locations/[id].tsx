@@ -1277,9 +1277,16 @@ class EditLocation extends React.Component<Props, State> {
           )}
         </td>
         <td>{RendererUtils.state(space.publicBookingEnabled)}</td>
+        {RuntimeConfig.INFOS.featureSpaceImages && (
+          <td>{RendererUtils.state(this.spaceHasImage(space))}</td>
+        )}
         <td>{bookingLink}</td>
       </tr>
     );
+  };
+
+  spaceHasImage = (space: SpaceState): boolean => {
+    return !!space.pendingImage || (space.hasImage && !space.removeImage);
   };
 
   getAvailableAttributeOptions = () => {
@@ -1856,6 +1863,7 @@ class EditLocation extends React.Component<Props, State> {
     const showKioskMode =
       RuntimeConfig.INFOS.featureKioskMode &&
       RuntimeConfig.INFOS.kioskModeEnabled;
+    const showImages = RuntimeConfig.INFOS.featureSpaceImages;
     const headers = [
       t("name"),
       t("enabled"),
@@ -1864,6 +1872,7 @@ class EditLocation extends React.Component<Props, State> {
       t("approvers"),
       t("allowBookers"),
       t("publicBooking"),
+      ...(showImages ? [t("image")] : []),
       t("bookingLink"),
     ];
     const rows = this.state.spaces.map((space) => [
@@ -1877,6 +1886,9 @@ class EditLocation extends React.Component<Props, State> {
         t,
       ),
       RendererUtils.stateXls(space.publicBookingEnabled, t),
+      ...(showImages
+        ? [RendererUtils.stateXls(this.spaceHasImage(space), t)]
+        : []),
       space.id ? Navigation.spaceAbsolute(this.entity.id, space.id) : "",
     ]);
     return this.ExcellentExport.convert(
@@ -2246,6 +2258,9 @@ class EditLocation extends React.Component<Props, State> {
                   {this.props.t("allowBookers")} <PremiumFeatureIcon />
                 </th>
                 <th>{this.props.t("publicBooking")}</th>
+                {RuntimeConfig.INFOS.featureSpaceImages && (
+                  <th>{this.props.t("image")}</th>
+                )}
                 <th>{this.props.t("bookingLink")}</th>
               </tr>
             </thead>
