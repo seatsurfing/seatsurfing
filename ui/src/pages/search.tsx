@@ -81,6 +81,7 @@ import CalendarUtil from "@/util/CalendarUtil";
 import SearchUtil from "@/util/SearchUtil";
 import BrowserUtil from "@/util/BrowserUtil";
 import RendererUtils from "@/util/RendererUtils";
+import SpaceTrapezoidOutline from "@/components/SpaceTrapezoidOutline";
 import SpaceApprovalIcon from "@/components/SpaceApprovalIcon";
 import ConfirmModal from "@/components/ConfirmModal";
 import AlertModal from "@/components/AlertModal";
@@ -1120,6 +1121,7 @@ class Search extends React.Component<Props, State> {
     };
     const className =
       "space space-box space-tinted" +
+      (item.shape === "trapezoid" ? " space-trapezoid" : "") +
       (RendererUtils.isSpaceVertical(item.width, item.height, item.rotation)
         ? " space-box-vertical"
         : "") +
@@ -1166,6 +1168,9 @@ class Search extends React.Component<Props, State> {
         data-tooltip-html-content={tooltipHtml}
         onClick={() => this.onSpaceSelect(item)}
       >
+        {item.shape === "trapezoid" && (
+          <SpaceTrapezoidOutline width={item.width} height={item.height} />
+        )}
         <div style={innerStyle}>
           {item.approvalRequired && <SpaceApprovalIcon />}
           <p style={textStyle}>{labelText}</p>
