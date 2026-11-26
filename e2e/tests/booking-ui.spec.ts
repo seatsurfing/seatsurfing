@@ -172,3 +172,32 @@ test("direct link reloads availability when the date changes", async ({
 
   await cancelAllBookings(page);
 });
+
+test("preferences modal via navbar gear icon", async ({ page }) => {
+  await expect(
+    page.getByRole("navigation").getByText("Preferences", { exact: true }),
+  ).toBeHidden();
+  await page.getByRole("button", { name: "Preferences" }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByText("Preferences", { exact: true })).toBeVisible();
+  await expect(dialog.getByLabel("Preferred area")).toBeVisible();
+  await dialog.getByRole("button", { name: "Style" }).click();
+  await expect(dialog.getByText("Booking colors")).toBeVisible();
+  await dialog.getByRole("button", { name: "Security" }).click();
+  await expect(
+    dialog.getByRole("heading", { name: "Active sessions" }),
+  ).toBeVisible();
+  await dialog.getByRole("button", { name: "Close" }).click();
+  await expect(dialog).toBeHidden();
+  await expect(page).toHaveURL(/search\/(\?.*)?$/);
+});
+
+test("legacy preferences page opens preferences modal", async ({ page }) => {
+  const uiURL = process.env.UI_URL
+    ? process.env.UI_URL
+    : "http://localhost:8080";
+  await page.goto(uiURL + "/ui/preferences/?tab=style");
+  await expect(page).toHaveURL(/search\/(\?.*)?$/);
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByText("Booking colors")).toBeVisible();
+});

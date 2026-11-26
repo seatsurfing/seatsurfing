@@ -184,7 +184,9 @@ describe("PasskeySettings – primary domain gating", () => {
 
     const link = container.querySelector("a[href*='primary.example.com']");
     expect(link).not.toBeNull();
-    expect((link as HTMLAnchorElement).href).toContain("/ui/preferences");
+    expect((link as HTMLAnchorElement).href).toContain(
+      "/ui/search/?preferences=security",
+    );
   });
 
   it("shows the primary domain name in the link text", async () => {
