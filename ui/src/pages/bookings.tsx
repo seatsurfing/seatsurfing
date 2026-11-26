@@ -24,11 +24,11 @@ import AlertModal from "@/components/AlertModal";
 
 import { Calendar, View } from "react-big-calendar";
 import CustomToolbar from "@/components/calendar/CustomToolbar";
-import createCustomEvent, {
-  createCustomMonthEvent,
+import {
   bookingToCalendarEvent,
   CalendarEvent,
 } from "@/components/calendar/CustomEvent";
+import { getCalendarComponents } from "@/components/calendar/CalendarComponents";
 import moment from "moment-timezone";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { IoCalendarNumber as CalendarIcon } from "react-icons/io5";
@@ -338,11 +338,7 @@ class Bookings extends React.Component<Props, State> {
               length={7}
               views={["week", "month"]}
               eventPropGetter={CalendarUtil.eventPropGetter}
-              components={{
-                toolbar,
-                event: createCustomEvent(),
-                month: { event: createCustomMonthEvent() },
-              }}
+              components={getCalendarComponents(toolbar)}
               scrollToTime={DateUtil.convertToFakeUTCDate(
                 DateUtil.getTodayTimeFromTimeString(this.workdayStart),
               )}

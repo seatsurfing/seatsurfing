@@ -43,11 +43,11 @@ import {
 } from "react-feather";
 import { Calendar, View } from "react-big-calendar";
 import CustomToolbar from "@/components/calendar/CustomToolbar";
-import createCustomEvent, {
-  createCustomMonthEvent,
+import {
   bookingToCalendarEvent,
   CalendarEvent,
 } from "@/components/calendar/CustomEvent";
+import { getCalendarComponents } from "@/components/calendar/CalendarComponents";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { getIcal } from "@/components/Ical";
 import {
@@ -3413,11 +3413,7 @@ class Search extends React.Component<Props, State> {
                   });
                 }}
                 culture={Formatting.Language}
-                components={{
-                  toolbar: spaceCalToolbar,
-                  event: createCustomEvent(),
-                  month: { event: createCustomMonthEvent() },
-                }}
+                components={getCalendarComponents(spaceCalToolbar)}
                 step={180}
                 timeslots={1}
                 dayPropGetter={CalendarUtil.getDayPropGetter(

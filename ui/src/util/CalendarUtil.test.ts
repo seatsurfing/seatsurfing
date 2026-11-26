@@ -69,4 +69,65 @@ describe("CalendarUtil", () => {
       ).toBe("9:00 AM – 5:30 PM");
     });
   });
+
+  describe("getPeriodLabel", () => {
+    beforeEach(() => {
+      RuntimeConfig.INFOS.weekStartDay = 1;
+    });
+
+    const date = new Date(Date.UTC(2030, 8, 4, 12, 0, 0));
+    const label = (view: "week" | "month" | "day", d: Date) =>
+      CalendarUtil.getPeriodLabel(view, d).replace(/\s+/g, " ");
+
+    it("formats the week range compactly", () => {
+      Formatting.Language = "en-GB";
+      const l = label("week", date);
+      expect(l).toMatch(/^2\s?–\s?8 Sept? 2030$/);
+      Formatting.Language = "de";
+      expect(label("week", date)).toMatch(/^2\.\s?–\s?8\. Sept?\. 2030$/);
+    });
+
+    it("includes both months for a week spanning two months", () => {
+      Formatting.Language = "en-GB";
+      const l = label("week", new Date(Date.UTC(2030, 8, 30, 12, 0, 0)));
+      expect(l).toMatch(/^30 Sept? – 6 Oct 2030$/);
+    });
+
+    it("formats month and day views", () => {
+      Formatting.Language = "en-GB";
+      expect(label("month", date)).toBe("September 2030");
+      expect(label("day", date)).toMatch(/^Wednesday,? 4 September 2030$/);
+    });
+  });
+
+  describe("formatTime", () => {
+    const date = new Date(Date.UTC(2030, 8, 4, 14, 5, 0));
+
+    it("respects the configured hour format", () => {
+      RuntimeConfig.INFOS.use24HourTime = true;
+      expect(CalendarUtil.formatTime(date)).toBe("14:05");
+      RuntimeConfig.INFOS.use24HourTime = false;
+      expect(CalendarUtil.formatTime(date)).toBe("2:05 PM");
+    });
+  });
+
+  describe("prop getters", () => {
+    it("marks pending events with a class", () => {
+      expect(
+        CalendarUtil.eventPropGetter({ approved: false } as any).className,
+      ).toBe("calendar-event calendar-event-pending");
+      expect(
+        CalendarUtil.eventPropGetter({ approved: true } as any).className,
+      ).toBe("calendar-event");
+    });
+
+    it("marks days outside the allowed weekdays", () => {
+      const getter = CalendarUtil.getDayPropGetter([1, 2, 3, 4, 5]);
+      const saturday = new Date(Date.UTC(2030, 8, 7));
+      const monday = new Date(Date.UTC(2030, 8, 2));
+      expect(getter(saturday)).toEqual({ className: "calendar-day-off" });
+      expect(getter(monday)).toEqual({});
+      expect(CalendarUtil.getDayPropGetter([])(saturday)).toEqual({});
+    });
+  });
 });
