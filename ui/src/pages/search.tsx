@@ -9,6 +9,7 @@ import {
   InputGroup,
   Nav,
   Alert,
+  Badge,
 } from "react-bootstrap";
 import Loading from "../components/Loading";
 import FullWidthModal from "../components/FullWidthModal";
@@ -40,6 +41,15 @@ import {
   Calendar as IconCalendar,
   RefreshCw as IconRefresh,
   Clock as IconPending,
+  Clock as IconTime,
+  MapPin as IconArea,
+  ShieldOff as IconNoApproval,
+  Shield as IconApproval,
+  CheckCircle as IconSuccess,
+  AlertTriangle as IconError,
+  Info as IconInfo,
+  UserPlus as IconAddBuddy,
+  MessageSquare as IconSubject,
 } from "react-feather";
 import { Calendar, View } from "react-big-calendar";
 import CustomToolbar from "@/components/calendar/CustomToolbar";
@@ -1227,76 +1237,70 @@ class Search extends React.Component<Props, State> {
 
   renderBookingNameRow = (booking: Booking) => {
     const buddiesEmails = this.buddies.map((i) => i.buddy.email);
-    let recurringIcon = <></>;
-    if (booking.isRecurring()) {
-      recurringIcon = (
-        <IconRefresh className="feather recurring-booking-icon" />
-      );
-    }
-
     const myBooking = booking.user.email === RuntimeConfig.INFOS.username;
+    const name = RendererUtils.fullname(
+      booking.user.firstname,
+      booking.user.lastname,
+      booking.user.email,
+    );
+    const canAddBuddy =
+      RuntimeConfig.INFOS.showNames &&
+      !RuntimeConfig.INFOS.disableBuddies &&
+      !myBooking &&
+      !buddiesEmails.includes(booking.user.email);
     return (
-      <div key={booking.id} className="booking-name-row">
-        <p>
-          <strong>
-            {this.props.t(
-              myBooking ? "spaceBookedInfoMyBooking" : "spaceBookedInfo",
-            )}
-          </strong>
-        </p>
-        <div className="booking-name-row">
-          {recurringIcon}
-          <span hidden={!booking.subject}>
-            {this.props.t("subject")}: {booking.subject}
-            <br />
-          </span>
-          <span
-            hidden={
-              !booking.user.firstname &&
-              !booking.user.lastname &&
-              !booking.user.email
-            }
-          >
-            {this.props.t("user")}:{" "}
-            {RendererUtils.fullname(
-              booking.user.firstname,
-              booking.user.lastname,
-              booking.user.email,
-            )}
-            <br />
-          </span>
-          {this.props.t("enter")}:{" "}
-          {Formatting.getFormatterShort().format(new Date(booking.enter))}
-          <br />
-          {this.props.t("leave")}:{" "}
-          {Formatting.getFormatterShort().format(new Date(booking.leave))}
-          {booking.approved === false && (
-            <>
-              <br />
-              <IconPending className="feather" />
-              &nbsp;{this.props.t("approval")}: {this.props.t("pending")}
-            </>
+      <div
+        key={booking.id}
+        className={"booking-card" + (myBooking ? " booking-card-mine" : "")}
+      >
+        <div className="booking-card-body">
+          {name && <div className="booking-card-name">{name}</div>}
+          <div className="booking-card-meta">
+            <IconTime className="feather" />
+            <span>
+              {Formatting.formatRange(
+                new Date(booking.enter),
+                new Date(booking.leave),
+              )}
+            </span>
+          </div>
+          {booking.subject && (
+            <div className="booking-card-meta">
+              <IconSubject className="feather" />
+              <span>{booking.subject}</span>
+            </div>
+          )}
+          {(booking.isRecurring() || booking.approved === false) && (
+            <div className="booking-card-badges">
+              {booking.isRecurring() && (
+                <Badge bg="secondary-subtle" text="secondary-emphasis" pill>
+                  <IconRefresh className="feather" />{" "}
+                  {RendererUtils.capitalize(this.props.t("recurring"))}
+                </Badge>
+              )}
+              {booking.approved === false && (
+                <Badge bg="warning-subtle" text="warning-emphasis" pill>
+                  <IconApproval className="feather" />{" "}
+                  {this.props.t("approval")}: {this.props.t("pending")}
+                </Badge>
+              )}
+            </div>
           )}
         </div>
-        {RuntimeConfig.INFOS.showNames &&
-          !RuntimeConfig.INFOS.disableBuddies &&
-          booking.user.email !== RuntimeConfig.INFOS.username &&
-          !buddiesEmails.includes(booking.user.email) && (
-            <Button
-              variant="primary"
-              onClick={(e) => {
-                e.preventDefault();
-                this.onAddBuddy(booking.user);
-              }}
-              style={{
-                marginLeft: "10px",
-                marginTop: "10px",
-                display: "block",
-              }}
-            >
-              {this.props.t("addBuddy")}
-            </Button>
-          )}
+        {canAddBuddy && (
+          <Button
+            size="sm"
+            variant="outline-primary"
+            className="booking-card-action"
+            onClick={(e) => {
+              e.preventDefault();
+              this.onAddBuddy(booking.user);
+            }}
+          >
+            <IconAddBuddy className="feather me-1" />
+            {this.props.t("addBuddy")}
+          </Button>
+        )}
       </div>
     );
   };
@@ -2782,32 +2786,33 @@ class Search extends React.Component<Props, State> {
     const directLinkChooseSpace = this.state.directLinkSpaceIds.length > 1;
     const selectedSpaceUnavailable =
       directLink && !this.state.selectedSpace?.available;
-    const confirmModalRows = [];
-    if (!directLinkChooseSpace) {
-      confirmModalRows.push({
-        label: this.props.t("space"),
-        value: this.state.selectedSpace?.name,
-      });
-    }
-    confirmModalRows.push({
+    const summaryRows: {
+      icon: React.ReactNode;
+      label: string;
+      value: React.ReactNode;
+    }[] = [];
+    summaryRows.push({
+      icon: <IconArea className="feather" />,
       label: this.props.t("area"),
       value: this.getLocationName(),
     });
     if (!directLink) {
-      confirmModalRows.push({
-        label: this.props.t("enter"),
-        value: formatter.format(
+      summaryRows.push({
+        icon: <IconTime className="feather" />,
+        label: this.props.t("time"),
+        value: Formatting.formatRange(
           DateUtil.convertToFakeUTCDate(new Date(this.state.enter)),
-        ),
-      });
-      confirmModalRows.push({
-        label: this.props.t("leave"),
-        value: formatter.format(
           DateUtil.convertToFakeUTCDate(new Date(this.state.leave)),
+          true,
         ),
       });
     }
-    confirmModalRows.push({
+    summaryRows.push({
+      icon: this.state.selectedSpace?.approvalRequired ? (
+        <IconApproval className="feather" />
+      ) : (
+        <IconNoApproval className="feather" />
+      ),
       label: this.props.t("approval"),
       value: RendererUtils.capitalize(
         this.state.selectedSpace?.approvalRequired
@@ -2815,23 +2820,22 @@ class Search extends React.Component<Props, State> {
           : this.props.t("no"),
       ),
     });
+    const attributeRows: { label?: string; value: string }[] = [];
     this.state.selectedSpace?.attributes.forEach((attribute) => {
-      const attributeName = this.availableAttributes.find(
-        (attr) => attr.id === attribute.attributeId,
-      )?.label;
-      const attributeType = this.availableAttributes.find(
-        (attr) => attr.id === attribute.attributeId,
-      )?.type;
-      if (attributeType === SpaceAttribute.TYPE_BOOL) {
-        confirmModalRows.push({
-          label: attributeName,
-          value: RendererUtils.capitalize(
-            attribute.value === "1" ? this.props.t("yes") : this.props.t("no"),
-          ),
-        });
-      } else {
-        confirmModalRows.push({ label: attributeName, value: attribute.value });
-      }
+      const attr = this.availableAttributes.find(
+        (a) => a.id === attribute.attributeId,
+      );
+      attributeRows.push({
+        label: attr?.label,
+        value:
+          attr?.type === SpaceAttribute.TYPE_BOOL
+            ? RendererUtils.capitalize(
+                attribute.value === "1"
+                  ? this.props.t("yes")
+                  : this.props.t("no"),
+              )
+            : attribute.value,
+      });
     });
     const confirmModal = (
       <Modal
@@ -2839,120 +2843,142 @@ class Search extends React.Component<Props, State> {
         onHide={() =>
           this.setState({ showConfirm: false, showRecurringOptions: false })
         }
+        centered={true}
+        className="booking-modal"
       >
         <Form onSubmit={this.onConfirmBooking}>
           <Modal.Header closeButton={true}>
-            <Modal.Title>{this.props.t("bookSeat")}</Modal.Title>
+            <div className="booking-modal-heading">
+              <div className="booking-modal-eyebrow">
+                {this.props.t("bookSeat")}
+              </div>
+              <Modal.Title>
+                {directLinkChooseSpace
+                  ? this.getLocationName()
+                  : this.state.selectedSpace?.name}
+              </Modal.Title>
+            </div>
           </Modal.Header>
           <Modal.Body hidden={this.state.showRecurringOptions}>
             {directLinkChooseSpace && (
-              <Form.Group as={Row} style={{ marginBottom: "5px" }}>
-                <Form.Label column sm="4" htmlFor="direct-link-space">
-                  {this.props.t("space")}:
+              <Form.Group className="mb-3">
+                <Form.Label htmlFor="direct-link-space">
+                  {this.props.t("space")}
                 </Form.Label>
-                <Col sm="8">
-                  <Form.Select
-                    id="direct-link-space"
-                    value={this.state.selectedSpace?.id ?? ""}
-                    onChange={(e: any) =>
-                      this.onDirectLinkSpaceChange(e.target.value)
-                    }
-                    disabled={this.state.confirmingBooking}
-                  >
-                    <option value="" disabled={true}>
-                      {this.props.t("pleaseSelect")}
+                <Form.Select
+                  id="direct-link-space"
+                  value={this.state.selectedSpace?.id ?? ""}
+                  onChange={(e: any) =>
+                    this.onDirectLinkSpaceChange(e.target.value)
+                  }
+                  disabled={this.state.confirmingBooking}
+                >
+                  <option value="" disabled={true}>
+                    {this.props.t("pleaseSelect")}
+                  </option>
+                  {directLinkSpaces.map((s) => (
+                    <option key={s.id} value={s.id} disabled={!s.available}>
+                      {s.name}
+                      {!s.available &&
+                        " (" + this.props.t("notAvailable") + ")"}
                     </option>
-                    {directLinkSpaces.map((s) => (
-                      <option key={s.id} value={s.id} disabled={!s.available}>
-                        {s.name}
-                        {!s.available &&
-                          " (" + this.props.t("notAvailable") + ")"}
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Col>
+                  ))}
+                </Form.Select>
               </Form.Group>
             )}
             {directLink && (
               <>
-                <Form.Group as={Row} style={{ marginBottom: "5px" }}>
-                  <Form.Label column sm="4">
-                    {this.props.t("date")}:
-                  </Form.Label>
-                  <Col sm="8">
-                    <div className="direct-link-selection">
-                      {renderDateSelection(true)}
-                    </div>
-                  </Col>
+                <Form.Group className="mb-3">
+                  <Form.Label>{this.props.t("date")}</Form.Label>
+                  <div className="direct-link-selection">
+                    {renderDateSelection(true)}
+                  </div>
                 </Form.Group>
                 {!RuntimeConfig.INFOS.dailyBasisBooking && (
-                  <Form.Group as={Row} style={{ marginBottom: "5px" }}>
-                    <Form.Label column sm="4">
-                      {this.props.t("time")}:
-                    </Form.Label>
-                    <Col sm="8">
-                      <div className="direct-link-selection">
-                        {renderTimeSelection(true)}
-                      </div>
-                    </Col>
+                  <Form.Group className="mb-3">
+                    <Form.Label>{this.props.t("time")}</Form.Label>
+                    <div className="direct-link-selection">
+                      {renderTimeSelection(true)}
+                    </div>
                   </Form.Group>
                 )}
                 {selectedSpaceUnavailable && (
-                  <div className="invalid-search-config margin-top-10">
+                  <div className="invalid-search-config mb-3">
                     {this.props.t("directLinkNoSpaceAvailable")}
                   </div>
                 )}
               </>
             )}
-            {confirmModalRows.map((row, index) => {
-              return (
-                <Row
+            <dl className="booking-summary">
+              {summaryRows.map((row, index) => (
+                <div
                   key={
-                    "confirm-modal-row" +
+                    "confirm-summary-" +
                     this.state.selectedSpace?.id +
                     "-" +
                     index
                   }
-                  style={{ marginBottom: "5px" }}
+                  className="booking-summary-row"
                 >
-                  <Col sm="4">{row.label}:</Col>
-                  <Col sm="8">
-                    <MarkdownRenderer inline>
-                      {row.value ?? ""}
-                    </MarkdownRenderer>
-                  </Col>
-                </Row>
-              );
-            })}
+                  <dt>
+                    {row.icon}
+                    {row.label}
+                  </dt>
+                  <dd>{row.value}</dd>
+                </div>
+              ))}
+            </dl>
+            {attributeRows.length > 0 && (
+              <>
+                <div className="booking-section-title">
+                  {this.props.t("details")}
+                </div>
+                <dl className="booking-attributes">
+                  {attributeRows.map((row, index) => (
+                    <div
+                      key={
+                        "confirm-attr-" +
+                        this.state.selectedSpace?.id +
+                        "-" +
+                        index
+                      }
+                      className="booking-attributes-row"
+                    >
+                      <dt>{row.label}</dt>
+                      <dd>
+                        <MarkdownRenderer inline>
+                          {row.value ?? ""}
+                        </MarkdownRenderer>
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </>
+            )}
             <Form.Group
-              as={Row}
-              style={{ marginTop: "25px" }}
+              className="mt-3"
               hidden={RuntimeConfig.INFOS.subjectDefault === 1}
             >
-              <Form.Label column sm="4" htmlFor="subject">
-                {this.props.t("subject")}:
-              </Form.Label>
-              <Col sm="8">
-                <Form.Control
-                  type="text"
-                  id="subject"
-                  autoFocus={true}
-                  placeholder={this.props.t(
-                    this.state.selectedSpace?.requireSubject
-                      ? "subject"
-                      : "subjectOptional",
-                  )}
-                  value={this.state.subject}
-                  onChange={(e: any) =>
-                    this.setState({ subject: e.target.value })
-                  }
-                  minLength={this.state.selectedSpace?.requireSubject ? 3 : 0}
-                  required={
-                    RuntimeConfig.INFOS.subjectDefault !== 1 &&
-                    this.state.selectedSpace?.requireSubject
-                  }
-                />
-              </Col>
+              <Form.Control
+                type="text"
+                id="subject"
+                aria-label={this.props.t("subject")}
+                autoFocus={true}
+                placeholder={this.props.t(
+                  this.state.selectedSpace?.requireSubject
+                    ? "subject"
+                    : "subjectOptional",
+                )}
+                value={this.state.subject}
+                onChange={(e: any) =>
+                  this.setState({ subject: e.target.value })
+                }
+                minLength={this.state.selectedSpace?.requireSubject ? 3 : 0}
+                required={
+                  RuntimeConfig.INFOS.subjectDefault !== 1 &&
+                  this.state.selectedSpace?.requireSubject
+                }
+              />
             </Form.Group>
           </Modal.Body>
           <Modal.Body
@@ -3095,36 +3121,49 @@ class Search extends React.Component<Props, State> {
               </Col>
             </Form.Group>
           </Modal.Body>
-          <Modal.Footer hidden={this.state.showRecurringOptions}>
-            <Button
-              variant={this.state.recurrence.active ? "primary" : "secondary"}
-              onClick={() => this.setState({ showRecurringOptions: true })}
-              hidden={
-                !RuntimeConfig.INFOS.featureRecurringBookings ||
-                !RuntimeConfig.INFOS.allowRecurringBookings
-              }
-              disabled={this.state.confirmingBooking}
-            >
-              <IconRefresh className="feather" />
-            </Button>
-            <CalendarButton
-              onClick={() => {
-                this.setState({ showConfirm: false });
-                this.openSpaceCalendar("showConfirm");
-              }}
-              disabled={
-                this.state.confirmingBooking ||
-                this.state.loading ||
-                !this.state.selectedSpace
-              }
-            />
-            {RuntimeConfig.INFOS.featureSpaceImages &&
-              this.state.selectedSpace?.hasImage && (
-                <SpaceImageButton
-                  onClick={() => this.openSpaceImage("showConfirm")}
-                  disabled={this.state.confirmingBooking || this.state.loading}
-                />
-              )}
+          <Modal.Footer
+            hidden={this.state.showRecurringOptions}
+            className="booking-modal-footer"
+          >
+            <div className="booking-modal-tools">
+              <Button
+                variant={
+                  this.state.recurrence.active ? "primary" : "outline-secondary"
+                }
+                onClick={() => this.setState({ showRecurringOptions: true })}
+                hidden={
+                  !RuntimeConfig.INFOS.featureRecurringBookings ||
+                  !RuntimeConfig.INFOS.allowRecurringBookings
+                }
+                disabled={this.state.confirmingBooking}
+                title={this.props.t("repeat")}
+                aria-label={this.props.t("repeat")}
+              >
+                <IconRefresh className="feather" />
+              </Button>
+              <CalendarButton
+                iconOnly={true}
+                onClick={() => {
+                  this.setState({ showConfirm: false });
+                  this.openSpaceCalendar("showConfirm");
+                }}
+                disabled={
+                  this.state.confirmingBooking ||
+                  this.state.loading ||
+                  !this.state.selectedSpace
+                }
+              />
+              {RuntimeConfig.INFOS.featureSpaceImages &&
+                this.state.selectedSpace?.hasImage && (
+                  <SpaceImageButton
+                    iconOnly={true}
+                    onClick={() => this.openSpaceImage("showConfirm")}
+                    disabled={
+                      this.state.confirmingBooking || this.state.loading
+                    }
+                  />
+                )}
+            </div>
             <Button
               type="submit"
               variant="primary"
@@ -3218,7 +3257,7 @@ class Search extends React.Component<Props, State> {
       gotoBooking = (
         <>
           <Button
-            variant="secondary"
+            variant="outline-secondary"
             onClick={() => {
               if (myBooking.isRecurring()) {
                 getIcal(myBooking.recurringId, true);
@@ -3269,10 +3308,15 @@ class Search extends React.Component<Props, State> {
         onHide={this.closeSpaceImage}
         size="lg"
         centered={true}
-        className="space-image-modal"
+        className="space-image-modal booking-modal"
       >
         <Modal.Header closeButton={true}>
-          <Modal.Title>{this.state.selectedSpace?.name}</Modal.Title>
+          <div className="booking-modal-heading">
+            <div className="booking-modal-eyebrow">
+              {this.getLocationName()}
+            </div>
+            <Modal.Title>{this.state.selectedSpace?.name}</Modal.Title>
+          </div>
         </Modal.Header>
         <Modal.Body>
           {this.state.selectedSpace && (
@@ -3286,28 +3330,37 @@ class Search extends React.Component<Props, State> {
         </Modal.Footer>
       </Modal>
     );
-    let isRecurring = false;
+    const isRecurring = bookings.some((b) => b.isRecurring());
     const bookingNamesModal = (
       <Modal
         show={
           this.state.showBookingNames && !this.state.showCancelBookingConfirm
         }
         onHide={() => this.setState({ showBookingNames: false })}
+        centered={true}
+        className="booking-modal"
       >
         <Modal.Header closeButton>
-          <Modal.Title>{this.state.selectedSpace?.name}</Modal.Title>
+          <div className="booking-modal-heading">
+            <div className="booking-modal-eyebrow">
+              {this.getLocationName()}
+            </div>
+            <Modal.Title>{this.state.selectedSpace?.name}</Modal.Title>
+          </div>
         </Modal.Header>
         <Modal.Body>
-          {bookings.map((item) => {
-            isRecurring = isRecurring || item.isRecurring();
-            return (
-              <span key={item.user.id}>{this.renderBookingNameRow(item)}</span>
-            );
-          })}
-          <div
-            hidden={!myBooking || !isRecurring}
-            style={{ marginTop: "15px", marginBottom: "0" }}
-          >
+          <div className="booking-modal-notice">
+            <IconInfo className="feather" />
+            <span>
+              {this.props.t(
+                myBooking ? "spaceBookedInfoMyBooking" : "spaceBookedInfo",
+              )}
+            </span>
+          </div>
+          <div className="booking-card-list">
+            {bookings.map((item) => this.renderBookingNameRow(item))}
+          </div>
+          <div hidden={!myBooking || !isRecurring} className="mt-3">
             <Form.Check
               type="checkbox"
               id="cancelAllUpcomingBookings"
@@ -3319,20 +3372,26 @@ class Search extends React.Component<Props, State> {
             />
           </div>
         </Modal.Body>
-        <Modal.Footer>
-          <CalendarButton
-            onClick={() => {
-              this.setState({ showBookingNames: false });
-              this.openSpaceCalendar();
-            }}
-          />
-          {RuntimeConfig.INFOS.featureSpaceImages &&
-            this.state.selectedSpace?.hasImage && (
-              <SpaceImageButton
-                onClick={() => this.openSpaceImage("showBookingNames")}
-              />
-            )}
-          {gotoBooking}
+        <Modal.Footer className="booking-modal-footer">
+          <div className="booking-modal-tools">
+            <CalendarButton
+              iconOnly={true}
+              onClick={() => {
+                this.setState({ showBookingNames: false });
+                this.openSpaceCalendar();
+              }}
+            />
+            {RuntimeConfig.INFOS.featureSpaceImages &&
+              this.state.selectedSpace?.hasImage && (
+                <SpaceImageButton
+                  iconOnly={true}
+                  onClick={() => this.openSpaceImage("showBookingNames")}
+                />
+              )}
+          </div>
+          {gotoBooking && (
+            <div className="booking-modal-tools">{gotoBooking}</div>
+          )}
         </Modal.Footer>
       </Modal>
     );
@@ -3364,11 +3423,17 @@ class Search extends React.Component<Props, State> {
           } as any)
         }
         maxWidth={1400}
+        className="booking-modal"
       >
         <Modal.Header closeButton>
-          <Modal.Title>
-            {this.state.selectedSpace?.name} – {this.props.t("calendar")}
-          </Modal.Title>
+          <div className="booking-modal-heading">
+            <div className="booking-modal-eyebrow">
+              {this.getLocationName()}
+            </div>
+            <Modal.Title>
+              {this.state.selectedSpace?.name} – {this.props.t("calendar")}
+            </Modal.Title>
+          </div>
         </Modal.Header>
         <Modal.Body
           style={{
@@ -3443,32 +3508,41 @@ class Search extends React.Component<Props, State> {
       </FullWidthModal>
     );
 
+    const bookingPending = !!this.state.selectedSpace?.approvalRequired;
     const successModal = (
       <Modal
         show={this.state.showSuccess}
         onHide={() => this.setState({ showSuccess: false })}
         backdrop="static"
         keyboard={false}
+        centered={true}
+        className="booking-modal booking-status-modal"
+        aria-labelledby="booking-success-title"
       >
-        <Modal.Header closeButton={false}>
-          <Modal.Title>{this.props.t("bookSeat")}</Modal.Title>
-        </Modal.Header>
         <Modal.Body>
-          <p>
-            {this.state.selectedSpace?.approvalRequired
+          <div
+            className={
+              "booking-status-icon " +
+              (bookingPending ? "is-pending" : "is-success")
+            }
+            aria-hidden="true"
+          >
+            {bookingPending ? <IconPending /> : <IconSuccess />}
+          </div>
+          <h5 id="booking-success-title" className="booking-status-title">
+            {bookingPending
               ? this.props.t("bookingPending")
               : this.props.t("bookingConfirmed")}
-          </p>
+          </h5>
+          {this.state.selectedSpace && (
+            <p className="booking-status-text">
+              {this.state.selectedSpace.name} · {this.getLocationName()}
+            </p>
+          )}
         </Modal.Body>
         <Modal.Footer>
           <Button
-            variant="primary"
-            onClick={() => this.props.router.push("/bookings")}
-          >
-            {this.props.t("myBookings").toString()}
-          </Button>
-          <Button
-            variant="secondary"
+            variant="outline-secondary"
             onClick={() => {
               if (this.state.recurrence.active) {
                 getIcal(this.state.createdBookingId, true);
@@ -3477,11 +3551,17 @@ class Search extends React.Component<Props, State> {
               }
             }}
           >
-            <IconCalendar className="feather" style={{ marginRight: "5px" }} />{" "}
+            <IconCalendar className="feather me-1" />
             {this.props.t("event")}
           </Button>
           <Button
-            variant="secondary"
+            variant="outline-primary"
+            onClick={() => this.props.router.push("/bookings")}
+          >
+            {this.props.t("myBookings").toString()}
+          </Button>
+          <Button
+            variant="primary"
             onClick={() => {
               this.setState({ showSuccess: false });
               this.refreshPage();
@@ -3498,12 +3578,18 @@ class Search extends React.Component<Props, State> {
         onHide={() => this.setState({ showError: false })}
         backdrop="static"
         keyboard={false}
+        centered={true}
+        className="booking-modal booking-status-modal"
+        aria-labelledby="booking-error-title"
       >
-        <Modal.Header closeButton={false}>
-          <Modal.Title>{this.props.t("bookSeat")}</Modal.Title>
-        </Modal.Header>
         <Modal.Body>
-          <p>{this.state.errorText}</p>
+          <div className="booking-status-icon is-error" aria-hidden="true">
+            <IconError />
+          </div>
+          <h5 id="booking-error-title" className="booking-status-title">
+            {this.props.t("bookSeat")}
+          </h5>
+          <p className="booking-status-text">{this.state.errorText}</p>
         </Modal.Body>
         <Modal.Footer>
           <Button
