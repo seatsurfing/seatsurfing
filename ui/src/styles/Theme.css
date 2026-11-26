@@ -210,6 +210,25 @@
   border-radius: 6px;
 }
 
+.space-tinted.space-trapezoid,
+.space-tinted.space-trapezoid:hover {
+  border: none;
+  background-color: transparent;
+}
+
+.space-trapezoid-outline {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  stroke: var(--space-color);
+  fill: color-mix(in srgb, var(--space-color) 22%, var(--bs-body-bg));
+}
+
+.space-tinted.space-trapezoid:hover .space-trapezoid-outline {
+  fill: color-mix(in srgb, var(--space-color) 34%, var(--bs-body-bg));
+}
+
 .space-box.space-tinted p {
   color: color-mix(in srgb, var(--space-color) 60%, var(--bs-emphasis-color));
   font-weight: 600;
