@@ -80,6 +80,28 @@ export default class Formatting {
     };
   }
 
+  static getFormatterTime(local?: boolean): DateFormatter {
+    const timeFormatter = Formatting.getTimeFormatter(local);
+    return {
+      format: (date?: Date | number) =>
+        timeFormatter.format(date === undefined ? new Date() : date),
+    };
+  }
+
+  static getFormatterPart(
+    options: Intl.DateTimeFormatOptions,
+    local?: boolean,
+  ): DateFormatter {
+    const formatter = new Intl.DateTimeFormat(Formatting.Language, {
+      timeZone: local ? undefined : "UTC",
+      ...options,
+    });
+    return {
+      format: (date?: Date | number) =>
+        formatter.format(date === undefined ? new Date() : date),
+    };
+  }
+
   static getFormatterDate(local?: boolean): DateFormatter {
     return {
       format: (date?: Date | number) => Formatting.formatDatePart(date, local),
