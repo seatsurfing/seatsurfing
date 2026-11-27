@@ -1081,7 +1081,7 @@ class Settings extends React.Component<Props, State> {
                   variant="outline-secondary"
                   title={this.props.t("openInNewTab")}
                   aria-label={this.props.t("openInNewTab")}
-                  href={this.state.customLogoUrl.trim()}
+                  href={this.state.customLogoUrl.trim() || "#"}
                   target="_blank"
                   rel="noopener noreferrer"
                   disabled={
