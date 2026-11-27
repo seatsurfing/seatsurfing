@@ -360,12 +360,21 @@ func (s *LocationService) IsLocationBlocked(location *Location, user *User, ente
 	if hasNoAdminRestrictions(user, location.OrganizationID) {
 		return false
 	}
-	firstDay := dateOnly(enter)
-	lastDay := dateOnly(leave.Add(-time.Nanosecond))
-	if location.BlockedUntil != nil && firstDay.After(dateOnly(*location.BlockedUntil)) {
+	return touchesPeriod(location.BlockedFrom, location.BlockedUntil, enter, leave)
+}
+
+// touchesPeriod reports whether [enter, leave) touches a calendar day within
+// [from, until]. A nil bound leaves that side open; both nil never matches.
+func touchesPeriod(from, until *time.Time, enter, leave time.Time) bool {
+	if from == nil && until == nil {
 		return false
 	}
-	if location.BlockedFrom != nil && lastDay.Before(dateOnly(*location.BlockedFrom)) {
+	firstDay := dateOnly(enter)
+	lastDay := dateOnly(leave.Add(-time.Nanosecond))
+	if until != nil && firstDay.After(dateOnly(*until)) {
+		return false
+	}
+	if from != nil && lastDay.Before(dateOnly(*from)) {
 		return false
 	}
 	return true

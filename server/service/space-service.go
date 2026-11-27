@@ -108,6 +108,13 @@ func (s *SpaceService) GetAvailabilityForUser(user *User, location *Location, sp
 	isAllowedToBookLocation := locations.IsUserAllowedToBookLocation(locationAllowedBookers, userGroups)
 	isValidWeekday := locations.IsLocationWeekdayBookable(location, user, enter, leave) &&
 		!locations.IsLocationBlocked(location, user, enter, leave)
+	blockExempt := false
+	for _, e := range list {
+		if spaceHasBlockedPeriod(&e.Space) {
+			blockExempt = hasNoAdminRestrictions(user, location.OrganizationID)
+			break
+		}
+	}
 	res := []*UserSpaceAvailability{}
 	for _, e := range list {
 		if spaceID != "" && e.ID != spaceID {
@@ -119,7 +126,7 @@ func (s *SpaceService) GetAvailabilityForUser(user *User, location *Location, sp
 		item := &UserSpaceAvailability{
 			Space:            e.Space,
 			Available:        e.Available,
-			Allowed:          isAllowedToBookLocation && s.IsUserAllowedToBookSpace(&e.Space, spaceAllowedBookers, userGroups) && isValidWeekday,
+			Allowed:          isAllowedToBookLocation && isValidWeekday && s.IsUserAllowedToBookSpace(&e.Space, spaceAllowedBookers, userGroups) && (blockExempt || !isSpaceBlockedInPeriod(&e.Space, enter, leave)),
 			ApprovalRequired: s.IsApprovalRequired(&e.Space, approvers),
 			HasImage:         spacesWithImage[e.ID],
 			Attributes:       []*SpaceAttributeValue{},
@@ -157,9 +164,9 @@ func (s *SpaceService) GetAvailabilityForUser(user *User, location *Location, sp
 // GetPublicAvailability reports for each public-bookable space of the
 // organization whether it can still be booked between enter and leave. enter
 // and leave are wall-clock times which are interpreted in the time zone of
-// each space's location. A space is unavailable if it is already booked, its
-// location is not bookable on that weekday, or the location's concurrent
-// booking limit is reached.
+// each space's location. A space is unavailable if it is already booked, it
+// or its location is blocked, its location is not bookable on that weekday,
+// or the location's concurrent booking limit is reached.
 func (s *SpaceService) GetPublicAvailability(organizationID string, enter, leave time.Time) (map[string]bool, error) {
 	spaces, err := GetSpaceRepository().GetAllPublicBookable(organizationID)
 	if err != nil {
@@ -180,7 +187,7 @@ func (s *SpaceService) GetPublicAvailability(organizationID string, enter, leave
 			return nil, err
 		}
 		for _, space := range locationSpaces {
-			res[space.ID] = available && !booked[space.ID]
+			res[space.ID] = available && !booked[space.ID] && !s.IsSpaceBlocked(space, location, nil, enter, leave)
 		}
 	}
 	return res, nil
@@ -189,9 +196,12 @@ func (s *SpaceService) GetPublicAvailability(organizationID string, enter, leave
 // IsPublicSlotAvailable reports whether space in location can still be booked
 // publicly between enter and leave, which must already carry the location's
 // time zone. The slot is unavailable if the location is not bookable on that
-// weekday, the location's concurrent booking limit is reached, or the space
-// already has an overlapping booking.
+// weekday, the location or space is blocked, the location's concurrent
+// booking limit is reached, or the space already has an overlapping booking.
 func (s *SpaceService) IsPublicSlotAvailable(space *Space, location *Location, enter, leave time.Time) (bool, error) {
+	if s.IsSpaceBlocked(space, location, nil, enter, leave) {
+		return false, nil
+	}
 	available, err := s.isPublicLocationSlotAvailable(location, enter, leave)
 	if err != nil || !available {
 		return false, err
@@ -247,6 +257,24 @@ func (s *SpaceService) isPublicLocationSlotAvailable(location *Location, enter, 
 		}
 	}
 	return true, nil
+}
+
+// IsSpaceBlocked checks whether [enter, leave) touches a calendar day within
+// the space's own blocked period (see IsLocationBlocked). location is the
+// space's location, whose organization settings apply.
+func (s *SpaceService) IsSpaceBlocked(space *Space, location *Location, user *User, enter, leave time.Time) bool {
+	if !spaceHasBlockedPeriod(space) || hasNoAdminRestrictions(user, location.OrganizationID) {
+		return false
+	}
+	return isSpaceBlockedInPeriod(space, enter, leave)
+}
+
+func spaceHasBlockedPeriod(space *Space) bool {
+	return space.BlockedFrom != nil || space.BlockedUntil != nil
+}
+
+func isSpaceBlockedInPeriod(space *Space, enter, leave time.Time) bool {
+	return spaceHasBlockedPeriod(space) && touchesPeriod(space.BlockedFrom, space.BlockedUntil, enter, leave)
 }
 
 // IsApprovalRequired reports whether any of approvers belongs to space e.

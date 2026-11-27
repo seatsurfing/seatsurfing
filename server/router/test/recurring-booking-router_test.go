@@ -222,9 +222,9 @@ func TestRecurringBookingsBlockedPeriod(t *testing.T) {
 	CheckTestBool(t, true, resBody[0].Success)  // 28
 	CheckTestBool(t, true, resBody[1].Success)  // 29
 	CheckTestBool(t, false, resBody[2].Success) // 30
-	CheckTestInt(t, ResponseCodeBookingBlocked, resBody[2].ErrorCode)
+	CheckTestInt(t, ResponseCodeBookingLocationBlocked, resBody[2].ErrorCode)
 	CheckTestBool(t, false, resBody[3].Success) // 31
-	CheckTestInt(t, ResponseCodeBookingBlocked, resBody[3].ErrorCode)
+	CheckTestInt(t, ResponseCodeBookingLocationBlocked, resBody[3].ErrorCode)
 	CheckTestBool(t, true, resBody[4].Success) // 01
 	CheckTestBool(t, true, resBody[5].Success) // 02
 
@@ -241,7 +241,7 @@ func TestRecurringBookingsBlockedPeriod(t *testing.T) {
 		booking, _ := GetBookingRepository().GetOne(b.ID)
 		CheckTestBool(t, !blocked, booking != nil)
 		if blocked {
-			CheckTestInt(t, ResponseCodeBookingBlocked, b.ErrorCode)
+			CheckTestInt(t, ResponseCodeBookingLocationBlocked, b.ErrorCode)
 		}
 	}
 }
@@ -311,8 +311,8 @@ func TestRecurringBookingsBlockedPeriodSetAfterCreation(t *testing.T) {
 	var pre []CreateRecurringBookingResponse
 	json.Unmarshal(res.Body.Bytes(), &pre)
 	CheckTestInt(t, 6, len(pre))
-	CheckTestInt(t, ResponseCodeBookingBlocked, pre[2].ErrorCode)
-	CheckTestInt(t, ResponseCodeBookingBlocked, pre[3].ErrorCode)
+	CheckTestInt(t, ResponseCodeBookingLocationBlocked, pre[2].ErrorCode)
+	CheckTestInt(t, ResponseCodeBookingLocationBlocked, pre[3].ErrorCode)
 
 	req = NewHTTPRequest("DELETE", "/recurring-booking/"+recurringID, user1.ID, nil)
 	res = ExecuteTestRequest(req)

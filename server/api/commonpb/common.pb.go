@@ -637,6 +637,8 @@ type Space struct {
 	KioskEnabled   bool                   `protobuf:"varint,11,opt,name=kiosk_enabled,json=kioskEnabled,proto3" json:"kiosk_enabled,omitempty"`
 	Shape          string                 `protobuf:"bytes,12,opt,name=shape,proto3" json:"shape,omitempty"`
 	FontSize       string                 `protobuf:"bytes,13,opt,name=font_size,json=fontSize,proto3" json:"font_size,omitempty"`
+	BlockedFrom    *timestamppb.Timestamp `protobuf:"bytes,14,opt,name=blocked_from,json=blockedFrom,proto3" json:"blocked_from,omitempty"`
+	BlockedUntil   *timestamppb.Timestamp `protobuf:"bytes,15,opt,name=blocked_until,json=blockedUntil,proto3" json:"blocked_until,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -760,6 +762,20 @@ func (x *Space) GetFontSize() string {
 		return x.FontSize
 	}
 	return ""
+}
+
+func (x *Space) GetBlockedFrom() *timestamppb.Timestamp {
+	if x != nil {
+		return x.BlockedFrom
+	}
+	return nil
+}
+
+func (x *Space) GetBlockedUntil() *timestamppb.Timestamp {
+	if x != nil {
+		return x.BlockedUntil
+	}
+	return nil
 }
 
 type SpaceDetails struct {
@@ -1336,7 +1352,7 @@ const file_common_proto_rawDesc = "" +
 	"\aenabled\x18\f \x01(\bR\aenabled\x12=\n" +
 	"\fblocked_from\x18\r \x01(\v2\x1a.google.protobuf.TimestampR\vblockedFrom\x12?\n" +
 	"\rblocked_until\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampR\fblockedUntil\x12\"\n" +
-	"\fannouncement\x18\x0f \x01(\tR\fannouncement\"\xcd\x02\n" +
+	"\fannouncement\x18\x0f \x01(\tR\fannouncement\"\xcd\x03\n" +
 	"\x05Space\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1f\n" +
 	"\vlocation_id\x18\x02 \x01(\tR\n" +
@@ -1352,7 +1368,9 @@ const file_common_proto_rawDesc = "" +
 	" \x01(\bR\aenabled\x12#\n" +
 	"\rkiosk_enabled\x18\v \x01(\bR\fkioskEnabled\x12\x14\n" +
 	"\x05shape\x18\f \x01(\tR\x05shape\x12\x1b\n" +
-	"\tfont_size\x18\r \x01(\tR\bfontSize\"\x7f\n" +
+	"\tfont_size\x18\r \x01(\tR\bfontSize\x12=\n" +
+	"\fblocked_from\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampR\vblockedFrom\x12?\n" +
+	"\rblocked_until\x18\x0f \x01(\v2\x1a.google.protobuf.TimestampR\fblockedUntil\"\x7f\n" +
 	"\fSpaceDetails\x12;\n" +
 	"\blocation\x18\x01 \x01(\v2\x1f.seatsurfing.plugin.v1.LocationR\blocation\x122\n" +
 	"\x05space\x18\x02 \x01(\v2\x1c.seatsurfing.plugin.v1.SpaceR\x05space\"\x8e\x04\n" +
@@ -1441,21 +1459,23 @@ var file_common_proto_depIdxs = []int32{
 	12, // 3: seatsurfing.plugin.v1.Domain.access_check:type_name -> google.protobuf.Timestamp
 	12, // 4: seatsurfing.plugin.v1.Location.blocked_from:type_name -> google.protobuf.Timestamp
 	12, // 5: seatsurfing.plugin.v1.Location.blocked_until:type_name -> google.protobuf.Timestamp
-	5,  // 6: seatsurfing.plugin.v1.SpaceDetails.location:type_name -> seatsurfing.plugin.v1.Location
-	6,  // 7: seatsurfing.plugin.v1.SpaceDetails.space:type_name -> seatsurfing.plugin.v1.Space
-	12, // 8: seatsurfing.plugin.v1.Booking.enter:type_name -> google.protobuf.Timestamp
-	12, // 9: seatsurfing.plugin.v1.Booking.leave:type_name -> google.protobuf.Timestamp
-	12, // 10: seatsurfing.plugin.v1.Booking.created_at_utc:type_name -> google.protobuf.Timestamp
-	12, // 11: seatsurfing.plugin.v1.Booking.last_info_mail_sent_at_utc:type_name -> google.protobuf.Timestamp
-	12, // 12: seatsurfing.plugin.v1.Booking.reminder_sent_at_utc:type_name -> google.protobuf.Timestamp
-	7,  // 13: seatsurfing.plugin.v1.BookingDetails.space:type_name -> seatsurfing.plugin.v1.SpaceDetails
-	8,  // 14: seatsurfing.plugin.v1.BookingDetails.booking:type_name -> seatsurfing.plugin.v1.Booking
-	12, // 15: seatsurfing.plugin.v1.AuthState.expiry:type_name -> google.protobuf.Timestamp
-	16, // [16:16] is the sub-list for method output_type
-	16, // [16:16] is the sub-list for method input_type
-	16, // [16:16] is the sub-list for extension type_name
-	16, // [16:16] is the sub-list for extension extendee
-	0,  // [0:16] is the sub-list for field type_name
+	12, // 6: seatsurfing.plugin.v1.Space.blocked_from:type_name -> google.protobuf.Timestamp
+	12, // 7: seatsurfing.plugin.v1.Space.blocked_until:type_name -> google.protobuf.Timestamp
+	5,  // 8: seatsurfing.plugin.v1.SpaceDetails.location:type_name -> seatsurfing.plugin.v1.Location
+	6,  // 9: seatsurfing.plugin.v1.SpaceDetails.space:type_name -> seatsurfing.plugin.v1.Space
+	12, // 10: seatsurfing.plugin.v1.Booking.enter:type_name -> google.protobuf.Timestamp
+	12, // 11: seatsurfing.plugin.v1.Booking.leave:type_name -> google.protobuf.Timestamp
+	12, // 12: seatsurfing.plugin.v1.Booking.created_at_utc:type_name -> google.protobuf.Timestamp
+	12, // 13: seatsurfing.plugin.v1.Booking.last_info_mail_sent_at_utc:type_name -> google.protobuf.Timestamp
+	12, // 14: seatsurfing.plugin.v1.Booking.reminder_sent_at_utc:type_name -> google.protobuf.Timestamp
+	7,  // 15: seatsurfing.plugin.v1.BookingDetails.space:type_name -> seatsurfing.plugin.v1.SpaceDetails
+	8,  // 16: seatsurfing.plugin.v1.BookingDetails.booking:type_name -> seatsurfing.plugin.v1.Booking
+	12, // 17: seatsurfing.plugin.v1.AuthState.expiry:type_name -> google.protobuf.Timestamp
+	18, // [18:18] is the sub-list for method output_type
+	18, // [18:18] is the sub-list for method input_type
+	18, // [18:18] is the sub-list for extension type_name
+	18, // [18:18] is the sub-list for extension extendee
+	0,  // [0:18] is the sub-list for field type_name
 }
 
 func init() { file_common_proto_init() }

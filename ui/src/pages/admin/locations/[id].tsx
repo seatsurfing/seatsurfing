@@ -101,6 +101,8 @@ interface SpaceState {
   removeImage: boolean;
   shape: string;
   fontSize: string;
+  blockedFrom: string;
+  blockedUntil: string;
   changed: boolean;
   attributes: Map<string, string>;
   enabledAttributes: string[];
@@ -699,6 +701,8 @@ class EditLocation extends React.Component<Props, State> {
           (item.approvers?.length ?? 0) > 0 && item.publicBookingEnabled;
         space.shape = item.shape;
         space.fontSize = item.fontSize;
+        space.blockedFrom = item.blockedFrom;
+        space.blockedUntil = item.blockedUntil;
         space.attributes = [];
         item.enabledAttributes.forEach((attributeId) => {
           let value = item.attributes.get(attributeId);
@@ -965,6 +969,8 @@ class EditLocation extends React.Component<Props, State> {
       removeImage: false,
       shape: e ? e.shape || "rect" : "rect",
       fontSize: e ? e.fontSize || "normal" : "normal",
+      blockedFrom: e ? e.blockedFrom : "",
+      blockedUntil: e ? e.blockedUntil : "",
       changed: true,
       attributes: new Map<string, string>(),
       enabledAttributes: [],
@@ -1089,6 +1095,87 @@ class EditLocation extends React.Component<Props, State> {
     space.changed = true;
     spaces[i] = space;
     this.setState({ spaces: spaces, changed: true });
+  };
+
+  setSpaceBlockedPeriod = (i: number, from: string, until: string) => {
+    const spaces = this.state.spaces;
+    const space = { ...spaces[i] };
+    space.blockedFrom = from;
+    space.blockedUntil = until;
+    space.changed = true;
+    spaces[i] = space;
+    this.setState({ spaces: spaces, changed: true });
+  };
+
+  renderSpaceBlockedPeriod = () => {
+    const i = this.state.selectedSpace!;
+    const space = this.getSelectedSpace();
+    const from = space?.blockedFrom ?? "";
+    const until = space?.blockedUntil ?? "";
+    const today = Formatting.getISO8601(new Date());
+    return (
+      <Form.Group as={Row}>
+        <Form.Label column sm="4" htmlFor="space-blocked-from">
+          {this.props.t("blockedPeriod")}
+          <HintTooltip hint={this.props.t("blockedPeriodHintSpace")} />
+        </Form.Label>
+        <Col sm="8">
+          <InputGroup>
+            <InputGroup.Checkbox
+              type="checkbox"
+              id="check-space-blocked-from"
+              aria-label={this.props.t("blockedFrom")}
+              checked={from !== ""}
+              onChange={(e: any) =>
+                this.setSpaceBlockedPeriod(
+                  i,
+                  e.target.checked ? until || today : "",
+                  until,
+                )
+              }
+            />
+            <DateTimePicker
+              id="space-blocked-from"
+              value={from ? this.parseDate(from) : null}
+              onChange={(value: Date) => {
+                const v = Formatting.getISO8601(value);
+                this.setSpaceBlockedPeriod(
+                  i,
+                  v,
+                  until && until < v ? v : until,
+                );
+              }}
+              enableTime={false}
+              disabled={from === ""}
+            />
+            <InputGroup.Text>–</InputGroup.Text>
+            <InputGroup.Checkbox
+              type="checkbox"
+              id="check-space-blocked-until"
+              aria-label={this.props.t("blockedUntil")}
+              checked={until !== ""}
+              onChange={(e: any) =>
+                this.setSpaceBlockedPeriod(
+                  i,
+                  from,
+                  e.target.checked ? from || today : "",
+                )
+              }
+            />
+            <DateTimePicker
+              id="space-blocked-until"
+              value={until ? this.parseDate(until) : null}
+              onChange={(value: Date) => {
+                const v = Formatting.getISO8601(value);
+                this.setSpaceBlockedPeriod(i, from && from > v ? v : from, v);
+              }}
+              enableTime={false}
+              disabled={until === ""}
+            />
+          </InputGroup>
+        </Col>
+      </Form.Group>
+    );
   };
 
   onSpaceSelect = (i: number) => {
@@ -1467,6 +1554,7 @@ class EditLocation extends React.Component<Props, State> {
   getEditSpaceDetailsModal = () => {
     return (
       <Modal
+        size="lg"
         show={this.state.showEditSpaceDetailsModal}
         onHide={() => this.setState({ showEditSpaceDetailsModal: false })}
       >
@@ -1538,6 +1626,7 @@ class EditLocation extends React.Component<Props, State> {
                 />
               </Col>
             </Form.Group>
+            {this.renderSpaceBlockedPeriod()}
             <Form.Group
               as={Row}
               hidden={
@@ -2415,7 +2504,7 @@ class EditLocation extends React.Component<Props, State> {
           <Form.Group as={Row}>
             <Form.Label column sm="2" htmlFor="location-blocked-from">
               {this.props.t("blockedPeriod")}
-              <HintTooltip hint={this.props.t("blockedPeriodHint")} />
+              <HintTooltip hint={this.props.t("blockedPeriodHintLocation")} />
             </Form.Label>
             <Col sm="4">
               <InputGroup>

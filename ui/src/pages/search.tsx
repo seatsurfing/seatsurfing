@@ -1158,6 +1158,9 @@ class Search extends React.Component<Props, State> {
       tooltipHtml = `<div class="text-center">${RendererUtils.suffixIfDefined(RendererUtils.escapeHtml(bookerName ?? ""), "<br/>")}${freeFrom}</div>`;
     } else if (!item.enabled || !item.allowed) {
       tooltipHtml = this.props.t("disallowed");
+      if (item.blockedFrom || item.blockedUntil) {
+        tooltipHtml = `<div class="text-center">${tooltipHtml}<br/>${this.props.t("blockedPeriod")}: ${this.formatBlockedPeriod(item.blockedFrom, item.blockedUntil)}</div>`;
+      }
     } else {
       tooltipHtml = this.props.t("free");
     }
@@ -1546,6 +1549,18 @@ class Search extends React.Component<Props, State> {
     });
   };
 
+  formatBlockedPeriod = (from: string, until: string): string => {
+    const formatter = Formatting.getFormatterDate();
+    const format = (s: string) => formatter.format(new Date(s));
+    if (!until) {
+      return this.props.t("from") + " " + format(from);
+    }
+    if (!from) {
+      return this.props.t("end") + " " + format(until);
+    }
+    return format(from) + " – " + format(until);
+  };
+
   getLocationAttributeRows = () => {
     const location = this.getLocation();
     if (!location) {
@@ -1621,17 +1636,10 @@ class Search extends React.Component<Props, State> {
 
     // blocked period
     if (location.blockedFrom || location.blockedUntil) {
-      const formatter = Formatting.getFormatterDate();
-      const blockedFrom = location.blockedFrom
-        ? formatter.format(new Date(location.blockedFrom))
-        : "";
-      const blockedUntil = location.blockedUntil
-        ? formatter.format(new Date(location.blockedUntil))
-        : "";
       attributeRows.push(
         createFormRow(
           this.props.t("blockedPeriod"),
-          blockedFrom + " – " + blockedUntil,
+          this.formatBlockedPeriod(location.blockedFrom, location.blockedUntil),
           "blockedPeriod",
         ),
       );

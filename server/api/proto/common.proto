@@ -102,6 +102,8 @@ message Space {
   bool kiosk_enabled = 11;
   string shape = 12;
   string font_size = 13;
+  google.protobuf.Timestamp blocked_from = 14;
+  google.protobuf.Timestamp blocked_until = 15;
 }
 
 message SpaceDetails {
