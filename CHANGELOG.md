@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.145.0](https://github.com/seatsurfing/seatsurfing/compare/v1.144.2...v1.145.0) (2026-11-27)
+
+
+### ✨ Features
+
+* **main:** add block period for spaces ([#2911](https://github.com/seatsurfing/seatsurfing/issues/2911)) ([c0ca95c](https://github.com/seatsurfing/seatsurfing/commit/c0ca95c45d1ded4a37c3d467c650e794d204856d))
+
 ## [1.144.2](https://github.com/seatsurfing/seatsurfing/compare/v1.144.1...v1.144.2) (2026-11-27)
 
 
