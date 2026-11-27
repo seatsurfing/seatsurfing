@@ -87,9 +87,7 @@ class EditOrg extends React.Component<Props, State> {
     };
     Ajax.postData(
       this.entity.getBackendUrl() +
-        this.entity.id +
-        "/verifyemail/" +
-        this.state.verifyUuid,
+        Ajax.path`${this.entity.id}/verifyemail/${this.state.verifyUuid}`,
       payload,
     )
       .then(() => {

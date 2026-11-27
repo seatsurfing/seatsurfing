@@ -100,6 +100,8 @@
   "cancelBooking": "Tühista broneering",
   "cantScanQrCode": "Ei saa QR-koodi skaneerida? Klõpsa salajase võtme kuvamiseks.",
   "changePassword": "Muuda parool",
+  "chartTypeBar": "Bar chart",
+  "chartTypePie": "Pie chart",
   "chooseAuthProvider": "Vali identiteedipakkuja",
   "city": "Linn",
   "close": "Close",
@@ -367,6 +369,7 @@
   "noAreasFounds": "Alasid ei leitud. Muuda filtreid.",
   "noBooking": "Broneering puudub",
   "noBookings": "Broneeringuid pole.",
+  "noBookingsInPeriod": "No bookings in the selected period or area",
   "noBuddies": "Sõpru pole",
   "noFilters": "Filtrid puuduvad",
   "noQrCodeTotpHint": "Kui QR-koodi skaneerimine pole võimalik, sisesta autentimisrakendusse järgmine salajane võti:",
@@ -696,5 +699,6 @@
   "mapFileHint": "PNG, JPEG, GIF or SVG, max. 5 MB",
   "userHigherPrivilegesReadOnly": "This user holds permissions beyond your own and can therefore not be edited.",
   "blockedPeriodHintSpace": "No bookings are possible for this space within this period (both days inclusive). If only one date is set, the period is open-ended. Applies in addition to the area's blocked period.",
-  "errorSpaceBlocked": "This space cannot be booked within its blocked period."
+  "errorSpaceBlocked": "This space cannot be booked within its blocked period.",
+  "noSpacesAvailable": "There are no spaces available at this location."
 }

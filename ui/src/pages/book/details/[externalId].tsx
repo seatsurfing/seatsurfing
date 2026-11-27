@@ -54,7 +54,7 @@ class PublicBookingDetailsPage extends React.Component<Props, State> {
     }
     try {
       const res = await Ajax.get(
-        "/public-booking/details/" + encodeURIComponent(externalId),
+        Ajax.path`/public-booking/details/${externalId}`,
         () => true,
       );
       this.setState({
@@ -84,7 +84,7 @@ class PublicBookingDetailsPage extends React.Component<Props, State> {
     this.setState({ showDeleteConfirm: false, deleting: true });
     try {
       await Ajax.delete(
-        "/public-booking/details/" + encodeURIComponent(externalId),
+        Ajax.path`/public-booking/details/${externalId}`,
         () => true,
       );
       this.setState({ deleting: false, deleted: true });

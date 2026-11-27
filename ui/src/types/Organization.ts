@@ -106,13 +106,13 @@ export default class Organization extends Entity {
 
   async delete(): Promise<number> {
     const result = await Ajax.delete(
-      `${this.getBackendUrl()}${encodeURIComponent(this.id)}`,
+      this.getBackendUrl() + Ajax.path`${this.id}`,
     );
     return result.json.code as number;
   }
 
   static async get(id: string): Promise<Organization> {
-    const result = await Ajax.get(`/organization/${encodeURIComponent(id)}`);
+    const result = await Ajax.get(Ajax.path`/organization/${id}`);
     const e: Organization = new Organization();
     e.deserialize(result.json);
     return e;
@@ -130,9 +130,7 @@ export default class Organization extends Entity {
   }
 
   static async getOrgForDomain(domain: string): Promise<Organization> {
-    const result = await Ajax.get(
-      `/organization/domain/${encodeURIComponent(domain)}`,
-    );
+    const result = await Ajax.get(Ajax.path`/organization/domain/${domain}`);
     const e: Organization = new Organization();
     e.deserialize(result.json);
     return e;

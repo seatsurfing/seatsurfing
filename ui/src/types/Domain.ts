@@ -32,34 +32,30 @@ export default class Domain {
 
   async delete(): Promise<void> {
     await Ajax.delete(
-      `/organization/${encodeURIComponent(this.organizationId)}/domain/${encodeURIComponent(this.domain)}`,
+      Ajax.path`/organization/${this.organizationId}/domain/${this.domain}`,
     );
   }
 
   async setPrimary(): Promise<void> {
     await Ajax.postData(
-      `/organization/${encodeURIComponent(this.organizationId)}/domain/${encodeURIComponent(this.domain)}/primary`,
+      Ajax.path`/organization/${this.organizationId}/domain/${this.domain}/primary`,
     );
   }
 
   async verify(): Promise<void> {
     await Ajax.postData(
-      `/organization/${encodeURIComponent(this.organizationId)}/domain/${encodeURIComponent(this.domain)}/verify`,
+      Ajax.path`/organization/${this.organizationId}/domain/${this.domain}/verify`,
       null,
       (status) => status === 400,
     );
   }
 
   static async add(orgId: string, domain: string): Promise<void> {
-    await Ajax.postData(
-      `/organization/${encodeURIComponent(orgId)}/domain/${encodeURIComponent(domain)}`,
-    );
+    await Ajax.postData(Ajax.path`/organization/${orgId}/domain/${domain}`);
   }
 
   static async list(orgId: string): Promise<Domain[]> {
-    const result = await Ajax.get(
-      `/organization/${encodeURIComponent(orgId)}/domain/`,
-    );
+    const result = await Ajax.get(Ajax.path`/organization/${orgId}/domain/`);
     const list: Domain[] = [];
     (result.json as []).forEach((item) => {
       const e: Domain = new Domain();

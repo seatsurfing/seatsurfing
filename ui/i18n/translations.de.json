@@ -128,6 +128,8 @@
   "cancelBooking": "Buchung stornieren",
   "cantScanQrCode": "QR-Code kann nicht gescannt werden? Klicke hier, um den geheimen Schlüssel anzuzeigen",
   "changePassword": "Kennwort ändern",
+  "chartTypeBar": "Balkendiagramm",
+  "chartTypePie": "Kreisdiagramm",
   "chooseAuthProvider": "Identity Provider wählen",
   "city": "Stadt",
   "close": "Schließen",
@@ -401,6 +403,7 @@
   "noAreasFounds": "Keine Bereiche gefunden. Bitte versuche, deine Filter anzupassen.",
   "noBooking": "Keine Buchung",
   "noBookings": "Keine Buchungen gefunden.",
+  "noBookingsInPeriod": "Keine Buchungen im gewählten Zeitraum oder Bereich",
   "noBuddies": "Keine KollegInnen",
   "noFilters": "Keine Filter verfügbar",
   "noQrCodeTotpHint": "Wenn du den QR-Code nicht scannen kannst, kannst du auch den folgenden geheimen Schlüssel in deine Authentifikator-App eingeben:",
@@ -697,5 +700,6 @@
   "defaultBookingView": "Standard-Buchungsansicht",
   "list": "Liste",
   "disallowed": "nicht erlaubt",
-  "userHigherPrivilegesReadOnly": "Dieser Benutzer verfügt über Berechtigungen, die über deine eigenen hinausgehen, und kann daher nicht bearbeitet werden."
+  "userHigherPrivilegesReadOnly": "Dieser Benutzer verfügt über Berechtigungen, die über deine eigenen hinausgehen, und kann daher nicht bearbeitet werden.",
+  "noSpacesAvailable": "An diesem Standort sind keine Plätze verfügbar."
 }

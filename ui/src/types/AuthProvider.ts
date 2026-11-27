@@ -89,11 +89,13 @@ export default class AuthProvider extends Entity {
   }
 
   async delete(): Promise<void> {
-    return Ajax.delete(this.getBackendUrl() + this.id).then(() => undefined);
+    return Ajax.delete(this.getBackendUrl() + Ajax.path`${this.id}`).then(
+      () => undefined,
+    );
   }
 
   static async get(id: string): Promise<AuthProvider> {
-    return Ajax.get("/auth-provider/" + id).then((result) => {
+    return Ajax.get(Ajax.path`/auth-provider/${id}`).then((result) => {
       let e: AuthProvider = new AuthProvider();
       e.deserialize(result.json);
       return e;
@@ -113,7 +115,7 @@ export default class AuthProvider extends Entity {
   }
 
   static async listPublicForOrg(id: string): Promise<AuthProvider[]> {
-    return Ajax.get("/auth-provider/org/" + id).then((result) => {
+    return Ajax.get(Ajax.path`/auth-provider/org/${id}`).then((result) => {
       let list: AuthProvider[] = [];
       (result.json as []).forEach((item) => {
         let e: AuthProvider = new AuthProvider();
@@ -142,7 +144,7 @@ export class AuthProviderMapping {
   }
 
   static async list(authProviderId: string): Promise<AuthProviderMapping[]> {
-    return Ajax.get("/auth-provider/" + authProviderId + "/mapping").then(
+    return Ajax.get(Ajax.path`/auth-provider/${authProviderId}/mapping`).then(
       (result) =>
         (result.json as any[]).map(
           (item) =>
@@ -159,7 +161,7 @@ export class AuthProviderMapping {
     authProviderId: string,
     mappings: AuthProviderMapping[],
   ): Promise<void> {
-    return Ajax.putData("/auth-provider/" + authProviderId + "/mapping", {
+    return Ajax.putData(Ajax.path`/auth-provider/${authProviderId}/mapping`, {
       mappings: mappings,
     }).then(() => undefined);
   }

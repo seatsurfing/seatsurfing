@@ -50,14 +50,14 @@ export default class Settings extends Entity {
   static async setOne(name: string, value: string): Promise<void> {
     const payload = { value: value };
     return Ajax.putData(
-      `${Navigation.PATH_API_SETTINGS}${encodeURIComponent(name)}`,
+      Navigation.PATH_API_SETTINGS + Ajax.path`${name}`,
       payload,
     ).then(() => undefined);
   }
 
   static async getOne(name: string): Promise<string> {
-    return Ajax.get(
-      `${Navigation.PATH_API_SETTINGS}${encodeURIComponent(name)}`,
-    ).then((res) => res.json);
+    return Ajax.get(Navigation.PATH_API_SETTINGS + Ajax.path`${name}`).then(
+      (res) => res.json,
+    );
   }
 }

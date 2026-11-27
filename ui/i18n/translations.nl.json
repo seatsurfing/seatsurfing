@@ -100,6 +100,8 @@
   "cancelBooking": "Boeking annuleren",
   "cantScanQrCode": "Can't scan QR code? Click to show secret key",
   "changePassword": "Wachtwoord wijzigen",
+  "chartTypeBar": "Bar chart",
+  "chartTypePie": "Pie chart",
   "chooseAuthProvider": "Choose identity provider",
   "city": "City",
   "close": "Close",
@@ -367,6 +369,7 @@
   "noAreasFounds": "No areas found. Please try to adjust your filters.",
   "noBooking": "Geen boeking",
   "noBookings": "Geen boekingen.",
+  "noBookingsInPeriod": "No bookings in the selected period or area",
   "noBuddies": "Geen buddies",
   "noFilters": "No filters available",
   "noQrCodeTotpHint": "If you cannot scan the QR code, you can also enter the following secret key in your authenticator app:",
@@ -696,5 +699,6 @@
   "mapFileHint": "PNG, JPEG, GIF or SVG, max. 5 MB",
   "userHigherPrivilegesReadOnly": "This user holds permissions beyond your own and can therefore not be edited.",
   "blockedPeriodHintSpace": "No bookings are possible for this space within this period (both days inclusive). If only one date is set, the period is open-ended. Applies in addition to the area's blocked period.",
-  "errorSpaceBlocked": "This space cannot be booked within its blocked period."
+  "errorSpaceBlocked": "This space cannot be booked within its blocked period.",
+  "noSpacesAvailable": "There are no spaces available at this location."
 }

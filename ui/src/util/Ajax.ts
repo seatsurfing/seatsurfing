@@ -109,6 +109,31 @@ export default class Ajax {
     }
   }
 
+  /**
+   * Tagged template for building request paths from untrusted values:
+   * every interpolated value is URL-encoded, and empty values, dot segments
+   * ("." / "..") and values containing "/" or "\\" are rejected with a 404
+   * without sending a request. Encoding alone is not enough: the server
+   * router decodes "%2F" and cleans "../" before routing.
+   */
+  static path(strings: TemplateStringsArray, ...values: string[]): string {
+    return strings.reduce((acc, s, i) => {
+      if (i === 0) return s;
+      const v = values[i - 1];
+      if (
+        typeof v !== "string" ||
+        v === "" ||
+        v === "." ||
+        v === ".." ||
+        v.includes("/") ||
+        v.includes("\\")
+      ) {
+        throw new AjaxError(404, 0);
+      }
+      return acc + encodeURIComponent(v) + s;
+    });
+  }
+
   private static handleGlobalError(httpStatus: number): void {
     if (httpStatus === 401) {
       Ajax.PERSISTER.deleteCredentialsFromStorage();
@@ -287,7 +312,7 @@ export default class Ajax {
       url += "/";
     }
     if (e.id) {
-      return Ajax.putData(url + e.id, e.serialize());
+      return Ajax.putData(url + Ajax.path`${e.id}`, e.serialize());
     } else {
       return Ajax.postData(url, e.serialize()).then((result) => {
         e.id = result.objectId;
