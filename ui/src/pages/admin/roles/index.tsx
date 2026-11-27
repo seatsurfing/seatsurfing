@@ -1,5 +1,5 @@
 import React from "react";
-import { Table } from "react-bootstrap";
+import { Badge, Table } from "react-bootstrap";
 import { Plus as IconPlus } from "react-feather";
 import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
@@ -59,7 +59,9 @@ class Roles extends React.Component<Props, State> {
         <td>
           {role.name}
           {role.system && (
-            <span className="text-muted"> ({this.props.t("systemRole")})</span>
+            <Badge bg="secondary" className="ms-2">
+              {this.props.t("systemRole")}
+            </Badge>
           )}
         </td>
         <td>{role.description}</td>
