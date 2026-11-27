@@ -1,12 +1,12 @@
 import React from "react";
-import { Nav, Button, Form } from "react-bootstrap";
+import { Nav, Form } from "react-bootstrap";
 import { NextRouter } from "next/router";
 import Link from "next/link";
 import { TranslationFunc, withTranslation } from "./withTranslation";
 import withReadyRouter from "./withReadyRouter";
-import RuntimeConfig from "./RuntimeConfig";
 import ThemeSelector from "./ThemeSelector";
 import LanguageSelector from "./LanguageSelector";
+import LogoutButton from "./LogoutButton";
 
 interface State {
   search: string;
@@ -26,11 +26,6 @@ class AdminNavBar extends React.Component<Props, State> {
       redirect: null,
     };
   }
-
-  logout = (e: any) => {
-    e.preventDefault();
-    RuntimeConfig.logOut();
-  };
 
   submitSearchForm = (e: any) => {
     e.preventDefault();
@@ -92,10 +87,7 @@ class AdminNavBar extends React.Component<Props, State> {
           <ThemeSelector inNavbar={true} iconOnly={true} align="end" />
           <LanguageSelector inNavbar={true} iconOnly={true} align="end" />
           <li className="nav-item text-nowrap">
-            <Button variant="link" className="nav-link" onClick={this.logout}>
-              {" "}
-              {this.props.t("logout")}
-            </Button>
+            <LogoutButton />
           </li>
         </ul>
       </Nav>

@@ -18,6 +18,7 @@ import { TranslationFunc, withTranslation } from "./withTranslation";
 import User from "@/types/User";
 import Ajax from "@/util/Ajax";
 import LanguageSelector from "./LanguageSelector";
+import LogoutButton from "./LogoutButton";
 import ThemeSelector from "./ThemeSelector";
 import RendererUtils from "@/util/RendererUtils";
 
@@ -57,11 +58,6 @@ class NavBar extends React.Component<Props, State> {
     });
   };
 
-  logOut = (e: any) => {
-    e.preventDefault();
-    RuntimeConfig.logOut();
-  };
-
   render() {
     let signOffButton = <></>;
     let adminButton = <></>;
@@ -80,9 +76,7 @@ class NavBar extends React.Component<Props, State> {
           </Nav.Link>
         );
       }
-      signOffButton = (
-        <Nav.Link onClick={this.logOut}>{this.props.t("logout")}</Nav.Link>
-      );
+      signOffButton = <LogoutButton compactBreakpoint="lg" />;
     }
 
     if (RuntimeConfig.INFOS.showNames && !RuntimeConfig.INFOS.disableBuddies) {
