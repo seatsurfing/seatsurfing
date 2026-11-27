@@ -648,7 +648,7 @@ func (router *SettingsRouter) isValidSettingValue(name string, value string) boo
 		return len(value) == 32
 	}
 	if name == SettingCustomLogoUrl.Name {
-		if !ValidateURL(value) {
+		if !ValidateHTTPSURL(value) {
 			return false
 		}
 		return true

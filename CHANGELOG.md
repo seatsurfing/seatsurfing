@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.144.2](https://github.com/seatsurfing/seatsurfing/compare/v1.144.1...v1.144.2) (2026-11-27)
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** add photo flag in space list ([#2926](https://github.com/seatsurfing/seatsurfing/issues/2926)) ([424638b](https://github.com/seatsurfing/seatsurfing/commit/424638b00ef1cae041598c2bf98d624690eaafb9))
+* **admin-ui:** add pie chart option for weekday stats ([#2927](https://github.com/seatsurfing/seatsurfing/issues/2927)) ([ab0fcac](https://github.com/seatsurfing/seatsurfing/commit/ab0fcacf17c81d56f6a0fedbc233631f44fbe4ec))
+* **admin-ui:** add preview for custom logo and only accept HTTPS URLs ([#2923](https://github.com/seatsurfing/seatsurfing/issues/2923)) ([0895bec](https://github.com/seatsurfing/seatsurfing/commit/0895becfb508adebd1c333d5855daaba50da4bb6))
+* **booking-ui:** add icon for spaces with photo ([#2925](https://github.com/seatsurfing/seatsurfing/issues/2925)) ([a4abd1d](https://github.com/seatsurfing/seatsurfing/commit/a4abd1d0083a1daa678d37d71299cbdc746a0d3f))
+
 ## [1.144.1](https://github.com/seatsurfing/seatsurfing/compare/v1.144.0...v1.144.1) (2026-11-26)
 
 

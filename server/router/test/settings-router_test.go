@@ -391,6 +391,34 @@ func TestSettingsInvalidTimezone(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
 }
 
+func TestSettingsCustomLogoUrlHTTPS(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	for _, value := range []string{"https://example.com/logo.png", ""} {
+		payload := `{"value": "` + value + `"}`
+		req := NewHTTPRequest("PUT", "/setting/"+SettingCustomLogoUrl.Name, loginResponse.UserID, bytes.NewBufferString(payload))
+		res := ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+	}
+}
+
+func TestSettingsCustomLogoUrlInvalid(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	for _, value := range []string{"http://example.com/logo.png", "ftp://example.com/logo.png", "//example.com/logo.png", "/logo.png", "https://", "test"} {
+		payload := `{"value": "` + value + `"}`
+		req := NewHTTPRequest("PUT", "/setting/"+SettingCustomLogoUrl.Name, loginResponse.UserID, bytes.NewBufferString(payload))
+		res := ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	}
+}
+
 func TestSettingsDefault24HourTime(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
