@@ -1,15 +1,11 @@
 .invalid-search-config {
   width: 100%;
   font-size: 0.875em;
-  color: #dc3545;
+  color: var(--bs-form-invalid-color);
 }
 select.form-select option:disabled {
   color: #bcbbbb;
 }
-body {
-  font-family: Helvetica, sans-serif;
-}
-
 .container {
   display: flex;
 }

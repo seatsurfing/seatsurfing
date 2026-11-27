@@ -27,7 +27,6 @@ import {
   Type as IconFontSize,
   Globe as IconGlobe,
   Book as IconBook,
-  Image as IconImage,
 } from "react-feather";
 import Moveable from "react-moveable";
 import { NextRouter } from "next/router";
@@ -37,6 +36,7 @@ import withPermission from "@/components/withPermission";
 import { Permission, PermissionLevel } from "@/types/Permission";
 import GroupSearchTypeahead from "@/components/GroupSearchTypeahead";
 import SpaceApprovalIcon from "@/components/SpaceApprovalIcon";
+import SpacePhotoIcon from "@/components/SpacePhotoIcon";
 import CopyToClipboardButton from "@/components/CopyToClipboardButton";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
@@ -125,7 +125,6 @@ interface SpaceRectProps {
   onRotateEnd: (i: number, rotation: number, x: number, y: number) => void;
   onNameChange: (i: number, name: string) => void;
   unnamedLabel: string;
-  imageLabel: string;
   newSpaceName: (baseName: string) => string;
   mapWidth: number;
   mapHeight: number;
@@ -148,7 +147,6 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
   onRotateEnd,
   onNameChange,
   unnamedLabel,
-  imageLabel,
   newSpaceName,
   mapWidth,
   mapHeight,
@@ -290,11 +288,7 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
                     )}
                 </>
               )}
-              {hasImage && (
-                <span title={imageLabel} style={{ display: "flex" }}>
-                  <IconImage size={16} role="img" aria-label={imageLabel} />
-                </span>
-              )}
+              {hasImage && <SpacePhotoIcon />}
             </div>
           )}
           <input
@@ -1197,7 +1191,6 @@ class EditLocation extends React.Component<Props, State> {
         onRotateEnd={this.setSpaceRotation}
         onNameChange={this.setSpaceName}
         unnamedLabel={this.props.t("unnamed")}
-        imageLabel={this.props.t("image")}
         newSpaceName={this.newSpaceName}
         mapWidth={this.mapData ? this.mapData.width * this.state.mapScale : 0}
         mapHeight={this.mapData ? this.mapData.height * this.state.mapScale : 0}
@@ -1277,9 +1270,16 @@ class EditLocation extends React.Component<Props, State> {
           )}
         </td>
         <td>{RendererUtils.state(space.publicBookingEnabled)}</td>
+        {RuntimeConfig.INFOS.featureSpaceImages && (
+          <td>{RendererUtils.state(this.spaceHasImage(space))}</td>
+        )}
         <td>{bookingLink}</td>
       </tr>
     );
+  };
+
+  spaceHasImage = (space: SpaceState): boolean => {
+    return !!space.pendingImage || (space.hasImage && !space.removeImage);
   };
 
   getAvailableAttributeOptions = () => {
@@ -1856,6 +1856,7 @@ class EditLocation extends React.Component<Props, State> {
     const showKioskMode =
       RuntimeConfig.INFOS.featureKioskMode &&
       RuntimeConfig.INFOS.kioskModeEnabled;
+    const showImages = RuntimeConfig.INFOS.featureSpaceImages;
     const headers = [
       t("name"),
       t("enabled"),
@@ -1864,6 +1865,7 @@ class EditLocation extends React.Component<Props, State> {
       t("approvers"),
       t("allowBookers"),
       t("publicBooking"),
+      ...(showImages ? [t("image")] : []),
       t("bookingLink"),
     ];
     const rows = this.state.spaces.map((space) => [
@@ -1877,6 +1879,9 @@ class EditLocation extends React.Component<Props, State> {
         t,
       ),
       RendererUtils.stateXls(space.publicBookingEnabled, t),
+      ...(showImages
+        ? [RendererUtils.stateXls(this.spaceHasImage(space), t)]
+        : []),
       space.id ? Navigation.spaceAbsolute(this.entity.id, space.id) : "",
     ]);
     return this.ExcellentExport.convert(
@@ -2246,6 +2251,9 @@ class EditLocation extends React.Component<Props, State> {
                   {this.props.t("allowBookers")} <PremiumFeatureIcon />
                 </th>
                 <th>{this.props.t("publicBooking")}</th>
+                {RuntimeConfig.INFOS.featureSpaceImages && (
+                  <th>{this.props.t("image")}</th>
+                )}
                 <th>{this.props.t("bookingLink")}</th>
               </tr>
             </thead>

@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.144.1](https://github.com/seatsurfing/seatsurfing/compare/v1.144.0...v1.144.1) (2026-11-26)
+
+
+### 🐛 Bug Fixes
+
+* **booking-ui:** fix border for trapezoid spaces ([#2934](https://github.com/seatsurfing/seatsurfing/issues/2934)) ([c3b23b6](https://github.com/seatsurfing/seatsurfing/commit/c3b23b6b2c3a7fe643cad825580059b89ea6cd6b))
+* **deps:** bump distroless/base-debian13 from `8bf71f4` to `1eb7e76` ([#2936](https://github.com/seatsurfing/seatsurfing/issues/2936)) ([0e4b02a](https://github.com/seatsurfing/seatsurfing/commit/0e4b02a4a59901d834a763c7e769adc031b882c0))
+* **deps:** bump react-zoom-pan-pinch from 4.2.0 to 4.4.0 in /ui in the production-dependencies group across 1 directory ([#2937](https://github.com/seatsurfing/seatsurfing/issues/2937)) ([2021818](https://github.com/seatsurfing/seatsurfing/commit/20218180d12d0687e17ae02b86a4c7db746c2930))
+
+## [1.144.0](https://github.com/seatsurfing/seatsurfing/compare/v1.143.2...v1.144.0) (2026-11-25)
+
+
+### ✨ Features
+
+* **main:** general theme update and new legend for booking UI ([#2921](https://github.com/seatsurfing/seatsurfing/issues/2921)) ([3726cb0](https://github.com/seatsurfing/seatsurfing/commit/3726cb0bc3d8b32602790fe7c3bbc74247ec31ab))
+
+
+### 🐛 Bug Fixes
+
+* **booking-ui:** add no space available info ([#2922](https://github.com/seatsurfing/seatsurfing/issues/2922)) ([7e271e4](https://github.com/seatsurfing/seatsurfing/commit/7e271e4b2d08f2b2ab32a8fa87cfec7b8a84b2eb))
+* **deps:** bump react-tooltip from 6.0.12 to 6.0.13 in /ui in the production-dependencies group across 1 directory ([#2919](https://github.com/seatsurfing/seatsurfing/issues/2919)) ([607c9c7](https://github.com/seatsurfing/seatsurfing/commit/607c9c7dd91ed288723c83d3dfeaadb0b515d179))
+
 ## [1.143.2](https://github.com/seatsurfing/seatsurfing/compare/v1.143.1...v1.143.2) (2026-11-24)
 
 

@@ -15,6 +15,7 @@ import "@/styles/FullLayout.css";
 import "@/styles/Booking.css";
 import "@/styles/FloorPlanDesigner.css";
 import "@/styles/SpaceImage.css";
+import "@/styles/Theme.css";
 import type { AppProps } from "next/app";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import React from "react";
@@ -38,6 +39,9 @@ import Router from "next/router";
 import "@/util/Theme";
 import FrameProtection from "@/util/FrameProtection";
 import FrameBlocked from "@/components/FrameBlocked";
+import { Inter } from "next/font/google";
+
+const inter = Inter({ subsets: ["latin", "latin-ext"], display: "swap" });
 
 interface State {
   isLoading: boolean;
@@ -331,6 +335,7 @@ class App extends React.Component<Props, State> {
               ? ` – ${RuntimeConfig.INFOS.orgName}`
               : ""}
           </title>
+          <style>{`:root{--font-inter:${inter.style.fontFamily};}`}</style>
         </Head>
         {this.state.showTotpEnforcement && (
           <TotpSetupModal

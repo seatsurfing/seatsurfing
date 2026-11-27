@@ -100,6 +100,8 @@
   "cancelBooking": "Cancelar reserva",
   "cantScanQrCode": "¿No puedes escanear el código QR? Haz clic para ver la clave secreta",
   "changePassword": "Cambiar contraseña",
+  "chartTypeBar": "Bar chart",
+  "chartTypePie": "Pie chart",
   "chooseAuthProvider": "Elige un proveedor de identidad",
   "city": "Ciudad",
   "close": "Cerrar",
@@ -367,6 +369,7 @@
   "noAreasFounds": "No se encontraron áreas. Intenta ajustar tus filtros.",
   "noBooking": "Sin reserva",
   "noBookings": "Sin reservas.",
+  "noBookingsInPeriod": "No bookings in the selected period or area",
   "noBuddies": "Sin compañeros",
   "noFilters": "No hay filtros disponibles",
   "noQrCodeTotpHint": "Si no puedes escanear el código QR, también puedes introducir la siguiente clave secreta en tu app de autenticación:",
@@ -698,5 +701,6 @@
   "preview": "Preview",
   "customLogoPreviewError": "The URL does not point to an image or the image could not be loaded.",
   "imageDimensions": "{{width}} × {{height}} pixels",
-  "openInNewTab": "Open in new tab"
+  "openInNewTab": "Open in new tab",
+  "noSpacesAvailable": "There are no spaces available at this location."
 }
