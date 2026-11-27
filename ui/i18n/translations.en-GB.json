@@ -208,6 +208,7 @@
   "current": "Current",
   "customLogoUrl": "Custom logo URL",
   "customLogoUrlHint": "Leave empty to use the default logo",
+  "customLogoPreviewError": "The URL does not point to an image or the image could not be loaded.",
   "daily": "daily",
   "dailyBasisBooking": "Allow bookings on a daily basis only",
   "dangerZone": "Danger zone",
@@ -696,5 +697,8 @@
   "defaultBookingView": "Default booking view",
   "list": "List",
   "disallowed": "disallowed",
-  "userHigherPrivilegesReadOnly": "This user holds permissions beyond your own and can therefore not be edited."
+  "userHigherPrivilegesReadOnly": "This user holds permissions beyond your own and can therefore not be edited.",
+  "preview": "Preview",
+  "imageDimensions": "{{width}} × {{height}} pixels",
+  "openInNewTab": "Open in new tab"
 }

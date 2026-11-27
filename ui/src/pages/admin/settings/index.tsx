@@ -22,6 +22,7 @@ import {
   MoreVertical as IconMore,
   ExternalLink as IconExternalLink,
   Edit2 as IconEdit,
+  Eye as IconEye,
 } from "react-feather";
 import { NextRouter } from "next/router";
 import FullLayout from "@/components/FullLayout";
@@ -50,6 +51,7 @@ import UpdateChecker from "@/util/UpdateChecker";
 import Navigation from "@/util/Navigation";
 import ConfirmModal from "@/components/ConfirmModal";
 import AlertModal from "@/components/AlertModal";
+import LogoPreviewModal from "@/components/LogoPreviewModal";
 import HintTooltip from "@/components/HintTooltip";
 import BookingAttributesEditor from "@/components/BookingAttributesEditor";
 
@@ -58,6 +60,7 @@ interface State {
   defaultTimezone: string;
   default24HourTime: boolean;
   customLogoUrl: string;
+  showLogoPreview: boolean;
   maxBookingsPerUser: number;
   maxConcurrentBookingsPerUser: number;
   maxDaysInAdvance: number;
@@ -142,6 +145,7 @@ class Settings extends React.Component<Props, State> {
       defaultTimezone: "",
       default24HourTime: true,
       customLogoUrl: "",
+      showLogoPreview: false,
       maxBookingsPerUser: 0,
       maxConcurrentBookingsPerUser: 0,
       maxBookingDuration: 0,
@@ -1052,14 +1056,41 @@ class Settings extends React.Component<Props, State> {
               <HintTooltip hint={this.props.t("customLogoUrlHint")} />
             </Form.Label>
             <Col sm="4">
-              <UrlInput
-                id="input-customLogoUrl"
-                placeholder="https://…"
-                value={this.state.customLogoUrl}
-                onChange={(e: any) =>
-                  this.setState({ customLogoUrl: e.target.value })
-                }
-              />
+              <InputGroup>
+                <UrlInput
+                  id="input-customLogoUrl"
+                  httpsOnly={true}
+                  placeholder="https://…"
+                  value={this.state.customLogoUrl}
+                  onChange={(e: any) =>
+                    this.setState({ customLogoUrl: e.target.value })
+                  }
+                />
+                <Button
+                  variant="outline-secondary"
+                  title={this.props.t("preview")}
+                  aria-label={this.props.t("preview")}
+                  disabled={
+                    !Validation.isHttpsUrl(this.state.customLogoUrl.trim())
+                  }
+                  onClick={() => this.setState({ showLogoPreview: true })}
+                >
+                  <IconEye className="feather" />
+                </Button>
+                <Button
+                  variant="outline-secondary"
+                  title={this.props.t("openInNewTab")}
+                  aria-label={this.props.t("openInNewTab")}
+                  href={this.state.customLogoUrl.trim()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  disabled={
+                    !Validation.isHttpsUrl(this.state.customLogoUrl.trim())
+                  }
+                >
+                  <IconExternalLink className="feather" />
+                </Button>
+              </InputGroup>
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
@@ -1971,7 +2002,8 @@ class Settings extends React.Component<Props, State> {
                         }
                       />
                       <Button
-                        aria-label={this.props.t("publicBookingUrl")}
+                        title={this.props.t("openInNewTab")}
+                        aria-label={this.props.t("openInNewTab")}
                         variant="outline-secondary"
                         href={this.getPublicBookingUrl()}
                         target="_blank"
@@ -2044,6 +2076,11 @@ class Settings extends React.Component<Props, State> {
           )}
           {dangerZone}
         </Form>
+        <LogoPreviewModal
+          show={this.state.showLogoPreview}
+          url={this.state.customLogoUrl.trim()}
+          onHide={() => this.setState({ showLogoPreview: false })}
+        />
         <ReloadModal
           show={this.state.showSavedModal}
           title={this.props.t("settings")}
