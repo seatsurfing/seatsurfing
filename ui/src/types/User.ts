@@ -26,6 +26,7 @@ export default class User extends Entity {
   accountType: number;
   /** IDs of the roles assigned to this user. */
   roleIds: string[];
+  systemRoleNames: string[];
   password: string;
   sendInvitation: boolean;
   firstBooking: BuddyBooking | null;
@@ -52,6 +53,7 @@ export default class User extends Entity {
     this.passwordPending = false;
     this.accountType = User.AccountTypePerson;
     this.roleIds = [];
+    this.systemRoleNames = [];
     this.password = "";
     this.sendInvitation = false;
     this.firstBooking = null;
@@ -94,6 +96,7 @@ export default class User extends Entity {
     }
     this.accountType = input.accountType ?? User.AccountTypePerson;
     this.roleIds = input.roleIds ?? [];
+    this.systemRoleNames = input.systemRoleNames ?? [];
     this.totpEnabled = input.totpEnabled;
     this.hasPasskeys = input.hasPasskeys ?? false;
     this.lastActivity = input.lastActivity

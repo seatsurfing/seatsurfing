@@ -349,6 +349,23 @@ func (r *RoleStore) GetAll(organizationID string) ([]*Role, error) {
 	return result, nil
 }
 
+func (r *RoleStore) GetSystemRoleNames(organizationID string) (map[string]string, error) {
+	result := map[string]string{}
+	rows, err := GetDatabase().DB().Query("SELECT id, name FROM roles WHERE organization_id = $1 AND system IS TRUE", organizationID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id, name string
+		if err := rows.Scan(&id, &name); err != nil {
+			return nil, err
+		}
+		result[id] = name
+	}
+	return result, nil
+}
+
 func (r *RoleStore) getPermissions(roleID string) (map[Permission]PermissionLevel, error) {
 	result := make(map[Permission]PermissionLevel)
 	rows, err := GetDatabase().DB().Query("SELECT permission, level "+

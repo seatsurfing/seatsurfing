@@ -1,6 +1,10 @@
 import React from "react";
-import { Table } from "react-bootstrap";
-import { Plus as IconPlus, Download as IconDownload } from "react-feather";
+import { Badge, OverlayTrigger, Table, Tooltip } from "react-bootstrap";
+import {
+  Plus as IconPlus,
+  Download as IconDownload,
+  Shield as IconAdmin,
+} from "react-feather";
 import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
 import Link from "next/link";
@@ -101,7 +105,25 @@ class Users extends React.Component<Props, State> {
         onClick={this.canEdit() ? () => this.onItemSelect(user) : undefined}
         style={this.canEdit() ? undefined : { cursor: "default" }}
       >
-        <td>{user.email}</td>
+        <td>
+          {user.email}
+          {user.systemRoleNames.length > 0 ? (
+            <OverlayTrigger
+              placement="top"
+              overlay={<Tooltip>{user.systemRoleNames.join(", ")}</Tooltip>}
+            >
+              <Badge
+                bg="primary"
+                className="ms-2"
+                aria-label={user.systemRoleNames.join(", ")}
+              >
+                <IconAdmin size={12} />
+              </Badge>
+            </OverlayTrigger>
+          ) : (
+            <></>
+          )}
+        </td>
         <td>{RendererUtils.fullname(user.firstname, user.lastname)}</td>
         <td>{accountType}</td>
         <td>{role}</td>
