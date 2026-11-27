@@ -310,6 +310,34 @@ func TestUserListWithServiceAccount(t *testing.T) {
 	CheckTestInt(t, 2, len(resBody))
 }
 
+func TestUserListSystemRoleNames(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	user := CreateTestUserInOrg(org)
+	org2 := CreateTestOrg("test2.com")
+	CreateTestUserOrgAdmin(org2)
+	loginResponse := LoginTestUser(admin.ID)
+
+	req := NewHTTPRequest("GET", "/user/", loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []*GetUserResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestInt(t, 2, len(resBody))
+	for _, u := range resBody {
+		switch u.ID {
+		case admin.ID:
+			CheckTestInt(t, 1, len(u.SystemRoleNames))
+			CheckTestString(t, RoleNameOrgAdmin, u.SystemRoleNames[0])
+		case user.ID:
+			CheckTestInt(t, 0, len(u.SystemRoleNames))
+		default:
+			t.Fatalf("unexpected user %s", u.ID)
+		}
+	}
+}
+
 func TestUserSearchIncludesServiceAccounts(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")

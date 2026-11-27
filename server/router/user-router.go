@@ -9,6 +9,7 @@ import (
 	"image/png"
 	"log"
 	"net/http"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -80,6 +81,7 @@ type GetUserResponse struct {
 	PasswordPending bool                    `json:"passwordPending"`
 	AuthProviderID  string                  `json:"authProviderId"`
 	RoleIDs         []string                `json:"roleIds"`
+	SystemRoleNames []string                `json:"systemRoleNames"`
 	TotpEnabled     bool                    `json:"totpEnabled"`
 	HasPasskeys     bool                    `json:"hasPasskeys"`
 	LastActivity    *time.Time              `json:"lastActivity"`
@@ -622,9 +624,22 @@ func (router *UserRouter) getAll(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
+	systemRoleNames, err := GetRoleRepository().GetSystemRoleNames(user.OrganizationID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
 	res := []*GetUserResponse{}
 	for _, e := range list {
 		m := router.copyToRestModel(e, true, hasPasskeysByUserID[e.ID], roleIDsByUserID[e.ID])
+		m.SystemRoleNames = []string{}
+		for _, id := range m.RoleIDs {
+			if name, ok := systemRoleNames[id]; ok {
+				m.SystemRoleNames = append(m.SystemRoleNames, name)
+			}
+		}
+		slices.Sort(m.SystemRoleNames)
 		res = append(res, m)
 	}
 	SendJSON(w, res)
