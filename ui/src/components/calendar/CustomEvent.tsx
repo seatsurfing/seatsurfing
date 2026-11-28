@@ -1,14 +1,28 @@
 import { useEffect, useRef, useState } from "react";
 import {
+  Clock as IconPending,
   MapPin as IconLocation,
   RefreshCw as IconRecurring,
 } from "react-feather";
 export { bookingToCalendarEvent } from "./CalendarEvent";
 import type { CalendarEvent } from "./CalendarEvent";
 import RendererUtils from "@/util/RendererUtils";
+import CalendarUtil from "@/util/CalendarUtil";
 export type { CalendarEvent };
 
 const WIDTH_THRESHOLD = 100;
+
+const EventIcons = ({ event }: { event: CalendarEvent }) => {
+  if (!event.recurring && event.approved !== false) {
+    return null;
+  }
+  return (
+    <span className="calendar-event-icons">
+      {event.approved === false && <IconPending className="feather" />}
+      {event.recurring && <IconRecurring className="feather" />}
+    </span>
+  );
+};
 
 const createCustomEvent =
   () =>
@@ -32,42 +46,29 @@ const createCustomEvent =
       return () => observer.disconnect();
     }, []);
 
-    let recurringIcon = <></>;
-    if (event.recurring) {
-      recurringIcon = (
-        <IconRecurring
-          className="feather recurring-booking-icon"
-          style={{ width: "12px", height: "12px", top: "4px", right: "4px" }}
-        />
-      );
-    }
+    const person =
+      event.mode == "space" &&
+      (event.firstname || event.lastname || event.email)
+        ? RendererUtils.fullname(event.firstname, event.lastname, event.email)
+        : "";
 
     return (
-      <div ref={containerRef} style={{ fontSize: "12px" }}>
-        {recurringIcon}
-        <p hidden={!event.subject}>
-          <strong>{event.subject}</strong>
-        </p>
-        {showDetails && event.mode == "user" && (
-          <>
-            <IconLocation
-              className="feather"
-              style={{ width: "12px", height: "12px" }}
-            />{" "}
-            {event.locationName}, {event.spaceName}
-          </>
+      <div ref={containerRef} className="calendar-event-body">
+        <EventIcons event={event} />
+        {event.subject && (
+          <div className="calendar-event-subject">{event.subject}</div>
         )}
-        {showDetails &&
-          event.mode == "space" &&
-          (event.firstname || event.lastname || event.email) && (
-            <>
-              {RendererUtils.fullname(
-                event.firstname,
-                event.lastname,
-                event.email,
-              )}
-            </>
-          )}
+        {showDetails && event.mode == "user" && (
+          <div className="calendar-event-detail">
+            <IconLocation className="feather" />
+            <span>
+              {event.locationName}, {event.spaceName}
+            </span>
+          </div>
+        )}
+        {showDetails && person && (
+          <div className="calendar-event-detail">{person}</div>
+        )}
       </div>
     );
   };
@@ -75,17 +76,12 @@ const createCustomEvent =
 export const createCustomMonthEvent =
   () =>
   ({ event }: { event: CalendarEvent }) => (
-    <div
-      className={"calendar-month-event" + (event.recurring ? " recurring" : "")}
-      title={event.title}
-    >
-      {event.recurring && (
-        <IconRecurring
-          className="feather recurring-booking-icon"
-          style={{ width: "12px", height: "12px", top: "4px", right: "4px" }}
-        />
-      )}
-      {event.title}
+    <div className="calendar-month-event" title={event.title}>
+      <span className="calendar-month-event-time">
+        {CalendarUtil.formatTime(event.enter)}
+      </span>
+      <span className="calendar-month-event-title">{event.title}</span>
+      <EventIcons event={event} />
     </div>
   );
 

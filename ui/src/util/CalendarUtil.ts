@@ -22,22 +22,64 @@ export default class CalendarUtil {
     return momentLocalizer(moment);
   }
 
+  static intl(options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
+    return new Intl.DateTimeFormat(Formatting.Language, {
+      timeZone: "UTC",
+      ...options,
+    });
+  }
+
+  static getTimeFormat(): string {
+    return RuntimeConfig.INFOS.use24HourTime ? "HH:mm" : "h:mm A";
+  }
+
+  static formatTime(date: Date): string {
+    CalendarUtil.setupMoment();
+    return moment(date).format(CalendarUtil.getTimeFormat());
+  }
+
+  static formatWeekdayShort(date: Date): string {
+    return CalendarUtil.intl({ weekday: "short" }).format(date);
+  }
+
+  static formatDayOfMonth(date: Date): string {
+    return CalendarUtil.intl({ day: "numeric" }).format(date);
+  }
+
+  static getPeriodLabel(view: View, date: Date): string {
+    if (view === "day") {
+      return CalendarUtil.intl({
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }).format(date);
+    }
+    if (view === "month") {
+      return CalendarUtil.intl({ month: "long", year: "numeric" }).format(date);
+    }
+    const range = CalendarUtil.getWeekRange(date);
+    return CalendarUtil.intl({
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }).formatRange(range.start, range.end);
+  }
+
   static getFormats(): Formats {
-    const time = RuntimeConfig.INFOS.use24HourTime ? "HH:mm" : "h:mm A";
+    const time = CalendarUtil.getTimeFormat();
     const range = ({ start, end }: DateRange, culture?: string, local?: any) =>
       local.format(start, time, culture) +
       " – " +
       local.format(end, time, culture);
     const intl = (options: Intl.DateTimeFormatOptions) => {
-      const formatter = new Intl.DateTimeFormat(Formatting.Language, {
-        timeZone: "UTC",
-        ...options,
-      });
+      const formatter = CalendarUtil.intl(options);
       return (date: Date) => formatter.format(date);
     };
     const weekday = intl({ weekday: "short" });
     const day = intl({ day: "2-digit" });
     return {
+      dateFormat: intl({ day: "numeric" }),
       weekdayFormat: weekday,
       dayFormat: (date: Date) => day(date) + " " + weekday(date),
       dayHeaderFormat: intl({
@@ -86,16 +128,16 @@ export default class CalendarUtil {
 
   static endAccessor = (event: CalendarEvent): Date => event.leave;
 
-  static eventPropGetter = (event: CalendarEvent) => {
-    return event.approved === false ? { style: { opacity: 0.5 } } : {};
-  };
+  static eventPropGetter = (event: CalendarEvent) => ({
+    className:
+      "calendar-event" +
+      (event.approved === false ? " calendar-event-pending" : ""),
+  });
 
   static getDayPropGetter = (allowedDays: number[]) => {
     return (date: Date) => {
       if (allowedDays.length > 0 && !allowedDays.includes(date.getUTCDay())) {
-        return {
-          style: { backgroundColor: "rgba(0, 0, 0, 0.05)" },
-        };
+        return { className: "calendar-day-off" };
       }
       return {};
     };

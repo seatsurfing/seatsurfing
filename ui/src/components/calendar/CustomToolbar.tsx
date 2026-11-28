@@ -1,14 +1,13 @@
 import React from "react";
 import { ToolbarProps } from "react-big-calendar";
 import {
-  Trello as IconTrello,
-  ArrowLeft as IconArrowLeft,
-  ArrowRight as IconArrowRight,
+  ChevronLeft as IconChevronLeft,
+  ChevronRight as IconChevronRight,
   SkipForward as IconSkipForward,
   SkipBack as IconSkipBack,
   Globe as IconGlobe,
 } from "react-feather";
-import Formatting from "@/util/Formatting";
+import CalendarUtil from "@/util/CalendarUtil";
 import moment from "moment-timezone";
 import { TranslationFunc } from "@/components/withTranslation";
 import { CalendarEvent } from "@/components/calendar/CalendarEvent";
@@ -28,13 +27,11 @@ const CustomToolbar: React.FC<Props> = ({
   timezone,
   minDate,
 }) => {
-  const isDayView = toolbar.view === "day";
   const isMonthView = toolbar.view === "month";
   const periodUnit = isMonthView ? "month" : "week";
   const periodStart = moment(toolbar.date).clone().startOf(periodUnit);
   const periodEnd = moment(toolbar.date).clone().endOf(periodUnit);
   const canNavigateBack = !minDate || periodStart.isAfter(minDate);
-  const formatter = Formatting.getFormatterDate();
   const availableViews = Array.isArray(toolbar.views)
     ? toolbar.views
     : Object.keys(toolbar.views ?? {});
@@ -73,89 +70,95 @@ const CustomToolbar: React.FC<Props> = ({
     toolbar.onNavigate("DATE", prevEventWeek[1]);
   };
 
+  const label = CalendarUtil.getPeriodLabel(toolbar.view, toolbar.date);
+
   return (
     <div className="custom-toolbar">
-      {timezone && (
-        <div
-          className="toolbar-timezone text-muted"
-          title={t("timezone")}
-          data-testid="calendar-timezone"
+      <div className="toolbar-group">
+        <button
+          type="button"
+          className="btn btn-sm btn-outline-secondary toolbar-today"
+          onClick={() => toolbar.onNavigate("TODAY")}
         >
-          <IconGlobe className="feather" />
-          {timezone}
-        </div>
-      )}
-      <button
-        type="button"
-        className="btn btn-sm btn-outline-secondary"
-        onClick={() => toolbar.onNavigate("TODAY")}
-      >
-        <IconTrello className="feather" /> {t("today")}
-      </button>{" "}
-      <button
-        type="button"
-        className="btn btn-sm btn-outline-secondary"
-        disabled={!canNavigateBack}
-        onClick={() => toolbar.onNavigate("PREV")}
-        aria-label={t("previous")}
-      >
-        <IconArrowLeft className="feather" />
-      </button>{" "}
-      <button
-        type="button"
-        className="btn btn-sm btn-outline-secondary"
-        onClick={() => toolbar.onNavigate("NEXT")}
-        aria-label={t("next")}
-      >
-        <IconArrowRight className="feather" />
-      </button>{" "}
-      {events && events.length > 0 && (
-        <>
+          {t("today")}
+        </button>
+        <div className="btn-group btn-group-sm toolbar-nav" role="group">
           <button
             type="button"
-            className="btn btn-sm btn-outline-secondary"
-            disabled={!prevEventWeek}
-            onClick={() => goToPreviousEvent()}
+            className="btn btn-outline-secondary"
+            disabled={!canNavigateBack}
+            onClick={() => toolbar.onNavigate("PREV")}
+            aria-label={t("previous")}
+            title={t("previous")}
           >
-            <IconSkipBack className="feather" /> {t("previousBooking")}
-          </button>{" "}
-          <button
-            type="button"
-            className="btn btn-sm btn-outline-secondary"
-            disabled={!nextEventWeek}
-            onClick={() => goToNextEvent()}
-          >
-            <IconSkipForward className="feather" /> {t("nextBooking")}
-          </button>
-        </>
-      )}{" "}
-      {canToggleMonth && (
-        <div className="btn-group btn-group-sm" role="group">
-          <button
-            type="button"
-            className={`btn ${isMonthView ? "btn-outline-secondary" : "btn-secondary"}`}
-            aria-pressed={!isMonthView}
-            onClick={() => toolbar.onView("week")}
-          >
-            {t("week")}
+            <IconChevronLeft className="feather" />
           </button>
           <button
             type="button"
-            className={`btn ${isMonthView ? "btn-secondary" : "btn-outline-secondary"}`}
-            aria-pressed={isMonthView}
-            onClick={() => toolbar.onView("month")}
+            className="btn btn-outline-secondary"
+            onClick={() => toolbar.onNavigate("NEXT")}
+            aria-label={t("next")}
+            title={t("next")}
           >
-            {t("month")}
+            <IconChevronRight className="feather" />
           </button>
         </div>
-      )}{" "}
-      <span className="toolbar-label">
-        {isDayView
-          ? formatter.format(toolbar.date)
-          : isMonthView
-            ? toolbar.label
-            : `${formatter.format(periodStart.toDate())} – ${formatter.format(periodEnd.toDate())}`}
-      </span>
+        <h2 className="toolbar-label" aria-live="polite">
+          {label}
+        </h2>
+      </div>
+      <div className="toolbar-group">
+        {timezone && (
+          <span
+            className="toolbar-timezone d-none d-md-inline-flex"
+            title={t("timezone")}
+            data-testid="calendar-timezone"
+          >
+            <IconGlobe className="feather" />
+            {timezone}
+          </span>
+        )}
+        {events && events.length > 0 && (
+          <div className="btn-group btn-group-sm" role="group">
+            <button
+              type="button"
+              className="btn btn-outline-secondary"
+              disabled={!prevEventWeek}
+              onClick={() => goToPreviousEvent()}
+            >
+              <IconSkipBack className="feather" /> {t("previousBooking")}
+            </button>
+            <button
+              type="button"
+              className="btn btn-outline-secondary"
+              disabled={!nextEventWeek}
+              onClick={() => goToNextEvent()}
+            >
+              {t("nextBooking")} <IconSkipForward className="feather" />
+            </button>
+          </div>
+        )}
+        {canToggleMonth && (
+          <div className="toolbar-view-switch" role="group">
+            <button
+              type="button"
+              className={isMonthView ? "" : "active"}
+              aria-pressed={!isMonthView}
+              onClick={() => toolbar.onView("week")}
+            >
+              {t("week")}
+            </button>
+            <button
+              type="button"
+              className={isMonthView ? "active" : ""}
+              aria-pressed={isMonthView}
+              onClick={() => toolbar.onView("month")}
+            >
+              {t("month")}
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
