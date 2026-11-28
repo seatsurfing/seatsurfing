@@ -229,8 +229,12 @@
   fill: color-mix(in srgb, var(--space-color) 34%, var(--bs-body-bg));
 }
 
-.space-box.space-tinted p {
+.space-box.space-tinted p,
+.space-box.space-tinted .space-icons {
   color: color-mix(in srgb, var(--space-color) 60%, var(--bs-emphasis-color));
+}
+
+.space-box.space-tinted p {
   font-weight: 600;
 }
 
