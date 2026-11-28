@@ -433,7 +433,7 @@ class Bookings extends React.Component<Props, State> {
             {this.state.selectedItem && (
               <div className="cancel-booking-summary">
                 {this.state.selectedItem.subject && (
-                  <div className="my-booking-space">
+                  <div className="my-booking-space text-wrap text-break">
                     {this.state.selectedItem.subject}
                   </div>
                 )}
