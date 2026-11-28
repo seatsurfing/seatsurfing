@@ -85,6 +85,15 @@ func (r *RoleStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 			panic(err)
 		}
 	}
+	if curVersion < 68 {
+		// The auth_providers permission was folded into org_settings.
+		// Roles that granted only auth_providers are deliberately not
+		// promoted to org_settings, which would widen their access.
+		if _, err := GetDatabase().DB().Exec(
+			"DELETE FROM role_permissions WHERE permission = $1", "auth_providers"); err != nil {
+			panic(err)
+		}
+	}
 }
 
 // legacyRoleColumnExists reports whether users.role is still present. The

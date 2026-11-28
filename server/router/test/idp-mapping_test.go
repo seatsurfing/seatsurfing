@@ -292,12 +292,12 @@ func TestAuthProviderMappingNoEscalation(t *testing.T) {
 	org := CreateTestOrg("test.com")
 	CreateTestUserOrgAdmin(org)
 	limited := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{
-		PermissionRoles:         PermissionLevelAdmin,
-		PermissionAuthProviders: PermissionLevelAdmin,
+		PermissionRoles:       PermissionLevelAdmin,
+		PermissionOrgSettings: PermissionLevelAdmin,
 	})
 	loginResponse := LoginTestUser(limited.ID)
 	provider := createTestAuthProvider(org, "groups")
-	powerful := CreateTestRole(org, "Powerful", map[Permission]PermissionLevel{PermissionOrgSettings: PermissionLevelAdmin})
+	powerful := CreateTestRole(org, "Powerful", map[Permission]PermissionLevel{PermissionUsers: PermissionLevelAdmin})
 
 	payload := `{"mappings":[{"claimValue":"/eng","targetType":"role","targetId":"` + powerful.ID + `"}]}`
 	req := NewHTTPRequest("PUT", "/auth-provider/"+provider.ID+"/mapping", loginResponse.UserID, bytes.NewBufferString(payload))

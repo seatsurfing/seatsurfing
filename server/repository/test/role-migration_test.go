@@ -110,7 +110,7 @@ func TestMigrationPreservesEffectiveAccess(t *testing.T) {
 	CheckTestInt(t, int(PermissionLevelRead), int(perms[PermissionUsers]))
 	CheckTestInt(t, int(PermissionLevelRead), int(perms[PermissionGroups]))
 	// Space admins were never able to reach these.
-	for _, p := range []Permission{PermissionOrgSettings, PermissionAuthProviders, PermissionAuditLog, PermissionServiceAccounts, PermissionRoles} {
+	for _, p := range []Permission{PermissionOrgSettings, PermissionAuditLog, PermissionServiceAccounts, PermissionRoles} {
 		if perms[p] != PermissionLevelNone {
 			t.Fatalf("expected space admin to have no access to %s, got %d", p, perms[p])
 		}
@@ -260,4 +260,38 @@ func TestMigrationDowngradesApprovalsAdmin(t *testing.T) {
 	CheckTestInt(t, int(PermissionLevelAdmin), int(system.Permissions[PermissionApprovals]))
 	api, _ = GetRoleRepository().GetOne(api.ID)
 	CheckTestInt(t, int(PermissionLevelAdmin), int(api.Permissions[PermissionApprovals]))
+}
+
+// The auth_providers permission was folded into org_settings. Stored grants
+// for it are removed without promoting the role to org_settings.
+func TestMigrationRemovesAuthProvidersPermission(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	idpOnly := CreateTestRole(org, "IdP", map[Permission]PermissionLevel{
+		PermissionGroups: PermissionLevelAdmin,
+	})
+	settings := CreateTestRole(org, "Settings", map[Permission]PermissionLevel{
+		PermissionOrgSettings: PermissionLevelAdmin,
+	})
+	for _, roleID := range []string{idpOnly.ID, settings.ID} {
+		if _, err := GetDatabase().DB().Exec("INSERT INTO role_permissions (role_id, permission, level) VALUES ($1, $2, $3)",
+			roleID, "auth_providers", int(PermissionLevelAdmin)); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	GetRoleRepository().RunSchemaUpgrade(67, 68)
+
+	var n int
+	if err := GetDatabase().DB().QueryRow("SELECT COUNT(*) FROM role_permissions WHERE permission = $1", "auth_providers").Scan(&n); err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, 0, n)
+	idpOnly, _ = GetRoleRepository().GetOne(idpOnly.ID)
+	CheckTestInt(t, 1, len(idpOnly.Permissions))
+	CheckTestInt(t, int(PermissionLevelAdmin), int(idpOnly.Permissions[PermissionGroups]))
+	CheckTestInt(t, int(PermissionLevelNone), int(idpOnly.Permissions[PermissionOrgSettings]))
+	settings, _ = GetRoleRepository().GetOne(settings.ID)
+	CheckTestInt(t, 1, len(settings.Permissions))
+	CheckTestInt(t, int(PermissionLevelAdmin), int(settings.Permissions[PermissionOrgSettings]))
 }

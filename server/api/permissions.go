@@ -33,7 +33,6 @@ const (
 	PermissionGroups          Permission = "groups"
 	PermissionRoles           Permission = "roles"
 	PermissionServiceAccounts Permission = "service_accounts"
-	PermissionAuthProviders   Permission = "auth_providers"
 	PermissionOrgSettings     Permission = "org_settings"
 	PermissionAuditLog        Permission = "audit_log"
 )
@@ -88,7 +87,6 @@ var builtInPermissions = []PermissionDefinition{
 	{Key: PermissionGroups, AllowedLevels: []PermissionLevel{PermissionLevelNone, PermissionLevelRead, PermissionLevelWrite, PermissionLevelAdmin}},
 	{Key: PermissionRoles, AllowedLevels: []PermissionLevel{PermissionLevelNone, PermissionLevelRead, PermissionLevelAdmin}},
 	{Key: PermissionServiceAccounts, AllowedLevels: []PermissionLevel{PermissionLevelNone, PermissionLevelAdmin}},
-	{Key: PermissionAuthProviders, AllowedLevels: []PermissionLevel{PermissionLevelNone, PermissionLevelAdmin}},
 	{Key: PermissionOrgSettings, AllowedLevels: []PermissionLevel{PermissionLevelNone, PermissionLevelAdmin}},
 	{Key: PermissionAuditLog, AllowedLevels: []PermissionLevel{PermissionLevelNone, PermissionLevelRead}},
 }

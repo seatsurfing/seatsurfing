@@ -266,7 +266,7 @@ class Settings extends React.Component<Props, State> {
   loadAuthProviders = async (): Promise<void> => {
     if (
       !RuntimeConfig.hasPermission(
-        Permission.AuthProviders,
+        Permission.OrgSettings,
         PermissionLevel.Admin,
       )
     ) {
@@ -2025,7 +2025,7 @@ class Settings extends React.Component<Props, State> {
           {/* AUTH PROVIDERS */}
 
           {RuntimeConfig.hasPermission(
-            Permission.AuthProviders,
+            Permission.OrgSettings,
             PermissionLevel.Admin,
           ) && (
             <>

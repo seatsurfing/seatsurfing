@@ -24,7 +24,6 @@ export const Permission = {
   Groups: "groups",
   Roles: "roles",
   ServiceAccounts: "service_accounts",
-  AuthProviders: "auth_providers",
   OrgSettings: "org_settings",
   AuditLog: "audit_log",
 } as const;
