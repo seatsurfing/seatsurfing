@@ -700,6 +700,10 @@
   "list": "List",
   "disallowed": "disallowed",
   "userHigherPrivilegesReadOnly": "This user holds permissions beyond your own and can therefore not be edited.",
+  "defaultLocation": "Default area",
+  "defaultLocationHint": "Pre-selected on the booking page for users who have not set a preferred area.",
+  "defaultLocationAutomatic": "Automatic: first enabled area",
+  "orgDefaultLocation": "Organization default: {{name}}",
   "preview": "Preview",
   "imageDimensions": "{{width}} × {{height}} pixels",
   "openInNewTab": "Open in new tab"

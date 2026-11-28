@@ -477,6 +477,16 @@ class Preferences extends React.Component<Props, State> {
     );
   }
 
+  getNoPreferredLocationLabel = (): string => {
+    const orgDefault = this.locations.find(
+      (l) => l.id === RuntimeConfig.INFOS.defaultLocationId && l.enabled,
+    );
+    if (orgDefault) {
+      return this.props.t("orgDefaultLocation", { name: orgDefault.name });
+    }
+    return this.props.t("none");
+  };
+
   render() {
     if (this.state.loading) {
       return <Loading />;
@@ -805,7 +815,9 @@ class Preferences extends React.Component<Props, State> {
                     this.setState({ locationId: e.target.value })
                   }
                 >
-                  <option value="">({this.props.t("none")})</option>
+                  <option value="">
+                    ({this.getNoPreferredLocationLabel()})
+                  </option>
                   {this.locations.map((location) => (
                     <option key={"location-" + location.id} value={location.id}>
                       {location.name}

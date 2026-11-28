@@ -224,6 +224,9 @@ func (router *SettingsRouter) setSetting(w http.ResponseWriter, r *http.Request)
 		SendBadRequest(w)
 		return
 	}
+	if !router.checkOrgReferences(w, user.OrganizationID, map[string]string{vars["name"]: value.Value}) {
+		return
+	}
 	err := router.doSetOne(user.OrganizationID, vars["name"], value.Value)
 	if err != nil {
 		log.Println(err)
@@ -336,6 +339,12 @@ func (router *SettingsRouter) setAll(w http.ResponseWriter, r *http.Request) {
 	}
 	pending := map[string]string{}
 	for _, e := range list {
+		// Reject duplicate names: the cross-setting checks below only see the
+		// last value per name, but every entry in list would be written.
+		if _, exists := pending[e.Name]; exists {
+			SendBadRequest(w)
+			return
+		}
 		if !router.isValidSettingNameWrite(e.Name) {
 			SendNotFound(w)
 			return
@@ -354,6 +363,9 @@ func (router *SettingsRouter) setAll(w http.ResponseWriter, r *http.Request) {
 		SendBadRequest(w)
 		return
 	}
+	if !router.checkOrgReferences(w, user.OrganizationID, pending) {
+		return
+	}
 	for _, e := range list {
 		err := router.doSetOne(user.OrganizationID, e.Name, e.Value)
 		if err != nil {
@@ -367,6 +379,37 @@ func (router *SettingsRouter) setAll(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	SendUpdated(w)
+}
+
+// checkOrgReferences writes 400 (or 500) and returns false if a setting
+// references an entity outside the organization.
+func (router *SettingsRouter) checkOrgReferences(w http.ResponseWriter, organizationID string, settings map[string]string) bool {
+	value, ok := settings[SettingDefaultLocationID.Name]
+	if !ok {
+		return true
+	}
+	if value == "" {
+		return true
+	}
+	if !ValidateGUID(value) {
+		SendBadRequest(w)
+		return false
+	}
+	location, err := GetLocationRepository().GetOne(value)
+	if errors.Is(err, sql.ErrNoRows) {
+		SendBadRequest(w)
+		return false
+	}
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return false
+	}
+	if location.OrganizationID != organizationID {
+		SendBadRequest(w)
+		return false
+	}
+	return true
 }
 
 func (router *SettingsRouter) doSetOne(organizationID, name, value string) error {
@@ -434,7 +477,8 @@ func (router *SettingsRouter) isValidSettingNameReadPublic(name string) bool {
 		name == SettingAllowRecurringBookings.Name ||
 		name == SettingPublicBookingEnabled.Name ||
 		name == SettingFeaturePublicBooking.Name ||
-		name == SettingDefaultBookingView.Name {
+		name == SettingDefaultBookingView.Name ||
+		name == SettingDefaultLocationID.Name {
 		return true
 	}
 	return false
@@ -503,7 +547,8 @@ func (router *SettingsRouter) isValidSettingNameWrite(name string) bool {
 		name == SettingPublicBookingMinDurationHours.Name ||
 		name == SettingPublicBookingMaxDurationHours.Name ||
 		name == SettingHideDisallowedLocations.Name ||
-		name == SettingDefaultBookingView.Name {
+		name == SettingDefaultBookingView.Name ||
+		name == SettingDefaultLocationID.Name {
 		return true
 	}
 	return false
@@ -617,6 +662,9 @@ func (router *SettingsRouter) getSettingType(name string) SettingType {
 	}
 	if name == SettingDefaultBookingView.Name {
 		return SettingDefaultBookingView.Type
+	}
+	if name == SettingDefaultLocationID.Name {
+		return SettingDefaultLocationID.Type
 	}
 	return 0
 }

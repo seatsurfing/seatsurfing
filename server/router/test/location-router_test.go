@@ -1156,3 +1156,25 @@ func TestLocationsForeignOrgAllowedBookerGroup(t *testing.T) {
 	CheckTestInt(t, 1, len(allowedBookers))
 	CheckTestString(t, ownGroup.ID, allowedBookers[0].GroupID)
 }
+
+func TestLocationsDeleteDefaultLocation(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+	defaultLocation, _ := CreateTestLocationAndSpace(org)
+	otherLocation, _ := CreateTestLocationAndSpace(org)
+	GetSettingsRepository().Set(org.ID, SettingDefaultLocationID.Name, defaultLocation.ID)
+
+	req := NewHTTPRequest("DELETE", "/location/"+otherLocation.ID, loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+	value, _ := GetSettingsRepository().Get(org.ID, SettingDefaultLocationID.Name)
+	CheckTestString(t, defaultLocation.ID, value)
+
+	req = NewHTTPRequest("DELETE", "/location/"+defaultLocation.ID, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+	_, err := GetSettingsRepository().Get(org.ID, SettingDefaultLocationID.Name)
+	CheckTestBool(t, true, err != nil)
+}

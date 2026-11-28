@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"testing"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
@@ -901,4 +902,128 @@ func getTestSettingFromList(t *testing.T, userID, name string) string {
 		}
 	}
 	return "<missing>"
+}
+
+func TestSettingsDefaultLocation(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	adminLogin := LoginTestUser(admin.ID)
+	location, _ := CreateTestLocationAndSpace(org)
+
+	payload := `{"value": "` + location.ID + `"}`
+	req := NewHTTPRequest("PUT", "/setting/"+SettingDefaultLocationID.Name, adminLogin.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	user := CreateTestUserInOrg(org)
+	userLogin := LoginTestUser(user.ID)
+	req = NewHTTPRequest("GET", "/setting/"+SettingDefaultLocationID.Name, userLogin.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var value string
+	json.Unmarshal(res.Body.Bytes(), &value)
+	CheckTestString(t, location.ID, value)
+
+	payload = `{"value": ""}`
+	req = NewHTTPRequest("PUT", "/setting/"+SettingDefaultLocationID.Name, adminLogin.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+	stored, _ := GetSettingsRepository().Get(org.ID, SettingDefaultLocationID.Name)
+	CheckTestString(t, "", stored)
+}
+
+func TestSettingsDefaultLocationForbiddenForUser(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	loginResponse := LoginTestUser(user.ID)
+	location, _ := CreateTestLocationAndSpace(org)
+
+	payload := `{"value": "` + location.ID + `"}`
+	req := NewHTTPRequest("PUT", "/setting/"+SettingDefaultLocationID.Name, loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func TestSettingsDefaultLocationForeignOrg(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(admin.ID)
+	otherOrg := CreateTestOrg("other.com")
+	otherLocation, _ := CreateTestLocationAndSpace(otherOrg)
+
+	payload := `{"value": "` + otherLocation.ID + `"}`
+	req := NewHTTPRequest("PUT", "/setting/"+SettingDefaultLocationID.Name, loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	payload = `[{"name": "` + SettingDefaultLocationID.Name + `", "value": "` + otherLocation.ID + `"}]`
+	req = NewHTTPRequest("PUT", "/setting/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	payload = `{"value": "not-a-uuid"}`
+	req = NewHTTPRequest("PUT", "/setting/"+SettingDefaultLocationID.Name, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	payload = `{"value": "8a9f2e4c-1b3d-4f5a-9c7e-0d2b4f6a8c1e"}`
+	req = NewHTTPRequest("PUT", "/setting/"+SettingDefaultLocationID.Name, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	_, err := GetSettingsRepository().Get(org.ID, SettingDefaultLocationID.Name)
+	CheckTestBool(t, true, err != nil)
+}
+
+func TestSettingsDefaultLocationDuplicateNameBypass(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(admin.ID)
+	otherOrg := CreateTestOrg("other.com")
+	otherLocation, _ := CreateTestLocationAndSpace(otherOrg)
+
+	// A foreign reference followed by an empty value for the same name must not
+	// slip past the ownership check.
+	payload := `[{"name": "` + SettingDefaultLocationID.Name + `", "value": "` + otherLocation.ID + `"}, ` +
+		`{"name": "` + SettingDefaultLocationID.Name + `", "value": ""}]`
+	req := NewHTTPRequest("PUT", "/setting/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	_, err := GetSettingsRepository().Get(org.ID, SettingDefaultLocationID.Name)
+	CheckTestBool(t, true, err != nil)
+
+	// Duplicates are rejected even when both values are valid.
+	location, _ := CreateTestLocationAndSpace(org)
+	payload = `[{"name": "` + SettingDefaultLocationID.Name + `", "value": "` + location.ID + `"}, ` +
+		`{"name": "` + SettingDefaultLocationID.Name + `", "value": "` + location.ID + `"}]`
+	req = NewHTTPRequest("PUT", "/setting/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+}
+
+func TestSettingsDefaultLocationUppercaseID(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(admin.ID)
+	location, _ := CreateTestLocationAndSpace(org)
+	upperID := strings.ToUpper(location.ID)
+
+	payload := `{"value": "` + upperID + `"}`
+	req := NewHTTPRequest("PUT", "/setting/"+SettingDefaultLocationID.Name, loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	payload = `[{"name": "` + SettingDefaultLocationID.Name + `", "value": "` + upperID + `"}]`
+	req = NewHTTPRequest("PUT", "/setting/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	_, err := GetSettingsRepository().Get(org.ID, SettingDefaultLocationID.Name)
+	CheckTestBool(t, true, err != nil)
 }

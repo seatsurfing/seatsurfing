@@ -82,6 +82,15 @@ func (r *SettingsStore) Delete(organizationID string, name string) error {
 	return nil
 }
 
+func (r *SettingsStore) DeleteIfValue(organizationID, name, value string) error {
+	if _, err := GetDatabase().DB().Exec("DELETE FROM settings WHERE organization_id = $1 AND name = $2 AND value = $3",
+		organizationID, name, value); err != nil {
+		return err
+	}
+	GetCache().Delete(organizationID + "_" + name)
+	return nil
+}
+
 func (r *SettingsStore) Get(organizationID string, name string) (string, error) {
 	// Check cache first
 	cachRes, err := GetCache().Get(organizationID + "_" + name)

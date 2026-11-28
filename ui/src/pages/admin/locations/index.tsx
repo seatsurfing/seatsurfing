@@ -1,5 +1,5 @@
 import React from "react";
-import { Table } from "react-bootstrap";
+import { Badge, Table } from "react-bootstrap";
 import {
   Plus as IconPlus,
   Download as IconDownload,
@@ -13,13 +13,14 @@ import withReadyRouter from "@/components/withReadyRouter";
 import withPermission from "@/components/withPermission";
 import { Permission, PermissionLevel } from "@/types/Permission";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
-import Ajax from "@/util/Ajax";
 import Location from "@/types/Location";
 
 import RendererUtils from "@/util/RendererUtils";
 import Navigation from "@/util/Navigation";
 import CopyToClipboardButton from "@/components/CopyToClipboardButton";
 import RuntimeConfig from "@/components/RuntimeConfig";
+import OrgSettings from "@/types/Settings";
+import Organization from "@/types/Organization";
 
 interface State {
   selectedItem: string;
@@ -33,6 +34,7 @@ interface Props {
 
 class Locations extends React.Component<Props, State> {
   data: Location[] = [];
+  defaultLocationId: string = "";
   ExcellentExport: any;
 
   constructor(props: any) {
@@ -50,11 +52,16 @@ class Locations extends React.Component<Props, State> {
     this.loadItems();
   };
 
-  loadItems = () => {
-    Location.list().then((list) => {
-      this.data = list;
-      this.setState({ loading: false });
-    });
+  loadItems = async () => {
+    const [list, settings] = await Promise.all([
+      Location.list(),
+      OrgSettings.list(),
+    ]);
+    this.data = list;
+    this.defaultLocationId =
+      settings.find((s) => s.name === Organization.PREF_DEFAULT_LOCATION_ID)
+        ?.value || "";
+    this.setState({ loading: false });
   };
 
   onItemSelect = (location: Location) => {
@@ -69,7 +76,15 @@ class Locations extends React.Component<Props, State> {
         onClick={() => this.onItemSelect(location)}
         title={location.description}
       >
-        <td>{location.name}</td>
+        <td>
+          {location.name}
+          {location.id === this.defaultLocationId && (
+            <>
+              &nbsp;
+              <Badge bg="primary">{this.props.t("default")}</Badge>
+            </>
+          )}
+        </td>
         <td>{RendererUtils.state(location.enabled)}</td>
         <td>
           {location.mapWidth}&nbsp;&times;&nbsp;{location.mapHeight}

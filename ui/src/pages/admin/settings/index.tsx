@@ -54,6 +54,7 @@ import AlertModal from "@/components/AlertModal";
 import LogoPreviewModal from "@/components/LogoPreviewModal";
 import HintTooltip from "@/components/HintTooltip";
 import BookingAttributesEditor from "@/components/BookingAttributesEditor";
+import Location from "@/types/Location";
 
 interface State {
   allowAnyUser: boolean;
@@ -68,6 +69,7 @@ interface State {
   bookingRetentionDays: number;
   subjectDefault: number;
   defaultBookingView: string;
+  defaultLocationId: string;
   enableMaxHoursBeforeDelete: boolean;
   maxHoursBeforeDelete: number;
   maxHoursPartiallyBooked: number;
@@ -131,6 +133,7 @@ class Settings extends React.Component<Props, State> {
   org: Organization | null;
   authProviders: AuthProvider[];
   publicBookingSpaces: PublicBookableSpace[] = [];
+  locations: Location[] = [];
   timezones: string[];
   maxConcurrentBookingsPerUserLastValue: number;
 
@@ -156,6 +159,7 @@ class Settings extends React.Component<Props, State> {
       bookingRetentionDays: 0,
       subjectDefault: 0,
       defaultBookingView: "map",
+      defaultLocationId: "",
       enableMaxHoursBeforeDelete: false,
       maxHoursBeforeDelete: 0,
       maxHoursPartiallyBooked: 0,
@@ -207,6 +211,7 @@ class Settings extends React.Component<Props, State> {
       this.loadItems(),
       this.loadAuthProviders(),
       this.loadTimezones(),
+      this.loadLocations(),
       this.checkUpdates(),
     ];
     Promise.all(promises).then(() => {
@@ -228,6 +233,14 @@ class Settings extends React.Component<Props, State> {
         });
       });
     });
+  };
+
+  loadLocations = async (): Promise<void> => {
+    try {
+      this.locations = await Location.list();
+    } catch {
+      this.locations = [];
+    }
   };
 
   loadPublicBookingSpaces = async (orgId: string): Promise<void> => {
@@ -315,6 +328,8 @@ class Settings extends React.Component<Props, State> {
           state.subjectDefault = window.parseInt(s.value);
         if (s.name === Organization.PREF_DEFAULT_BOOKING_VIEW)
           state.defaultBookingView = s.value;
+        if (s.name === Organization.PREF_DEFAULT_LOCATION_ID)
+          state.defaultLocationId = s.value;
         if (s.name === Organization.PREF_NO_ADMIN_RESTRICTIONS)
           state.noAdminRestrictions = s.value === "1";
         if (s.name === Organization.PREF_SHOW_NAMES)
@@ -542,6 +557,10 @@ class Settings extends React.Component<Props, State> {
       new OrgSettings(
         Organization.PREF_DEFAULT_BOOKING_VIEW,
         this.state.defaultBookingView,
+      ),
+      new OrgSettings(
+        Organization.PREF_DEFAULT_LOCATION_ID,
+        this.state.defaultLocationId,
       ),
       new OrgSettings(
         Organization.PREF_KIOSK_MODE_ENABLED,
@@ -1261,6 +1280,30 @@ class Settings extends React.Component<Props, State> {
               >
                 <option value="map">{this.props.t("map")}</option>
                 <option value="list">{this.props.t("list")}</option>
+              </Form.Select>
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2" htmlFor="select-defaultLocation">
+              {this.props.t("defaultLocation")}
+              <HintTooltip hint={this.props.t("defaultLocationHint")} />
+            </Form.Label>
+            <Col sm="4">
+              <Form.Select
+                id="select-defaultLocation"
+                value={this.state.defaultLocationId}
+                onChange={(e: any) =>
+                  this.setState({ defaultLocationId: e.target.value })
+                }
+              >
+                <option value="">
+                  ({this.props.t("defaultLocationAutomatic")})
+                </option>
+                {this.locations.map((location) => (
+                  <option key={location.id} value={location.id}>
+                    {location.name}
+                  </option>
+                ))}
               </Form.Select>
             </Col>
           </Form.Group>
