@@ -36,10 +36,15 @@ test("crud booking", async ({ page }) => {
   await expect(page.getByText("Loading …")).not.toBeVisible();
   await page.getByLabel("Calendar", { exact: true }).click(); // switch to list view
   await page
-    .getByText(/Sample Floor/)
+    .getByRole("listitem")
+    .filter({ hasText: "Sample Floor" })
     .first()
+    .getByRole("button", { name: "Cancel booking" })
     .click();
-  await page.getByRole("button", { name: "Cancel booking" }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Cancel booking" })
+    .click();
   await expect(page.getByText("No bookings.")).toBeVisible();
   await page.getByRole("link", { name: "Book a space" }).click();
   await expect(page).toHaveURL(/search\/(\?.*)?$/);

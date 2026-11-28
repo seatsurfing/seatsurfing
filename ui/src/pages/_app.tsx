@@ -13,6 +13,7 @@ import "@/styles/Settings.css";
 import "@/styles/SideBar.css";
 import "@/styles/FullLayout.css";
 import "@/styles/Booking.css";
+import "@/styles/MyBookings.css";
 import "@/styles/FloorPlanDesigner.css";
 import "@/styles/SpaceImage.css";
 import "@/styles/Theme.css";
