@@ -295,6 +295,8 @@ func spaceToProto(s *Space) *commonpb.Space {
 		KioskEnabled:   s.KioskEnabled,
 		Shape:          s.Shape,
 		FontSize:       s.FontSize,
+		BlockedFrom:    nullTimeToProto(s.BlockedFrom),
+		BlockedUntil:   nullTimeToProto(s.BlockedUntil),
 	}
 }
 
@@ -316,6 +318,8 @@ func spaceFromProto(p *commonpb.Space) *Space {
 		KioskEnabled:   p.KioskEnabled,
 		Shape:          p.Shape,
 		FontSize:       p.FontSize,
+		BlockedFrom:    nullTimeFromProto(p.BlockedFrom),
+		BlockedUntil:   nullTimeFromProto(p.BlockedUntil),
 	}
 }
 

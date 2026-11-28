@@ -38,6 +38,26 @@ describe("Validation", () => {
     });
   });
 
+  describe("isHttpsUrl", () => {
+    it("accepts https URLs", () => {
+      expect(Validation.isHttpsUrl("https://example.com")).toBe(true);
+      expect(Validation.isHttpsUrl("https://example.com/logo.png?v=1")).toBe(
+        true,
+      );
+    });
+
+    it("rejects http, other schemes, relative and malformed URLs", () => {
+      expect(Validation.isHttpsUrl("http://example.com/logo.svg")).toBe(false);
+      expect(Validation.isHttpsUrl("")).toBe(false);
+      expect(Validation.isHttpsUrl("not a url")).toBe(false);
+      expect(Validation.isHttpsUrl("/ui/logo.svg")).toBe(false);
+      expect(Validation.isHttpsUrl("//example.com/logo.svg")).toBe(false);
+      expect(Validation.isHttpsUrl("ftp://example.com/logo.svg")).toBe(false);
+      expect(Validation.isHttpsUrl("javascript:alert(1)")).toBe(false);
+      expect(Validation.isHttpsUrl("https://")).toBe(false);
+    });
+  });
+
   describe("isAbsoluteUrl", () => {
     it("should return true for http URLs", () => {
       expect(Validation.isAbsoluteUrl("http://example.com")).toBe(true);

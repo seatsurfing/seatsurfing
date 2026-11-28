@@ -1406,3 +1406,96 @@ func TestSpaceRouterBulkUpdateDuplicateApproverGroup(t *testing.T) {
 	}
 	CheckTestInt(t, 1, len(approvers))
 }
+
+func TestSpacesBlockedPeriod(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+	location := &Location{Name: "Location 1", OrganizationID: org.ID}
+	GetLocationRepository().Create(location)
+	baseURL := "/location/" + location.ID + "/space/"
+
+	payload := `{"name": "H1", "shape": "rect", "fontSize": "normal", "blockedFrom": "2030-09-04", "blockedUntil": "2030-09-06"}`
+	req := NewHTTPRequest("POST", baseURL, loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+
+	req = NewHTTPRequest("GET", baseURL+id, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *GetSpaceResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestString(t, "2030-09-04", resBody.BlockedFrom)
+	CheckTestString(t, "2030-09-06", resBody.BlockedUntil)
+
+	// Only end date
+	payload = `{"name": "H1", "shape": "rect", "fontSize": "normal", "blockedUntil": "2030-09-06"}`
+	req = NewHTTPRequest("PUT", baseURL+id, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+	req = NewHTTPRequest("GET", baseURL, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	var list []*GetSpaceResponse
+	json.Unmarshal(res.Body.Bytes(), &list)
+	CheckTestInt(t, 1, len(list))
+	CheckTestString(t, "", list[0].BlockedFrom)
+	CheckTestString(t, "2030-09-06", list[0].BlockedUntil)
+
+	req = NewHTTPRequest("GET", baseURL+"availability?enter=2030-09-05T08:00:00Z&leave=2030-09-05T17:00:00Z", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var availability []*GetSpaceAvailabilityResponse
+	json.Unmarshal(res.Body.Bytes(), &availability)
+	CheckTestInt(t, 1, len(availability))
+	CheckTestString(t, "2030-09-06", availability[0].BlockedUntil)
+	CheckTestBool(t, false, availability[0].IsAllowed)
+
+	// Bulk update clears the period
+	payload = `{"updates": [{"id": "` + id + `", "name": "H1", "shape": "rect", "fontSize": "normal"}]}`
+	req = NewHTTPRequest("POST", baseURL+"bulk", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var bulkRes *BulkUpdateResponse
+	json.Unmarshal(res.Body.Bytes(), &bulkRes)
+	CheckTestBool(t, true, bulkRes.Updates[0].Success)
+	space, _ := GetSpaceRepository().GetOne(id)
+	CheckTestBool(t, true, space.BlockedFrom == nil)
+	CheckTestBool(t, true, space.BlockedUntil == nil)
+}
+
+func TestSpacesBlockedPeriodInvalid(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+	location, space := CreateTestLocationAndSpace(org)
+	baseURL := "/location/" + location.ID + "/space/"
+
+	payloads := []string{
+		`{"name": "H1", "shape": "rect", "fontSize": "normal", "blockedFrom": "2030-09-06", "blockedUntil": "2030-09-04"}`,
+		`{"name": "H1", "shape": "rect", "fontSize": "normal", "blockedFrom": "04.09.2030"}`,
+		`{"name": "H1", "shape": "rect", "fontSize": "normal", "blockedUntil": "2030-09-04T00:00:00Z"}`,
+	}
+	for _, payload := range payloads {
+		req := NewHTTPRequest("POST", baseURL, loginResponse.UserID, bytes.NewBufferString(payload))
+		res := ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+		req = NewHTTPRequest("PUT", baseURL+space.ID, loginResponse.UserID, bytes.NewBufferString(payload))
+		res = ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	}
+
+	payload := `{"creates": [` + payloads[0] + `], "updates": [{"id": "` + space.ID + `", "name": "H1", "shape": "rect", "fontSize": "normal", "blockedFrom": "2030-09-06", "blockedUntil": "2030-09-04"}]}`
+	req := NewHTTPRequest("POST", baseURL+"bulk", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var bulkRes *BulkUpdateResponse
+	json.Unmarshal(res.Body.Bytes(), &bulkRes)
+	CheckTestBool(t, false, bulkRes.Creates[0].Success)
+	CheckTestBool(t, false, bulkRes.Updates[0].Success)
+	spaces, _ := GetSpaceRepository().GetAll(location.ID)
+	CheckTestInt(t, 1, len(spaces))
+	CheckTestBool(t, true, spaces[0].BlockedFrom == nil)
+}

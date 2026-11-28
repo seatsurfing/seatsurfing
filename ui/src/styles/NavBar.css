@@ -19,3 +19,41 @@
 .navbar-nav .nav-link.active {
   color: var(--bs-primary) !important;
 }
+
+.booking-navbar {
+  border-bottom: 1px solid var(--bs-border-color);
+}
+
+.booking-navbar .navbar-nav {
+  gap: 0.25rem;
+}
+
+.booking-navbar .navbar-nav .nav-link {
+  padding: 0.375rem 0.75rem;
+  border-radius: 999px;
+  font-weight: 500;
+  color: var(--bs-secondary-color);
+  transition:
+    background-color 0.15s ease-in-out,
+    color 0.15s ease-in-out;
+}
+
+.booking-navbar .navbar-nav .nav-link:hover {
+  color: var(--bs-body-color);
+  background-color: var(--bs-tertiary-bg);
+}
+
+.booking-navbar .navbar-nav .nav-link.active {
+  color: var(--bs-primary-text-emphasis) !important;
+  background-color: var(--bs-primary-bg-subtle);
+}
+
+.booking-navbar .navbar-nav .nav-link.icon-link {
+  background-color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .booking-navbar .navbar-nav .nav-link {
+    transition: none;
+  }
+}

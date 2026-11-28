@@ -22,7 +22,7 @@
     "react-markdown": "10.1.0",
     "react-moveable": "0.56.0",
     "react-tooltip": "6.0.13",
-    "react-zoom-pan-pinch": "4.2.0",
+    "react-zoom-pan-pinch": "4.4.0",
     "remark-gfm": "4.0.1"
   },
   "scripts": {
@@ -47,6 +47,6 @@
     "prettier": "3.10.1",
     "typescript": "6.0.3",
     "vite-tsconfig-paths": "6.1.1",
-    "vitest": "5.1.0"
+    "vitest": "5.1.1"
   }
 }

@@ -22,6 +22,15 @@ export default class Validation {
     return /^(https?:)?\/\//i.test(url);
   }
 
+  static isHttpsUrl(url: string): boolean {
+    try {
+      const u = new URL(url);
+      return u.protocol === "https:" && !!u.host;
+    } catch {
+      return false;
+    }
+  }
+
   static isUuid(value: string): boolean {
     return Validation.UUID_PATTERN.test(value);
   }

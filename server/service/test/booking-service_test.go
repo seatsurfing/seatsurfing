@@ -121,23 +121,33 @@ func TestBookingServiceCheckBooking(t *testing.T) {
 	enter, leave := serviceTestSlot(0, 8, 17)
 	location, _ = GetLocationRepository().GetOne(location.ID)
 
-	valid, code := svc.CheckBooking(&BookingInput{SpaceID: space.ID, Enter: enter, Leave: leave}, location, user, "", 0)
-	CheckTestBool(t, true, valid)
-	CheckTestInt(t, 0, code)
+	bErr := svc.CheckBooking(&BookingInput{SpaceID: space.ID, Enter: enter, Leave: leave}, location, user, "", 0)
+	CheckTestBool(t, true, bErr == nil)
 
-	valid, code = svc.CheckBooking(&BookingInput{SpaceID: space.ID, Enter: time.Now().AddDate(0, 0, -3), Leave: time.Now().AddDate(0, 0, -3).Add(time.Hour)}, location, user, "", 0)
-	CheckTestBool(t, false, valid)
-	CheckTestInt(t, BookingCodeInPast, code)
+	bErr = svc.CheckBooking(&BookingInput{SpaceID: space.ID, Enter: time.Now().AddDate(0, 0, -3), Leave: time.Now().AddDate(0, 0, -3).Add(time.Hour)}, location, user, "", 0)
+	CheckTestBool(t, true, bErr != nil && bErr.Kind == BookingErrorInvalid)
+	CheckTestInt(t, BookingCodeInPast, bErr.Code)
 
 	GetSettingsRepository().Set(org.ID, SettingMaxBookingsPerUser.Name, "1")
-	valid, code = svc.CheckBooking(&BookingInput{SpaceID: space.ID, Enter: enter, Leave: leave}, location, user, "", 1)
-	CheckTestBool(t, false, valid)
-	CheckTestInt(t, BookingCodeTooManyUpcomingBookings, code)
+	bErr = svc.CheckBooking(&BookingInput{SpaceID: space.ID, Enter: enter, Leave: leave}, location, user, "", 1)
+	CheckTestBool(t, true, bErr != nil && bErr.Kind == BookingErrorInvalid)
+	CheckTestInt(t, BookingCodeTooManyUpcomingBookings, bErr.Code)
 
 	location.BookableDays = "2,3"
-	valid, code = svc.CheckBooking(&BookingInput{Enter: enter, Leave: leave}, location, user, "", 0)
-	CheckTestBool(t, false, valid)
-	CheckTestInt(t, BookingCodeInvalidWeekday, code)
+	bErr = svc.CheckBooking(&BookingInput{Enter: enter, Leave: leave}, location, user, "", 0)
+	CheckTestBool(t, true, bErr != nil && bErr.Kind == BookingErrorInvalid)
+	CheckTestInt(t, BookingCodeInvalidWeekday, bErr.Code)
+}
+
+func TestBookingServiceCheckBookingSpaceLookupFails(t *testing.T) {
+	_, user, location, space := setupServiceTest(t)
+	svc := GetBookingService()
+	enter, leave := serviceTestSlot(0, 8, 17)
+	location, _ = GetLocationRepository().GetOne(location.ID)
+	GetSpaceRepository().Delete(space)
+
+	bErr := svc.CheckBooking(&BookingInput{SpaceID: space.ID, Enter: enter, Leave: leave}, location, user, "", 0)
+	CheckTestBool(t, true, bErr != nil && bErr.Kind == BookingErrorInternal)
 }
 
 func TestBookingServiceForeignSpaceRevealsNothing(t *testing.T) {

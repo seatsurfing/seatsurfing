@@ -134,6 +134,8 @@ type Space struct {
 	Shape                string
 	FontSize             string
 	PublicBookingEnabled bool
+	BlockedFrom          *time.Time
+	BlockedUntil         *time.Time
 }
 
 type SpaceDetails struct {

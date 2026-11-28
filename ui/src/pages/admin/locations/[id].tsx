@@ -27,7 +27,6 @@ import {
   Type as IconFontSize,
   Globe as IconGlobe,
   Book as IconBook,
-  Image as IconImage,
 } from "react-feather";
 import Moveable from "react-moveable";
 import { NextRouter } from "next/router";
@@ -37,6 +36,7 @@ import withPermission from "@/components/withPermission";
 import { Permission, PermissionLevel } from "@/types/Permission";
 import GroupSearchTypeahead from "@/components/GroupSearchTypeahead";
 import SpaceApprovalIcon from "@/components/SpaceApprovalIcon";
+import SpacePhotoIcon from "@/components/SpacePhotoIcon";
 import CopyToClipboardButton from "@/components/CopyToClipboardButton";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
@@ -101,6 +101,8 @@ interface SpaceState {
   removeImage: boolean;
   shape: string;
   fontSize: string;
+  blockedFrom: string;
+  blockedUntil: string;
   changed: boolean;
   attributes: Map<string, string>;
   enabledAttributes: string[];
@@ -125,7 +127,6 @@ interface SpaceRectProps {
   onRotateEnd: (i: number, rotation: number, x: number, y: number) => void;
   onNameChange: (i: number, name: string) => void;
   unnamedLabel: string;
-  imageLabel: string;
   newSpaceName: (baseName: string) => string;
   mapWidth: number;
   mapHeight: number;
@@ -148,7 +149,6 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
   onRotateEnd,
   onNameChange,
   unnamedLabel,
-  imageLabel,
   newSpaceName,
   mapWidth,
   mapHeight,
@@ -290,11 +290,7 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
                     )}
                 </>
               )}
-              {hasImage && (
-                <span title={imageLabel} style={{ display: "flex" }}>
-                  <IconImage size={16} role="img" aria-label={imageLabel} />
-                </span>
-              )}
+              {hasImage && <SpacePhotoIcon />}
             </div>
           )}
           <input
@@ -705,6 +701,8 @@ class EditLocation extends React.Component<Props, State> {
           (item.approvers?.length ?? 0) > 0 && item.publicBookingEnabled;
         space.shape = item.shape;
         space.fontSize = item.fontSize;
+        space.blockedFrom = item.blockedFrom;
+        space.blockedUntil = item.blockedUntil;
         space.attributes = [];
         item.enabledAttributes.forEach((attributeId) => {
           let value = item.attributes.get(attributeId);
@@ -971,6 +969,8 @@ class EditLocation extends React.Component<Props, State> {
       removeImage: false,
       shape: e ? e.shape || "rect" : "rect",
       fontSize: e ? e.fontSize || "normal" : "normal",
+      blockedFrom: e ? e.blockedFrom : "",
+      blockedUntil: e ? e.blockedUntil : "",
       changed: true,
       attributes: new Map<string, string>(),
       enabledAttributes: [],
@@ -1097,6 +1097,87 @@ class EditLocation extends React.Component<Props, State> {
     this.setState({ spaces: spaces, changed: true });
   };
 
+  setSpaceBlockedPeriod = (i: number, from: string, until: string) => {
+    const spaces = this.state.spaces;
+    const space = { ...spaces[i] };
+    space.blockedFrom = from;
+    space.blockedUntil = until;
+    space.changed = true;
+    spaces[i] = space;
+    this.setState({ spaces: spaces, changed: true });
+  };
+
+  renderSpaceBlockedPeriod = () => {
+    const i = this.state.selectedSpace!;
+    const space = this.getSelectedSpace();
+    const from = space?.blockedFrom ?? "";
+    const until = space?.blockedUntil ?? "";
+    const today = Formatting.getISO8601(new Date());
+    return (
+      <Form.Group as={Row}>
+        <Form.Label column sm="4" htmlFor="space-blocked-from">
+          {this.props.t("blockedPeriod")}
+          <HintTooltip hint={this.props.t("blockedPeriodHintSpace")} />
+        </Form.Label>
+        <Col sm="8">
+          <InputGroup>
+            <InputGroup.Checkbox
+              type="checkbox"
+              id="check-space-blocked-from"
+              aria-label={this.props.t("blockedFrom")}
+              checked={from !== ""}
+              onChange={(e: any) =>
+                this.setSpaceBlockedPeriod(
+                  i,
+                  e.target.checked ? until || today : "",
+                  until,
+                )
+              }
+            />
+            <DateTimePicker
+              id="space-blocked-from"
+              value={from ? this.parseDate(from) : null}
+              onChange={(value: Date) => {
+                const v = Formatting.getISO8601(value);
+                this.setSpaceBlockedPeriod(
+                  i,
+                  v,
+                  until && until < v ? v : until,
+                );
+              }}
+              enableTime={false}
+              disabled={from === ""}
+            />
+            <InputGroup.Text>–</InputGroup.Text>
+            <InputGroup.Checkbox
+              type="checkbox"
+              id="check-space-blocked-until"
+              aria-label={this.props.t("blockedUntil")}
+              checked={until !== ""}
+              onChange={(e: any) =>
+                this.setSpaceBlockedPeriod(
+                  i,
+                  from,
+                  e.target.checked ? from || today : "",
+                )
+              }
+            />
+            <DateTimePicker
+              id="space-blocked-until"
+              value={until ? this.parseDate(until) : null}
+              onChange={(value: Date) => {
+                const v = Formatting.getISO8601(value);
+                this.setSpaceBlockedPeriod(i, from && from > v ? v : from, v);
+              }}
+              enableTime={false}
+              disabled={until === ""}
+            />
+          </InputGroup>
+        </Col>
+      </Form.Group>
+    );
+  };
+
   onSpaceSelect = (i: number) => {
     if (this.state.selectedSpace === i) {
       return;
@@ -1197,7 +1278,6 @@ class EditLocation extends React.Component<Props, State> {
         onRotateEnd={this.setSpaceRotation}
         onNameChange={this.setSpaceName}
         unnamedLabel={this.props.t("unnamed")}
-        imageLabel={this.props.t("image")}
         newSpaceName={this.newSpaceName}
         mapWidth={this.mapData ? this.mapData.width * this.state.mapScale : 0}
         mapHeight={this.mapData ? this.mapData.height * this.state.mapScale : 0}
@@ -1277,9 +1357,16 @@ class EditLocation extends React.Component<Props, State> {
           )}
         </td>
         <td>{RendererUtils.state(space.publicBookingEnabled)}</td>
+        {RuntimeConfig.INFOS.featureSpaceImages && (
+          <td>{RendererUtils.state(this.spaceHasImage(space))}</td>
+        )}
         <td>{bookingLink}</td>
       </tr>
     );
+  };
+
+  spaceHasImage = (space: SpaceState): boolean => {
+    return !!space.pendingImage || (space.hasImage && !space.removeImage);
   };
 
   getAvailableAttributeOptions = () => {
@@ -1467,6 +1554,7 @@ class EditLocation extends React.Component<Props, State> {
   getEditSpaceDetailsModal = () => {
     return (
       <Modal
+        size="lg"
         show={this.state.showEditSpaceDetailsModal}
         onHide={() => this.setState({ showEditSpaceDetailsModal: false })}
       >
@@ -1538,6 +1626,7 @@ class EditLocation extends React.Component<Props, State> {
                 />
               </Col>
             </Form.Group>
+            {this.renderSpaceBlockedPeriod()}
             <Form.Group
               as={Row}
               hidden={
@@ -1856,6 +1945,7 @@ class EditLocation extends React.Component<Props, State> {
     const showKioskMode =
       RuntimeConfig.INFOS.featureKioskMode &&
       RuntimeConfig.INFOS.kioskModeEnabled;
+    const showImages = RuntimeConfig.INFOS.featureSpaceImages;
     const headers = [
       t("name"),
       t("enabled"),
@@ -1864,6 +1954,7 @@ class EditLocation extends React.Component<Props, State> {
       t("approvers"),
       t("allowBookers"),
       t("publicBooking"),
+      ...(showImages ? [t("image")] : []),
       t("bookingLink"),
     ];
     const rows = this.state.spaces.map((space) => [
@@ -1877,6 +1968,9 @@ class EditLocation extends React.Component<Props, State> {
         t,
       ),
       RendererUtils.stateXls(space.publicBookingEnabled, t),
+      ...(showImages
+        ? [RendererUtils.stateXls(this.spaceHasImage(space), t)]
+        : []),
       space.id ? Navigation.spaceAbsolute(this.entity.id, space.id) : "",
     ]);
     return this.ExcellentExport.convert(
@@ -2246,6 +2340,9 @@ class EditLocation extends React.Component<Props, State> {
                   {this.props.t("allowBookers")} <PremiumFeatureIcon />
                 </th>
                 <th>{this.props.t("publicBooking")}</th>
+                {RuntimeConfig.INFOS.featureSpaceImages && (
+                  <th>{this.props.t("image")}</th>
+                )}
                 <th>{this.props.t("bookingLink")}</th>
               </tr>
             </thead>
@@ -2407,7 +2504,7 @@ class EditLocation extends React.Component<Props, State> {
           <Form.Group as={Row}>
             <Form.Label column sm="2" htmlFor="location-blocked-from">
               {this.props.t("blockedPeriod")}
-              <HintTooltip hint={this.props.t("blockedPeriodHint")} />
+              <HintTooltip hint={this.props.t("blockedPeriodHintLocation")} />
             </Form.Label>
             <Col sm="4">
               <InputGroup>

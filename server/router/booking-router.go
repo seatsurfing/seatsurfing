@@ -468,8 +468,8 @@ func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
 		Leave:   eNew.Leave,
 	}
 
-	if valid, code := service.GetBookingService().CheckBooking(bookingReq, location, requestUser, eNew.ID, 0); !valid {
-		SendBadRequestCode(w, code)
+	if bErr := service.GetBookingService().CheckBooking(bookingReq, location, requestUser, eNew.ID, 0); bErr != nil {
+		sendBookingError(w, bErr)
 		return
 	}
 	conflicts, err := GetBookingRepository().GetConflicts(eNew.SpaceID, eNew.Enter, eNew.Leave, eNew.ID)
@@ -531,8 +531,8 @@ func (router *BookingRouter) preBookingCreateCheck(w http.ResponseWriter, r *htt
 		Enter: enterNew,
 		Leave: leaveNew,
 	}
-	if valid, code := service.GetBookingService().CheckBooking(bookingReq, location, requestUser, "", 0); !valid {
-		SendBadRequestCode(w, code)
+	if bErr := service.GetBookingService().CheckBooking(bookingReq, location, requestUser, "", 0); bErr != nil {
+		sendBookingError(w, bErr)
 		return
 	}
 	SendUpdated(w)

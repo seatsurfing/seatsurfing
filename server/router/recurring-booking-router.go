@@ -96,7 +96,14 @@ func (router *RecurringBookingRouter) preBookingCreateCheck(w http.ResponseWrite
 			Enter:   b.Enter,
 			Leave:   b.Leave,
 		}
-		valid, code := service.GetBookingService().CheckBooking(bookingReq, location, requestUser, "", idx)
+		valid, code := true, 0
+		if bErr := service.GetBookingService().CheckBooking(bookingReq, location, requestUser, "", idx); bErr != nil {
+			if bErr.Kind == service.BookingErrorInternal {
+				SendInternalServerError(w)
+				return
+			}
+			valid, code = false, bErr.Code
+		}
 		if valid {
 			conflicts, _ := GetBookingRepository().GetConflicts(e.SpaceID, b.Enter, b.Leave, "")
 			if len(conflicts) > 0 {
@@ -265,7 +272,14 @@ func (router *RecurringBookingRouter) create(w http.ResponseWriter, r *http.Requ
 			Enter:   b.Enter,
 			Leave:   b.Leave,
 		}
-		valid, code := service.GetBookingService().CheckBooking(bookingReq, location, requestUser, "", 0)
+		valid, code := true, 0
+		if bErr := service.GetBookingService().CheckBooking(bookingReq, location, requestUser, "", 0); bErr != nil {
+			if bErr.Kind == service.BookingErrorInternal {
+				SendInternalServerError(w)
+				return
+			}
+			valid, code = false, bErr.Code
+		}
 		if valid {
 			conflicts, _ := GetBookingRepository().GetConflicts(e.SpaceID, b.Enter, b.Leave, "")
 			if len(conflicts) > 0 {

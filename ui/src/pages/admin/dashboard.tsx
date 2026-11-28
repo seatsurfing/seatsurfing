@@ -1,6 +1,8 @@
 import React from "react";
-import { Info } from "react-feather";
+import { BarChart2, Info, PieChart } from "react-feather";
 import {
+  Button,
+  ButtonGroup,
   Card,
   Row,
   Col,
@@ -11,7 +13,7 @@ import {
   Tooltip,
 } from "react-bootstrap";
 import { NextRouter } from "next/router";
-import WeekdayChart from "@/components/WeekdayChart";
+import WeekdayChart, { WeekdayChartType } from "@/components/WeekdayChart";
 import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";
@@ -39,6 +41,7 @@ interface State {
   selectedUtilizationLocationId: string | null;
   selectedWeekdayLocationId: string | null;
   selectedWeekdayPeriod: string | null;
+  weekdayChartType: WeekdayChartType;
   stats: Stats | null;
 }
 
@@ -60,6 +63,7 @@ class Dashboard extends React.Component<Props, State> {
       selectedUtilizationLocationId: null,
       selectedWeekdayLocationId: null,
       selectedWeekdayPeriod: null,
+      weekdayChartType: "bar",
       stats: null,
     };
   }
@@ -154,13 +158,29 @@ class Dashboard extends React.Component<Props, State> {
   };
 
   renderWeekdayChart = (bookingsByWeekday: number[]) => {
+    if (bookingsByWeekday.every((num) => !num)) {
+      return (
+        <div
+          className="d-flex align-items-center justify-content-center text-muted"
+          style={{ height: "200px" }}
+        >
+          {this.props.t("noBookingsInPeriod")}
+        </div>
+      );
+    }
     const weekStartDay = RuntimeConfig.INFOS.weekStartDay ?? 1;
     const order = [0, 1, 2, 3, 4, 5, 6].map(
       (offset) => (weekStartDay + offset) % 7,
     );
     const data = order.map((day) => bookingsByWeekday[day]);
     const labels = order.map((day) => this.props.t(`workday-${day}`));
-    return <WeekdayChart data={data} labels={labels} />;
+    return (
+      <WeekdayChart
+        data={data}
+        labels={labels}
+        type={this.state.weekdayChartType}
+      />
+    );
   };
 
   getLoadDateRanges = () => {
@@ -349,6 +369,32 @@ class Dashboard extends React.Component<Props, State> {
                       {this.props.t("bookingsByWeekday")}
                     </Card.Title>
                     <div className="d-flex gap-2">
+                      <ButtonGroup size="sm">
+                        <Button
+                          variant="outline-secondary"
+                          active={this.state.weekdayChartType === "bar"}
+                          aria-pressed={this.state.weekdayChartType === "bar"}
+                          aria-label={this.props.t("chartTypeBar")}
+                          title={this.props.t("chartTypeBar")}
+                          onClick={() =>
+                            this.setState({ weekdayChartType: "bar" })
+                          }
+                        >
+                          <BarChart2 size={14} />
+                        </Button>
+                        <Button
+                          variant="outline-secondary"
+                          active={this.state.weekdayChartType === "pie"}
+                          aria-pressed={this.state.weekdayChartType === "pie"}
+                          aria-label={this.props.t("chartTypePie")}
+                          title={this.props.t("chartTypePie")}
+                          onClick={() =>
+                            this.setState({ weekdayChartType: "pie" })
+                          }
+                        >
+                          <PieChart size={14} />
+                        </Button>
+                      </ButtonGroup>
                       <Dropdown>
                         <Dropdown.Toggle variant="outline-secondary" size="sm">
                           {this.state.selectedWeekdayPeriod

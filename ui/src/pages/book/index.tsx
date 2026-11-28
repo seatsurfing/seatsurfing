@@ -12,6 +12,7 @@ import DateTimePicker from "@/components/DateTimePicker";
 import Validation from "@/util/Validation";
 import RendererUtils from "@/util/RendererUtils";
 import CopyrightFooter from "@/components/CopyrightFooter";
+import SpaceTrapezoidOutline from "@/components/SpaceTrapezoidOutline";
 import BookingAttribute from "@/types/BookingAttribute";
 
 interface PublicBookableSpace {
@@ -21,8 +22,10 @@ interface PublicBookableSpace {
   locationName: string;
   requireSubject: boolean;
   bookableDays: number[];
-  blockedFrom: string;
-  blockedUntil: string;
+  locationBlockedFrom: string;
+  locationBlockedUntil: string;
+  spaceBlockedFrom: string;
+  spaceBlockedUntil: string;
   x: number;
   y: number;
   width: number;
@@ -297,7 +300,18 @@ class PublicBooking extends React.Component<Props, State> {
     if (!space) {
       return true;
     }
-    if (DateUtil.isInPeriod(date, space.blockedFrom, space.blockedUntil)) {
+    if (
+      DateUtil.isInPeriod(
+        date,
+        space.locationBlockedFrom,
+        space.locationBlockedUntil,
+      )
+    ) {
+      return false;
+    }
+    if (
+      DateUtil.isInPeriod(date, space.spaceBlockedFrom, space.spaceBlockedUntil)
+    ) {
       return false;
     }
     if (!space.bookableDays || space.bookableDays.length === 0) {
@@ -644,7 +658,12 @@ class PublicBooking extends React.Component<Props, State> {
     };
     const className =
       "space space-box" +
-      (selected ? "" : available ? " space-available" : " space-notavailable") +
+      (selected
+        ? ""
+        : available
+          ? " space-tinted space-available"
+          : " space-tinted space-notavailable") +
+      (item.shape === "trapezoid" ? " space-trapezoid" : "") +
       (RendererUtils.isSpaceVertical(item.width, item.height, item.rotation)
         ? " space-box-vertical"
         : "");
@@ -666,6 +685,9 @@ class PublicBooking extends React.Component<Props, State> {
           }
         }}
       >
+        {!selected && item.shape === "trapezoid" && (
+          <SpaceTrapezoidOutline width={item.width} height={item.height} />
+        )}
         <div style={innerStyle}>
           <p style={textStyle}>{item.spaceName}</p>
         </div>
