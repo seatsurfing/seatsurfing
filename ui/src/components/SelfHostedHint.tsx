@@ -96,7 +96,7 @@ class SelfHostedHint extends React.Component<Props, State> {
     const hints = this.getHints();
     return (
       <Row className="mb-4">
-        <Col sm="12" xl="8">
+        <Col xs="12">
           <Alert variant="info">
             <div className="d-flex" style={{ gap: "0.75rem" }}>
               {/* All hints share the same grid cell, so the container keeps the

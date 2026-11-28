@@ -1,5 +1,14 @@
 import React from "react";
-import { BarChart2, Info, PieChart } from "react-feather";
+import {
+  BarChart2,
+  Calendar,
+  ChevronRight,
+  Grid,
+  Info,
+  MapPin,
+  PieChart,
+  Users,
+} from "react-feather";
 import {
   Button,
   ButtonGroup,
@@ -133,27 +142,143 @@ class Dashboard extends React.Component<Props, State> {
     });
   };
 
-  renderStatsCard = (num: number | undefined, title: string, link?: string) => {
+  getClickableProps = (link?: string) => {
+    if (!link) {
+      return {};
+    }
+    const onActivate = () => this.setState({ redirect: link });
+    return {
+      role: "button",
+      tabIndex: 0,
+      onClick: onActivate,
+      onKeyDown: (e: React.KeyboardEvent) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onActivate();
+        }
+      },
+    };
+  };
+
+  renderStatsCard = (
+    num: number | undefined,
+    title: string,
+    icon: React.ReactNode,
+    link?: string,
+  ) => {
+    const clickable = !!link;
     return (
-      <Col sm="3" xl="2">
+      <Col xs="12" sm="4">
         <Card
-          {...(link
-            ? {
-                className: "dashboard-card-clickable",
-                onClick: () => this.setState({ redirect: link }),
-              }
-            : {})}
+          className={
+            "dashboard-stat h-100" +
+            (clickable ? " dashboard-card-clickable" : "")
+          }
+          {...this.getClickableProps(link)}
         >
-          <Card.Body>
-            <Card.Title className="dashboard-number text-center">
-              {num}
-            </Card.Title>
-            <Card.Subtitle className="text-center mb-2 text-muted">
-              {title}
-            </Card.Subtitle>
+          <Card.Body className="d-flex align-items-center gap-3">
+            <div className="dashboard-stat-icon" aria-hidden="true">
+              {icon}
+            </div>
+            <div className="dashboard-stat-text flex-grow-1">
+              <div className="dashboard-stat-label text-truncate">{title}</div>
+              <div className="dashboard-number">
+                {(num ?? 0).toLocaleString()}
+              </div>
+            </div>
+            {clickable && (
+              <ChevronRight
+                size={18}
+                className="dashboard-stat-chevron"
+                aria-hidden="true"
+              />
+            )}
           </Card.Body>
         </Card>
       </Col>
+    );
+  };
+
+  renderBookingMetric = (
+    num: number | undefined,
+    title: string,
+    link: string,
+  ) => {
+    return (
+      <div
+        className="dashboard-booking-metric"
+        aria-label={`${this.props.t("bookings")} ${title}: ${num ?? 0}`}
+        {...this.getClickableProps(link)}
+      >
+        <div className="dashboard-stat-label text-truncate">{title}</div>
+        <div className="dashboard-number">{(num ?? 0).toLocaleString()}</div>
+      </div>
+    );
+  };
+
+  renderLocationDropdown = (
+    selectedLocationId: string | null,
+    onSelect: (locationId: string | null) => void,
+  ) => {
+    return (
+      <Dropdown>
+        <Dropdown.Toggle variant="outline-secondary" size="sm">
+          {selectedLocationId
+            ? this.locations.find((e) => e.id == selectedLocationId)?.name
+            : this.props.t("allAreas")}
+        </Dropdown.Toggle>
+        <Dropdown.Menu align="end">
+          <Dropdown.Item
+            active={!selectedLocationId}
+            onClick={() => onSelect(null)}
+          >
+            {this.props.t("allAreas")}
+          </Dropdown.Item>
+          {this.locations.map((location) => (
+            <Dropdown.Item
+              key={location.id}
+              active={location.id == selectedLocationId}
+              onClick={() => onSelect(location.id)}
+            >
+              {location.name}
+            </Dropdown.Item>
+          ))}
+        </Dropdown.Menu>
+      </Dropdown>
+    );
+  };
+
+  renderPeriodDropdown = () => {
+    const periods: (string | null)[] = [
+      null,
+      "lastMonth",
+      "lastWeek",
+      "thisWeek",
+      "nextWeek",
+    ];
+    const selected = this.state.selectedWeekdayPeriod;
+    return (
+      <Dropdown>
+        <Dropdown.Toggle variant="outline-secondary" size="sm">
+          {selected ? this.props.t(selected) : this.props.t("allTime")}
+        </Dropdown.Toggle>
+        <Dropdown.Menu align="end">
+          {periods.map((period) => (
+            <Dropdown.Item
+              key={period ?? "allTime"}
+              active={period === selected}
+              onClick={() =>
+                this.updateWeekdayChart(
+                  this.state.selectedWeekdayLocationId,
+                  period,
+                )
+              }
+            >
+              {this.props.t(period ?? "allTime")}
+            </Dropdown.Item>
+          ))}
+        </Dropdown.Menu>
+      </Dropdown>
     );
   };
 
@@ -211,9 +336,8 @@ class Dashboard extends React.Component<Props, State> {
     if (!num) {
       num = 0;
     }
-    const label = `${title}: ${num} %`;
     const formatter = Formatting.getFormatterDate();
-    const tooltip = `${formatter.format(range[0])} – ${formatter.format(range[1])}`;
+    const dateRange = `${formatter.format(range[0])} – ${formatter.format(range[1])}`;
     let variant = "success";
     if (num >= 75) {
       variant = "warning";
@@ -222,8 +346,20 @@ class Dashboard extends React.Component<Props, State> {
       variant = "danger";
     }
     return (
-      <div title={tooltip}>
-        {label} <ProgressBar now={num} className="mb-3" variant={variant} />
+      <div className="dashboard-load">
+        <div className="d-flex justify-content-between align-items-baseline mb-1">
+          <div>
+            <span className="fw-medium">{title}</span>
+            <span className="dashboard-load-range ms-2">{dateRange}</span>
+          </div>
+          <span className="dashboard-load-value">{num} %</span>
+        </div>
+        <ProgressBar
+          now={Math.min(num, 100)}
+          variant={variant}
+          className="dashboard-load-bar"
+          aria-label={`${title}: ${num} %`}
+        />
       </div>
     );
   };
@@ -251,8 +387,8 @@ class Dashboard extends React.Component<Props, State> {
     ) {
       updateHint = (
         <Row className="mb-4">
-          <Col sm="8">
-            <Alert variant="warning">
+          <Col xs="12">
+            <Alert variant="warning" className="mb-0">
               <a
                 href="https://github.com/seatsurfing/seatsurfing/releases"
                 target="_blank"
@@ -276,8 +412,8 @@ class Dashboard extends React.Component<Props, State> {
       RuntimeConfig.INFOS.cloudHosted &&
       !RuntimeConfig.INFOS.subscriptionActive ? (
         <Row className="mb-4">
-          <Col sm="8">
-            <Alert variant="info">
+          <Col xs="12">
+            <Alert variant="info" className="mb-0">
               <p style={{ fontWeight: "bold" }}>
                 <PremiumFeatureIcon
                   style={{ marginLeft: "0px", marginRight: "5px" }}
@@ -303,12 +439,14 @@ class Dashboard extends React.Component<Props, State> {
     if (RuntimeConfig.INFOS.hideStats || !this.canViewStats()) {
       statsContent = <p>{this.props.t("statsHiddenByAdmin")}</p>;
     } else {
+      const stats = this.state.stats;
       statsContent = (
         <>
-          <Row className="mb-4">
+          <Row className="g-3 mb-4">
             {this.renderStatsCard(
-              this.state.stats?.numUsers,
+              stats?.numUsers,
               this.props.t("users"),
+              <Users size={20} />,
               RuntimeConfig.hasPermission(
                 Permission.Users,
                 PermissionLevel.Read,
@@ -317,58 +455,82 @@ class Dashboard extends React.Component<Props, State> {
                 : "",
             )}
             {this.renderStatsCard(
-              this.state.stats?.numLocations,
+              stats?.numLocations,
               this.props.t("areas"),
+              <MapPin size={20} />,
               Navigation.adminLocations(),
             )}
             {this.renderStatsCard(
-              this.state.stats?.numSpaces,
+              stats?.numSpaces,
               this.props.t("spaces"),
+              <Grid size={20} />,
               Navigation.adminLocations(),
             )}
-            {this.renderStatsCard(
-              this.state.stats?.numBookings,
-              this.props.t("bookings"),
-              Navigation.adminBookings(
-                "enter=2000-01-01T00:00&leave=2999-12-31T23:59&filter=enter_leave",
-              ),
-            )}
           </Row>
           <Row className="mb-4">
-            {this.renderStatsCard(
-              this.state.stats?.numBookingsCurrent,
-              this.props.t("current"),
-              Navigation.adminBookings("filter=current"),
-            )}
-            {this.renderStatsCard(
-              this.state.stats?.numBookingsToday,
-              this.props.t("today"),
-              Navigation.adminBookings("filter=today"),
-            )}
-            {this.renderStatsCard(
-              this.state.stats?.numBookingsYesterday,
-              this.props.t("yesterday"),
-              Navigation.adminBookings(
-                `enter=${yesterdayDateString}T00:00&leave=${yesterdayDateString}T23:59&filter=enter_leave`,
-              ),
-            )}
-            {this.renderStatsCard(
-              this.state.stats?.numBookingsThisWeek,
-              this.props.t("thisWeek"),
-              Navigation.adminBookings(
-                `enter=${DateUtil.getThisWeekMondayDateString()}T00:00&leave=${DateUtil.getThisWeekSundayDateString()}T23:59&filter=enter_leave`,
-              ),
-            )}
-          </Row>
-          <Row className="mb-4">
-            <Col sm="12" xl="8">
-              <Card>
+            <Col xs="12">
+              <Card className="dashboard-panel">
                 <Card.Body>
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <Card.Title className="mb-0">
+                  <div className="dashboard-panel-header">
+                    <Card.Title
+                      as="h2"
+                      className="dashboard-panel-title d-flex align-items-center gap-2"
+                    >
+                      <span
+                        className="dashboard-stat-icon dashboard-stat-icon-sm"
+                        aria-hidden="true"
+                      >
+                        <Calendar size={16} />
+                      </span>
+                      {this.props.t("bookings")}
+                    </Card.Title>
+                  </div>
+                  <div className="dashboard-booking-metrics">
+                    {this.renderBookingMetric(
+                      stats?.numBookings,
+                      this.props.t("allTime"),
+                      Navigation.adminBookings(
+                        "enter=2000-01-01T00:00&leave=2999-12-31T23:59&filter=enter_leave",
+                      ),
+                    )}
+                    {this.renderBookingMetric(
+                      stats?.numBookingsCurrent,
+                      this.props.t("current"),
+                      Navigation.adminBookings("filter=current"),
+                    )}
+                    {this.renderBookingMetric(
+                      stats?.numBookingsToday,
+                      this.props.t("today"),
+                      Navigation.adminBookings("filter=today"),
+                    )}
+                    {this.renderBookingMetric(
+                      stats?.numBookingsYesterday,
+                      this.props.t("yesterday"),
+                      Navigation.adminBookings(
+                        `enter=${yesterdayDateString}T00:00&leave=${yesterdayDateString}T23:59&filter=enter_leave`,
+                      ),
+                    )}
+                    {this.renderBookingMetric(
+                      stats?.numBookingsThisWeek,
+                      this.props.t("thisWeek"),
+                      Navigation.adminBookings(
+                        `enter=${DateUtil.getThisWeekMondayDateString()}T00:00&leave=${DateUtil.getThisWeekSundayDateString()}T23:59&filter=enter_leave`,
+                      ),
+                    )}
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+          <Row className="g-3 mb-4">
+            <Col xs="12" xl="6">
+              <Card className="dashboard-panel h-100">
+                <Card.Body>
+                  <div className="dashboard-panel-header">
+                    <Card.Title as="h2" className="dashboard-panel-title">
                       {this.props.t("bookingsByWeekday")}
                     </Card.Title>
-                    <div className="d-flex gap-2">
+                    <div className="dashboard-panel-controls">
                       <ButtonGroup size="sm">
                         <Button
                           variant="outline-secondary"
@@ -395,117 +557,31 @@ class Dashboard extends React.Component<Props, State> {
                           <PieChart size={14} />
                         </Button>
                       </ButtonGroup>
-                      <Dropdown>
-                        <Dropdown.Toggle variant="outline-secondary" size="sm">
-                          {this.state.selectedWeekdayPeriod
-                            ? this.props.t(this.state.selectedWeekdayPeriod)
-                            : this.props.t("allTime")}
-                        </Dropdown.Toggle>
-                        <Dropdown.Menu align="end">
-                          <Dropdown.Item
-                            onClick={() => {
-                              this.updateWeekdayChart(
-                                this.state.selectedWeekdayLocationId,
-                                null,
-                              );
-                            }}
-                          >
-                            {this.props.t("allTime")}
-                          </Dropdown.Item>
-                          <Dropdown.Item
-                            onClick={() => {
-                              this.updateWeekdayChart(
-                                this.state.selectedWeekdayLocationId,
-                                "lastMonth",
-                              );
-                            }}
-                          >
-                            {this.props.t("lastMonth")}
-                          </Dropdown.Item>
-                          <Dropdown.Item
-                            onClick={() => {
-                              this.updateWeekdayChart(
-                                this.state.selectedWeekdayLocationId,
-                                "lastWeek",
-                              );
-                            }}
-                          >
-                            {this.props.t("lastWeek")}
-                          </Dropdown.Item>
-                          <Dropdown.Item
-                            onClick={() => {
-                              this.updateWeekdayChart(
-                                this.state.selectedWeekdayLocationId,
-                                "thisWeek",
-                              );
-                            }}
-                          >
-                            {this.props.t("thisWeek")}
-                          </Dropdown.Item>
-                          <Dropdown.Item
-                            onClick={() => {
-                              this.updateWeekdayChart(
-                                this.state.selectedWeekdayLocationId,
-                                "nextWeek",
-                              );
-                            }}
-                          >
-                            {this.props.t("nextWeek")}
-                          </Dropdown.Item>
-                        </Dropdown.Menu>
-                      </Dropdown>
-                      <Dropdown>
-                        <Dropdown.Toggle variant="outline-secondary" size="sm">
-                          {this.state.selectedWeekdayLocationId
-                            ? this.locations.find(
-                                (e) =>
-                                  e.id == this.state.selectedWeekdayLocationId,
-                              )?.name
-                            : this.props.t("allAreas")}
-                        </Dropdown.Toggle>
-                        <Dropdown.Menu align="end">
-                          <Dropdown.Item
-                            onClick={() => {
-                              this.updateWeekdayChart(
-                                null,
-                                this.state.selectedWeekdayPeriod,
-                              );
-                            }}
-                          >
-                            {this.props.t("allAreas")}
-                          </Dropdown.Item>
-                          {this.locations.map((location) => (
-                            <Dropdown.Item
-                              key={location.id}
-                              onClick={() => {
-                                this.updateWeekdayChart(
-                                  location.id,
-                                  this.state.selectedWeekdayPeriod,
-                                );
-                              }}
-                            >
-                              {location.name}
-                            </Dropdown.Item>
-                          ))}
-                        </Dropdown.Menu>
-                      </Dropdown>
+                      {this.renderPeriodDropdown()}
+                      {this.renderLocationDropdown(
+                        this.state.selectedWeekdayLocationId,
+                        (locationId) =>
+                          this.updateWeekdayChart(
+                            locationId,
+                            this.state.selectedWeekdayPeriod,
+                          ),
+                      )}
                     </div>
                   </div>
                   {this.renderWeekdayChart(
-                    this.state.stats?.bookingsByWeekday ?? [
-                      0, 0, 0, 0, 0, 0, 0,
-                    ],
+                    stats?.bookingsByWeekday ?? [0, 0, 0, 0, 0, 0, 0],
                   )}
                 </Card.Body>
               </Card>
             </Col>
-          </Row>
-          <Row className="mb-4">
-            <Col sm="12" xl="8">
-              <Card>
+            <Col xs="12" xl="6">
+              <Card className="dashboard-panel h-100">
                 <Card.Body>
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <Card.Title className="mb-0 d-flex align-items-center gap-2">
+                  <div className="dashboard-panel-header">
+                    <Card.Title
+                      as="h2"
+                      className="dashboard-panel-title d-flex align-items-center gap-2"
+                    >
                       {this.props.t("utilization")}
                       <OverlayTrigger
                         placement="right"
@@ -527,6 +603,10 @@ class Dashboard extends React.Component<Props, State> {
                       >
                         <Info
                           size={16}
+                          tabIndex={0}
+                          aria-label={this.props.t(
+                            "targetUtilizationHoursPerWeek",
+                          )}
                           style={{
                             cursor: "pointer",
                             color: "var(--bs-secondary-color)",
@@ -534,58 +614,33 @@ class Dashboard extends React.Component<Props, State> {
                         />
                       </OverlayTrigger>
                     </Card.Title>
-                    <Dropdown>
-                      <Dropdown.Toggle variant="outline-secondary" size="sm">
-                        {this.state.selectedUtilizationLocationId
-                          ? this.locations.find(
-                              (e) =>
-                                e.id ==
-                                this.state.selectedUtilizationLocationId,
-                            )?.name
-                          : this.props.t("allAreas")}
-                      </Dropdown.Toggle>
-                      <Dropdown.Menu align="end">
-                        <Dropdown.Item
-                          onClick={() => {
-                            this.updateLoad();
-                          }}
-                        >
-                          {this.props.t("allAreas")}
-                        </Dropdown.Item>
-                        {this.locations.map((location) => (
-                          <Dropdown.Item
-                            key={location.id}
-                            onClick={() => {
-                              this.updateLoad(location.id);
-                            }}
-                          >
-                            {location.name}
-                          </Dropdown.Item>
-                        ))}
-                      </Dropdown.Menu>
-                    </Dropdown>
+                    {this.renderLocationDropdown(
+                      this.state.selectedUtilizationLocationId,
+                      (locationId) => this.updateLoad(locationId),
+                    )}
                   </div>
-
-                  {this.renderProgressBar(
-                    this.state.stats?.spaceLoadNextWeek,
-                    this.props.t("nextWeek"),
-                    loadRanges.nextWeek,
-                  )}
-                  {this.renderProgressBar(
-                    this.state.stats?.spaceLoadThisWeek,
-                    this.props.t("thisWeek"),
-                    loadRanges.thisWeek,
-                  )}
-                  {this.renderProgressBar(
-                    this.state.stats?.spaceLoadLastWeek,
-                    this.props.t("lastWeek"),
-                    loadRanges.lastWeek,
-                  )}
-                  {this.renderProgressBar(
-                    this.state.stats?.spaceLoadLastMonth,
-                    this.props.t("lastMonth"),
-                    loadRanges.lastMonth,
-                  )}
+                  <div className="d-flex flex-column gap-3">
+                    {this.renderProgressBar(
+                      stats?.spaceLoadNextWeek,
+                      this.props.t("nextWeek"),
+                      loadRanges.nextWeek,
+                    )}
+                    {this.renderProgressBar(
+                      stats?.spaceLoadThisWeek,
+                      this.props.t("thisWeek"),
+                      loadRanges.thisWeek,
+                    )}
+                    {this.renderProgressBar(
+                      stats?.spaceLoadLastWeek,
+                      this.props.t("lastWeek"),
+                      loadRanges.lastWeek,
+                    )}
+                    {this.renderProgressBar(
+                      stats?.spaceLoadLastMonth,
+                      this.props.t("lastMonth"),
+                      loadRanges.lastMonth,
+                    )}
+                  </div>
                 </Card.Body>
               </Card>
             </Col>

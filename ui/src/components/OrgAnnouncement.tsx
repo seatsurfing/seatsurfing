@@ -12,7 +12,7 @@ const OrgAnnouncement: React.FC<Props> = ({ text }) => {
   }
   return (
     <Row className="mb-4">
-      <Col sm="12" xl="8">
+      <Col xs="12">
         <Alert variant="warning" className="org-announcement">
           <MarkdownRenderer relativeLinksSameTab>{text}</MarkdownRenderer>
         </Alert>
