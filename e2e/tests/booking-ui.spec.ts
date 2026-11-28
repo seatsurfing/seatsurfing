@@ -45,6 +45,52 @@ test("crud booking", async ({ page }) => {
   await expect(page).toHaveURL(/search\/(\?.*)?$/);
 });
 
+test("arrow keys change day after picking a date", async ({ page }) => {
+  await expect(page.getByText("Loading …")).not.toBeVisible();
+  const dateInput = page
+    .getByLabel("Reservation start date")
+    .first()
+    .getByRole("textbox");
+  await dateInput.click();
+  await page
+    .locator(
+      ".flatpickr-calendar.open .flatpickr-day:not(.flatpickr-disabled):not(.prevMonthDay)",
+    )
+    .nth(2)
+    .click();
+  await page.keyboard.press("Escape");
+  // The read-only date input keeps focus after picking a date.
+  await expect(dateInput).toBeFocused();
+  const picked = await dateInput.inputValue();
+  await page.keyboard.press("ArrowRight");
+  await expect(dateInput).not.toHaveValue(picked);
+  await page.keyboard.press("ArrowLeft");
+  await expect(dateInput).toHaveValue(picked);
+});
+
+test("arrow keys change day while location dropdown is focused", async ({
+  page,
+}) => {
+  await expect(page.getByText("Loading …")).not.toBeVisible();
+  const locationSelect = page.getByRole("combobox", {
+    name: "Select location",
+  });
+  await expect(locationSelect).not.toHaveValue("");
+  const location = await locationSelect.inputValue();
+  const dateInput = page
+    .getByLabel("Reservation start date")
+    .first()
+    .getByRole("textbox");
+  await locationSelect.focus();
+  const before = await dateInput.inputValue();
+  await page.keyboard.press("ArrowRight");
+  await expect(dateInput).not.toHaveValue(before);
+  await expect(locationSelect).toHaveValue(location);
+  await page.keyboard.press("ArrowLeft");
+  await expect(dateInput).toHaveValue(before);
+  await expect(locationSelect).toHaveValue(location);
+});
+
 test("direct link with multiple spaces and enter=now", async ({ page }) => {
   const uiURL = process.env.UI_URL
     ? process.env.UI_URL

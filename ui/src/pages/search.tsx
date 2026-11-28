@@ -177,6 +177,7 @@ class Search extends React.Component<Props, State> {
   mapData: any;
   searchContainerRef: RefObject<any>;
   transformWrapperRef: React.RefObject<ReactZoomPanPinchContentRef | null>;
+  locationSelectRef = React.createRef<HTMLSelectElement>();
   buddies: Buddy[];
   availableAttributes: SpaceAttribute[];
   recurrenceMaxEndDate: Date;
@@ -326,10 +327,20 @@ class Search extends React.Component<Props, State> {
     ) {
       return;
     }
+    // Ignore keys typed into editable fields. Read-only inputs (e.g. the
+    // flatpickr date/time inputs, which keep focus after a date has been
+    // picked) don't use the arrow keys, so day navigation still applies.
+    // The location dropdown keeps its native up/down behaviour, but
+    // left/right switch the day as everywhere else on the page.
     const target = e.target;
+    const isLocationSelectDayKey =
+      target === this.locationSelectRef.current &&
+      (e.key === "ArrowLeft" || e.key === "ArrowRight");
     if (
+      !isLocationSelectDayKey &&
       target instanceof HTMLElement &&
-      (["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) ||
+      ((target instanceof HTMLInputElement && !target.readOnly) ||
+        ["TEXTAREA", "SELECT"].includes(target.tagName) ||
         target.isContentEditable)
     ) {
       return;
@@ -2611,6 +2622,7 @@ class Search extends React.Component<Props, State> {
                 <div className="ms-2 w-100">
                   <InputGroup>
                     <Form.Select
+                      ref={this.locationSelectRef}
                       required={true}
                       value={this.state.locationId}
                       onChange={(e) => this.changeLocation(e.target.value)}
