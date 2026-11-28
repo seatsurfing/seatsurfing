@@ -283,3 +283,27 @@ func TestInvalidHTTPSURLs(t *testing.T) {
 		CheckTestBool(t, false, ValidateHTTPSURL(input))
 	}
 }
+
+func TestValidGUIDs(t *testing.T) {
+	inputs := []string{
+		"8a9f2e4c-1b3d-4f5a-9c7e-0d2b4f6a8c1e",
+		"00000000-0000-0000-0000-000000000000",
+	}
+	for _, input := range inputs {
+		CheckTestBool(t, true, ValidateGUID(input))
+	}
+}
+
+func TestInvalidGUIDs(t *testing.T) {
+	inputs := []string{
+		"",
+		"not-a-uuid",
+		"8A9F2E4C-1B3D-4F5A-9C7E-0D2B4F6A8C1E",
+		"8a9f2e4c-1b3d-4f5a-9C7e-0d2b4f6a8c1e",
+		"{8a9f2e4c-1b3d-4f5a-9c7e-0d2b4f6a8c1e}",
+		"8a9f2e4c1b3d4f5a9c7e0d2b4f6a8c1e",
+	}
+	for _, input := range inputs {
+		CheckTestBool(t, false, ValidateGUID(input))
+	}
+}

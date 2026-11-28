@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"testing"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
@@ -970,6 +971,28 @@ func TestSettingsDefaultLocationForeignOrg(t *testing.T) {
 
 	payload = `{"value": "8a9f2e4c-1b3d-4f5a-9c7e-0d2b4f6a8c1e"}`
 	req = NewHTTPRequest("PUT", "/setting/"+SettingDefaultLocationID.Name, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	_, err := GetSettingsRepository().Get(org.ID, SettingDefaultLocationID.Name)
+	CheckTestBool(t, true, err != nil)
+}
+
+func TestSettingsDefaultLocationUppercaseID(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(admin.ID)
+	location, _ := CreateTestLocationAndSpace(org)
+	upperID := strings.ToUpper(location.ID)
+
+	payload := `{"value": "` + upperID + `"}`
+	req := NewHTTPRequest("PUT", "/setting/"+SettingDefaultLocationID.Name, loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	payload = `[{"name": "` + SettingDefaultLocationID.Name + `", "value": "` + upperID + `"}]`
+	req = NewHTTPRequest("PUT", "/setting/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
 
