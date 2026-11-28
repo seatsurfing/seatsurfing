@@ -119,3 +119,42 @@ test("filter bookings for next 7 days", async ({ page }) => {
   await expect(page.getByText("Loading …")).not.toBeVisible();
   await expect(page.getByLabel("Period")).toHaveValue("next_7_days");
 });
+
+test("settings tabs", async ({ page }) => {
+  // Navigate to "Settings"
+  await page.getByRole("link", { name: "Settings" }).click();
+  await expect(page).toHaveURL(/admin\/settings\/$/);
+  await expect(page.getByText("Loading …")).not.toBeVisible();
+
+  // "General" is the default tab
+  await expect(page.getByRole("tab", { name: "General" })).toHaveClass(
+    /active/,
+  );
+  await expect(page.getByLabel("Default time zone")).toBeVisible();
+  await expect(page.getByLabel("Max. bookings per user")).not.toBeVisible();
+
+  // Switching tabs shows the tab's settings and updates the URL hash
+  await page.getByRole("tab", { name: "Bookings" }).click();
+  await expect(page).toHaveURL(/admin\/settings\/#bookings$/);
+  await expect(page.getByLabel("Max. bookings per user")).toBeVisible();
+  await expect(page.getByLabel("Default time zone")).not.toBeVisible();
+
+  // The URL hash selects the tab when opening the page
+  await page.goto(page.url().replace("#bookings", "#users"));
+  await page.reload();
+  await expect(page.getByText("Loading …")).not.toBeVisible();
+  await expect(page.getByRole("tab", { name: "Users" })).toHaveClass(/active/);
+  await expect(
+    page.getByLabel("Enforce two-factor authentication"),
+  ).toBeVisible();
+
+  // Saving with an invalid field in another tab switches to that tab
+  await page.getByRole("tab", { name: "Bookings" }).click();
+  await page.getByLabel("Max. bookings per user").fill("");
+  await page.getByRole("tab", { name: "General" }).click();
+  await page.getByRole("button", { name: "Save" }).click();
+  await expect(page.getByRole("tab", { name: "Bookings" })).toHaveClass(
+    /active/,
+  );
+  await expect(page.getByLabel("Max. bookings per user")).toBeFocused();
+});

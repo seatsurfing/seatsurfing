@@ -702,5 +702,15 @@
   "customLogoPreviewError": "The URL does not point to an image or the image could not be loaded.",
   "imageDimensions": "{{width}} × {{height}} pixels",
   "openInNewTab": "Open in new tab",
-  "noSpacesAvailable": "There are no spaces available at this location."
+  "noSpacesAvailable": "There are no spaces available at this location.",
+  "deleteOrgHint": "Permanently delete this organization including all users, locations, spaces and bookings.",
+  "settingsSectionBookingData": "Data & utilization",
+  "settingsSectionBookingDisplay": "Display",
+  "settingsSectionBookingLimits": "Limits & duration",
+  "settingsSectionBookingRules": "Rules",
+  "settingsSectionBranding": "Branding",
+  "settingsSectionDateTime": "Date & time",
+  "settingsSectionNotifications": "Notifications",
+  "settingsTabGeneral": "General",
+  "settingsTabReports": "Reports"
 }
