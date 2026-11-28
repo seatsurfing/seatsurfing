@@ -339,6 +339,12 @@ func (router *SettingsRouter) setAll(w http.ResponseWriter, r *http.Request) {
 	}
 	pending := map[string]string{}
 	for _, e := range list {
+		// Reject duplicate names: the cross-setting checks below only see the
+		// last value per name, but every entry in list would be written.
+		if _, exists := pending[e.Name]; exists {
+			SendBadRequest(w)
+			return
+		}
 		if !router.isValidSettingNameWrite(e.Name) {
 			SendNotFound(w)
 			return

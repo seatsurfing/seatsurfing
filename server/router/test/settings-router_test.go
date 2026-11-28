@@ -978,6 +978,34 @@ func TestSettingsDefaultLocationForeignOrg(t *testing.T) {
 	CheckTestBool(t, true, err != nil)
 }
 
+func TestSettingsDefaultLocationDuplicateNameBypass(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(admin.ID)
+	otherOrg := CreateTestOrg("other.com")
+	otherLocation, _ := CreateTestLocationAndSpace(otherOrg)
+
+	// A foreign reference followed by an empty value for the same name must not
+	// slip past the ownership check.
+	payload := `[{"name": "` + SettingDefaultLocationID.Name + `", "value": "` + otherLocation.ID + `"}, ` +
+		`{"name": "` + SettingDefaultLocationID.Name + `", "value": ""}]`
+	req := NewHTTPRequest("PUT", "/setting/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	_, err := GetSettingsRepository().Get(org.ID, SettingDefaultLocationID.Name)
+	CheckTestBool(t, true, err != nil)
+
+	// Duplicates are rejected even when both values are valid.
+	location, _ := CreateTestLocationAndSpace(org)
+	payload = `[{"name": "` + SettingDefaultLocationID.Name + `", "value": "` + location.ID + `"}, ` +
+		`{"name": "` + SettingDefaultLocationID.Name + `", "value": "` + location.ID + `"}]`
+	req = NewHTTPRequest("PUT", "/setting/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+}
+
 func TestSettingsDefaultLocationUppercaseID(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
