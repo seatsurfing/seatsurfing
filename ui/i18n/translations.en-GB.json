@@ -702,5 +702,6 @@
   "userHigherPrivilegesReadOnly": "This user holds permissions beyond your own and can therefore not be edited.",
   "preview": "Preview",
   "imageDimensions": "{{width}} × {{height}} pixels",
-  "openInNewTab": "Open in new tab"
+  "openInNewTab": "Open in new tab",
+  "mapNoDarkInvert": "No dark mode inversion"
 }

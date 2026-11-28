@@ -117,15 +117,21 @@ func (r *LocationStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 			panic(err)
 		}
 	}
+	if curVersion < 68 {
+		if _, err := GetDatabase().DB().Exec("ALTER TABLE locations " +
+			"ADD COLUMN IF NOT EXISTS map_no_dark_invert boolean NOT NULL DEFAULT FALSE"); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (r *LocationStore) Create(e *Location) error {
 	var id string
 	err := GetDatabase().DB().QueryRow("INSERT INTO locations "+
-		"(organization_id, name, description, max_concurrent_bookings, tz, enabled, map_type, bookable_days, blocked_from, blocked_until, announcement) "+
-		"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) "+
+		"(organization_id, name, description, max_concurrent_bookings, tz, enabled, map_type, bookable_days, blocked_from, blocked_until, announcement, map_no_dark_invert) "+
+		"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) "+
 		"RETURNING id",
-		e.OrganizationID, e.Name, e.Description, e.MaxConcurrentBookings, e.Timezone, e.Enabled, e.MapType, e.BookableDays, e.BlockedFrom, e.BlockedUntil, e.Announcement).Scan(&id)
+		e.OrganizationID, e.Name, e.Description, e.MaxConcurrentBookings, e.Timezone, e.Enabled, e.MapType, e.BookableDays, e.BlockedFrom, e.BlockedUntil, e.Announcement, e.MapNoDarkInvert).Scan(&id)
 	if err != nil {
 		return err
 	}
@@ -135,10 +141,10 @@ func (r *LocationStore) Create(e *Location) error {
 
 func (r *LocationStore) GetOne(id string) (*Location, error) {
 	e := &Location{}
-	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, name, map_mimetype, map_width, map_height, map_scale, map_type, description, max_concurrent_bookings, tz, enabled, bookable_days, blocked_from, blocked_until, announcement "+
+	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, name, map_mimetype, map_width, map_height, map_scale, map_type, description, max_concurrent_bookings, tz, enabled, bookable_days, blocked_from, blocked_until, announcement, map_no_dark_invert "+
 		"FROM locations "+
 		"WHERE id = $1",
-		id).Scan(&e.ID, &e.OrganizationID, &e.Name, &e.MapMimeType, &e.MapWidth, &e.MapHeight, &e.MapScale, &e.MapType, &e.Description, &e.MaxConcurrentBookings, &e.Timezone, &e.Enabled, &e.BookableDays, &e.BlockedFrom, &e.BlockedUntil, &e.Announcement)
+		id).Scan(&e.ID, &e.OrganizationID, &e.Name, &e.MapMimeType, &e.MapWidth, &e.MapHeight, &e.MapScale, &e.MapType, &e.Description, &e.MaxConcurrentBookings, &e.Timezone, &e.Enabled, &e.BookableDays, &e.BlockedFrom, &e.BlockedUntil, &e.Announcement, &e.MapNoDarkInvert)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +153,7 @@ func (r *LocationStore) GetOne(id string) (*Location, error) {
 
 func (r *LocationStore) GetByKeyword(organizationID string, keyword string) ([]*Location, error) {
 	var result []*Location
-	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, name, map_mimetype, map_width, map_height, map_scale, map_type, description, max_concurrent_bookings, tz, enabled, bookable_days, blocked_from, blocked_until, announcement "+
+	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, name, map_mimetype, map_width, map_height, map_scale, map_type, description, max_concurrent_bookings, tz, enabled, bookable_days, blocked_from, blocked_until, announcement, map_no_dark_invert "+
 		"FROM locations "+
 		"WHERE organization_id = $1 AND LOWER(name) LIKE '%' || $2 || '%' "+
 		"ORDER BY name", organizationID, strings.ToLower(keyword))
@@ -157,7 +163,7 @@ func (r *LocationStore) GetByKeyword(organizationID string, keyword string) ([]*
 	defer rows.Close()
 	for rows.Next() {
 		e := &Location{}
-		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Name, &e.MapMimeType, &e.MapWidth, &e.MapHeight, &e.MapScale, &e.MapType, &e.Description, &e.MaxConcurrentBookings, &e.Timezone, &e.Enabled, &e.BookableDays, &e.BlockedFrom, &e.BlockedUntil, &e.Announcement)
+		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Name, &e.MapMimeType, &e.MapWidth, &e.MapHeight, &e.MapScale, &e.MapType, &e.Description, &e.MaxConcurrentBookings, &e.Timezone, &e.Enabled, &e.BookableDays, &e.BlockedFrom, &e.BlockedUntil, &e.Announcement, &e.MapNoDarkInvert)
 		if err != nil {
 			return nil, err
 		}
@@ -168,7 +174,7 @@ func (r *LocationStore) GetByKeyword(organizationID string, keyword string) ([]*
 
 func (r *LocationStore) GetAll(organizationID string) ([]*Location, error) {
 	var result []*Location
-	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, name, map_mimetype, map_width, map_height, map_scale, map_type, description, max_concurrent_bookings, tz, enabled, bookable_days, blocked_from, blocked_until, announcement "+
+	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, name, map_mimetype, map_width, map_height, map_scale, map_type, description, max_concurrent_bookings, tz, enabled, bookable_days, blocked_from, blocked_until, announcement, map_no_dark_invert "+
 		"FROM locations "+
 		"WHERE organization_id = $1 "+
 		"ORDER BY name", organizationID)
@@ -178,7 +184,7 @@ func (r *LocationStore) GetAll(organizationID string) ([]*Location, error) {
 	defer rows.Close()
 	for rows.Next() {
 		e := &Location{}
-		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Name, &e.MapMimeType, &e.MapWidth, &e.MapHeight, &e.MapScale, &e.MapType, &e.Description, &e.MaxConcurrentBookings, &e.Timezone, &e.Enabled, &e.BookableDays, &e.BlockedFrom, &e.BlockedUntil, &e.Announcement)
+		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Name, &e.MapMimeType, &e.MapWidth, &e.MapHeight, &e.MapScale, &e.MapType, &e.Description, &e.MaxConcurrentBookings, &e.Timezone, &e.Enabled, &e.BookableDays, &e.BlockedFrom, &e.BlockedUntil, &e.Announcement, &e.MapNoDarkInvert)
 		if err != nil {
 			return nil, err
 		}
@@ -200,9 +206,10 @@ func (r *LocationStore) Update(e *Location) error {
 		"bookable_days = $9, "+
 		"blocked_from = $10, "+
 		"blocked_until = $11, "+
-		"announcement = $12 "+
-		"WHERE id = $13",
-		e.OrganizationID, e.Name, e.Description, e.MaxConcurrentBookings, e.MapScale, e.Timezone, e.Enabled, e.MapType, e.BookableDays, e.BlockedFrom, e.BlockedUntil, e.Announcement, e.ID)
+		"announcement = $12, "+
+		"map_no_dark_invert = $13 "+
+		"WHERE id = $14",
+		e.OrganizationID, e.Name, e.Description, e.MaxConcurrentBookings, e.MapScale, e.Timezone, e.Enabled, e.MapType, e.BookableDays, e.BlockedFrom, e.BlockedUntil, e.Announcement, e.MapNoDarkInvert, e.ID)
 	return err
 }
 

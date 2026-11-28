@@ -22,6 +22,8 @@ export default class Location extends Entity {
   blockedUntil: string;
   /** Markdown text shown as a banner in the booking UI; empty means no announcement */
   announcement: string;
+  /** if true, the floor plan image is not inverted in dark mode */
+  mapNoDarkInvert: boolean;
 
   constructor() {
     super();
@@ -40,6 +42,7 @@ export default class Location extends Entity {
     this.blockedFrom = "";
     this.blockedUntil = "";
     this.announcement = "";
+    this.mapNoDarkInvert = false;
   }
 
   serialize(): Object {
@@ -56,6 +59,7 @@ export default class Location extends Entity {
       blockedFrom: this.blockedFrom,
       blockedUntil: this.blockedUntil,
       announcement: this.announcement,
+      mapNoDarkInvert: this.mapNoDarkInvert,
     });
   }
 
@@ -78,10 +82,18 @@ export default class Location extends Entity {
     this.blockedFrom = input.blockedFrom || "";
     this.blockedUntil = input.blockedUntil || "";
     this.announcement = input.announcement || "";
+    this.mapNoDarkInvert = input.mapNoDarkInvert === true;
   }
 
   getBackendUrl(): string {
     return "/location/";
+  }
+
+  /** CSS class(es) for the floor plan background layer */
+  getFloorPlanBgClass(): string {
+    return this.mapNoDarkInvert
+      ? "floor-plan-bg floor-plan-bg-no-invert"
+      : "floor-plan-bg";
   }
 
   getMapUrl(bookingContext: boolean = false): string {

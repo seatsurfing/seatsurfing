@@ -2428,6 +2428,8 @@ class Search extends React.Component<Props, State> {
         height:
           (this.mapData ? this.mapData.height * this.mapData.scale : 0) + "px",
       };
+      const floorPlanBgClass =
+        this.getLocation()?.getFloorPlanBgClass() ?? "floor-plan-bg";
       const floorPlanImageStyle: React.CSSProperties = {
         position: "absolute",
         inset: 0,
@@ -2470,7 +2472,7 @@ class Search extends React.Component<Props, State> {
                     <MiniMap>
                       <div style={floorPlanStyle}>
                         <div
-                          className="floor-plan-bg"
+                          className={floorPlanBgClass}
                           style={floorPlanImageStyle}
                         ></div>
                       </div>
@@ -2511,7 +2513,7 @@ class Search extends React.Component<Props, State> {
                 <TransformComponent contentClass="border border-3">
                   <div style={floorPlanStyle}>
                     <div
-                      className="floor-plan-bg"
+                      className={floorPlanBgClass}
                       style={floorPlanImageStyle}
                     ></div>
                     {spaces}
