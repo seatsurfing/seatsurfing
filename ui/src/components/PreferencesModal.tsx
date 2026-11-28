@@ -78,6 +78,7 @@ interface State {
   currentSessionId: string;
   showPasswordChangedModal: boolean;
   showReloadModal: boolean;
+  pickerContainer: HTMLDivElement | null;
 }
 
 interface Props {
@@ -140,6 +141,7 @@ class PreferencesModal extends React.Component<Props, State> {
       currentSessionId: "",
       showPasswordChangedModal: false,
       showReloadModal: false,
+      pickerContainer: null,
     };
   };
 
@@ -608,6 +610,7 @@ class PreferencesModal extends React.Component<Props, State> {
               <div style={{ width: "40%" }}>
                 <DateTimePicker
                   id="workdayStart"
+                  appendTo={this.state.pickerContainer}
                   noCalendar={true}
                   enableTime={true}
                   value={DateUtil.getTodayTimeFromTimeString(
@@ -649,6 +652,7 @@ class PreferencesModal extends React.Component<Props, State> {
               <div style={{ width: "40%" }}>
                 <DateTimePicker
                   id="workdayEnd"
+                  appendTo={this.state.pickerContainer}
                   noCalendar={true}
                   enableTime={true}
                   value={DateUtil.getTodayTimeFromTimeString(
@@ -1147,6 +1151,14 @@ class PreferencesModal extends React.Component<Props, State> {
   // synthetic events still bubble through the React tree, so stopping them
   // here keeps them from reaching that window listener. Handlers inside the
   // dialog (e.g. arrow key navigation in Nav) still run, since they fire first.
+  // Container inside the modal for date/time picker popups, so they stay
+  // within the modal's focus trap. Must be a stable callback ref.
+  setPickerContainer = (el: HTMLDivElement | null) => {
+    if (el !== this.state.pickerContainer) {
+      this.setState({ pickerContainer: el });
+    }
+  };
+
   onKeyDown = (e: React.KeyboardEvent) => {
     if (
       e.key === "ArrowLeft" ||
@@ -1229,6 +1241,7 @@ class PreferencesModal extends React.Component<Props, State> {
               <div className="preferences-content">{this.renderContent()}</div>
             </div>
           </Modal.Body>
+          <div ref={this.setPickerContainer} />
         </Modal>
         <Modal
           show={this.state.showPasswordChangedModal}

@@ -225,6 +225,36 @@ test("arrow keys in preferences modal do not change booking search", async ({
   await expect(areaSelect).toHaveValue(areaBefore);
 });
 
+test("working hours in preferences modal can be edited by keyboard", async ({
+  page,
+}) => {
+  await page.getByRole("button", { name: "Preferences" }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByLabel("Preferred area")).toBeVisible();
+  const workdayStart = dialog.locator("#workdayStart");
+  const valueBefore = await workdayStart.inputValue();
+  await workdayStart.click();
+
+  // The picker popup must be rendered inside the dialog's focus trap.
+  const hour = dialog.getByRole("spinbutton", { name: "Hour" }).first();
+  await expect(hour).toBeVisible();
+  await hour.click();
+  await expect(hour).toBeFocused();
+  await page.keyboard.press("ArrowUp");
+  await expect(hour).toBeFocused();
+  await page.keyboard.press("ControlOrMeta+a");
+  await page.keyboard.type("6");
+  await expect(hour).toBeFocused();
+  await expect(hour).toHaveValue(/^0?6$/);
+
+  // Close the popup without saving the preferences.
+  await dialog.getByText("Working hours").click();
+  await expect(workdayStart).not.toHaveValue(valueBefore);
+  await expect(workdayStart).toHaveValue(/^0?6:/);
+  await dialog.getByRole("button", { name: "Close" }).click();
+  await expect(dialog).toBeHidden();
+});
+
 test("legacy preferences page opens preferences modal", async ({ page }) => {
   const uiURL = process.env.UI_URL
     ? process.env.UI_URL
