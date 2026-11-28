@@ -168,7 +168,15 @@ class PreferencesModal extends React.Component<Props, State> {
 
   componentDidUpdate = (prevProps: Props) => {
     if (this.props.show && !prevProps.show) {
-      this.setState(this.getInitialState(), () => this.loadData());
+      // Keep the picker container: its callback ref may already have queued
+      // an update in this commit and won't be called again for the same node.
+      this.setState(
+        (prevState) => ({
+          ...this.getInitialState(),
+          pickerContainer: prevState.pickerContainer,
+        }),
+        () => this.loadData(),
+      );
     } else if (
       this.props.show &&
       this.props.initialTab !== prevProps.initialTab &&
