@@ -281,11 +281,11 @@ class BookingAttributesEditor extends React.Component<Props, State> {
     );
     return (
       <Form.Group as={Row}>
-        <Form.Label column sm="2">
+        <Form.Label column md="4" xl="3">
           {this.props.t("bookingAttributes")}
           <HintTooltip hint={this.props.t("bookingAttributesHint")} />
         </Form.Label>
-        <Col sm="4">
+        <Col md="8" xl="6">
           {this.state.items.length > 0 && (
             <Table size="sm" id="bookingAttributesTable">
               <thead>

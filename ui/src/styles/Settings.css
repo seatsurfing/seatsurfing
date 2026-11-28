@@ -27,3 +27,128 @@
   height: 2rem;
   max-width: 100%;
 }
+
+/* Settings page layout: vertical tab navigation + content cards */
+
+.settings-nav-col {
+  margin-bottom: 1.5rem;
+}
+
+.settings-content-col {
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  .settings-nav-col {
+    width: 14rem;
+    padding-right: 1rem;
+  }
+
+  .settings-nav .nav-link {
+    overflow-wrap: anywhere;
+  }
+}
+
+.settings-nav {
+  position: sticky;
+  top: 1rem;
+  gap: 2px;
+}
+
+.settings-nav .nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--bs-body-color);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.settings-nav .nav-link .feather {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--bs-secondary-color);
+}
+
+.settings-nav .nav-link:hover {
+  background-color: var(--bs-tertiary-bg);
+}
+
+.settings-nav .nav-link.active,
+.settings-nav .nav-link.active .feather {
+  color: #fff;
+}
+
+.settings-nav .nav-link.active:hover {
+  background-color: var(--ss-accent);
+}
+
+.settings-nav .nav-link.settings-nav-danger,
+.settings-nav .nav-link.settings-nav-danger .feather {
+  color: var(--bs-danger);
+}
+
+.settings-nav .nav-link.settings-nav-danger.active {
+  background-color: var(--bs-danger);
+}
+
+.settings-nav .nav-link.settings-nav-danger.active,
+.settings-nav .nav-link.settings-nav-danger.active .feather {
+  color: #fff;
+}
+
+/* Horizontal, scrollable tab bar on small screens */
+@media (max-width: 767.98px) {
+  .settings-nav {
+    position: static;
+    flex-direction: row !important;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+  }
+
+  .settings-nav .nav-link {
+    white-space: nowrap;
+  }
+}
+
+.settings-card {
+  border-color: var(--bs-border-color);
+  box-shadow: var(--ss-shadow-sm);
+}
+
+.settings-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-weight: 600;
+  background-color: var(--bs-tertiary-bg);
+}
+
+.settings-card .card-body > .row:last-child,
+.settings-card .card-body > .table:last-child {
+  margin-bottom: 0;
+}
+
+.settings-card-danger {
+  border-color: var(--bs-danger-border-subtle);
+}
+
+.settings-card-danger .settings-card-header {
+  color: var(--bs-danger-text-emphasis);
+  background-color: var(--bs-danger-bg-subtle);
+}
+
+.settings-org-edit-btn {
+  margin-left: 5px;
+  margin-top: 6px;
+  padding: 4px;
+  line-height: 1;
+}
+
+.settings-org-edit-btn .feather {
+  width: 14px;
+  height: 14px;
+}

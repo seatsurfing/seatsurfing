@@ -11,6 +11,9 @@ import {
   Dropdown,
   OverlayTrigger,
   Tooltip,
+  Card,
+  Nav,
+  Tab,
 } from "react-bootstrap";
 import {
   Plus as IconPlus,
@@ -23,6 +26,14 @@ import {
   ExternalLink as IconExternalLink,
   Edit2 as IconEdit,
   Eye as IconEye,
+  Sliders as IconGeneral,
+  Users as IconUsers,
+  Calendar as IconBookings,
+  BarChart2 as IconReports,
+  Monitor as IconKiosk,
+  Globe as IconPublicBooking,
+  Key as IconAuthProviders,
+  AlertOctagon as IconDangerZone,
 } from "react-feather";
 import { NextRouter } from "next/router";
 import FullLayout from "@/components/FullLayout";
@@ -113,6 +124,13 @@ interface State {
   verifyDomainName: string | null;
   deleteOrgConfirmStep: 0 | 1 | 2;
   alertMessage: string | null;
+  activeTab: string;
+}
+
+interface SettingsTab {
+  key: string;
+  title: string;
+  icon: React.JSX.Element;
 }
 
 interface PublicBookableSpace {
@@ -198,10 +216,15 @@ class Settings extends React.Component<Props, State> {
       verifyDomainName: null,
       deleteOrgConfirmStep: 0,
       alertMessage: null,
+      activeTab: "general",
     };
   }
 
   componentDidMount = () => {
+    const hash = window.location.hash.replace("#", "");
+    if (hash) {
+      this.setState({ activeTab: hash });
+    }
     const promises = [
       this.loadSettings(),
       this.loadItems(),
@@ -264,12 +287,7 @@ class Settings extends React.Component<Props, State> {
   };
 
   loadAuthProviders = async (): Promise<void> => {
-    if (
-      !RuntimeConfig.hasPermission(
-        Permission.AuthProviders,
-        PermissionLevel.Admin,
-      )
-    ) {
+    if (!this.canManageAuthProviders()) {
       return;
     }
     return AuthProvider.list().then((list) => {
@@ -419,8 +437,97 @@ class Settings extends React.Component<Props, State> {
     });
   };
 
+  getTabs = (): SettingsTab[] => {
+    const tabs: SettingsTab[] = [
+      {
+        key: "general",
+        title: this.props.t("settingsTabGeneral"),
+        icon: <IconGeneral className="feather" />,
+      },
+      {
+        key: "users",
+        title: this.props.t("users"),
+        icon: <IconUsers className="feather" />,
+      },
+      {
+        key: "bookings",
+        title: this.props.t("bookings"),
+        icon: <IconBookings className="feather" />,
+      },
+      {
+        key: "reports",
+        title: this.props.t("settingsTabReports"),
+        icon: <IconReports className="feather" />,
+      },
+      {
+        key: "kiosk",
+        title: this.props.t("kioskMode"),
+        icon: <IconKiosk className="feather" />,
+      },
+      {
+        key: "publicBooking",
+        title: this.props.t("publicBooking"),
+        icon: <IconPublicBooking className="feather" />,
+      },
+    ];
+    if (this.canManageAuthProviders()) {
+      tabs.push({
+        key: "authProviders",
+        title: this.props.t("authProviders"),
+        icon: <IconAuthProviders className="feather" />,
+      });
+    }
+    if (this.state.allowOrgDelete) {
+      tabs.push({
+        key: "dangerZone",
+        title: this.props.t("dangerZone"),
+        icon: <IconDangerZone className="feather" />,
+      });
+    }
+    return tabs;
+  };
+
+  canManageAuthProviders = (): boolean => {
+    return RuntimeConfig.hasPermission(
+      Permission.AuthProviders,
+      PermissionLevel.Admin,
+    );
+  };
+
+  selectTab = (key: string) => {
+    this.setState({ activeTab: key });
+    window.history.replaceState(
+      window.history.state,
+      "",
+      window.location.pathname + window.location.search + "#" + key,
+    );
+  };
+
+  // The form spans all tabs, but the browser can't focus an invalid field in a
+  // hidden tab. Validate manually and switch to the tab of the first invalid
+  // field before reporting it.
+  validateForm = (form: HTMLFormElement): boolean => {
+    if (form.checkValidity()) {
+      return true;
+    }
+    const invalid = form.querySelector(":invalid");
+    const tab = invalid
+      ?.closest("[data-settings-tab]")
+      ?.getAttribute("data-settings-tab");
+    if (tab && tab !== this.state.activeTab) {
+      this.selectTab(tab);
+      window.setTimeout(() => form.reportValidity(), 0);
+    } else {
+      form.reportValidity();
+    }
+    return false;
+  };
+
   onSubmit = async (e: any) => {
     e.preventDefault();
+    if (!this.validateForm(e.currentTarget)) {
+      return;
+    }
     this.setState({
       submitting: true,
       error: false,
@@ -914,19 +1021,11 @@ class Settings extends React.Component<Props, State> {
       publicBookingHint = <p>{this.props.t("featureNotEnabled")}</p>;
     }
 
-    let dangerZone = <></>;
-    if (this.state.allowOrgDelete) {
-      dangerZone = (
-        <>
-          <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-            <h1 className="h2">{this.props.t("dangerZone")}</h1>
-          </div>
-          <Button className="btn btn-danger" onClick={this.deleteOrg}>
-            {this.props.t("deleteOrg")}
-          </Button>
-        </>
-      );
-    }
+    const tabs = this.getTabs();
+    const activeTab = tabs.some((tab) => tab.key === this.state.activeTab)
+      ? this.state.activeTab
+      : "general";
+    const canManageAuthProviders = this.canManageAuthProviders();
 
     const hint = this.state.error ? (
       <Alert variant="danger">{this.props.t("errorSave")}</Alert>
@@ -975,1106 +1074,1514 @@ class Settings extends React.Component<Props, State> {
 
     return (
       <FullLayout headline={this.props.t("settings")} buttons={buttonSave}>
-        <Form onSubmit={this.onSubmit} id="form">
+        <Form onSubmit={this.onSubmit} id="form" noValidate={true}>
           {hint}
-          <Form.Group as={Row}>
-            <Form.Label column sm="2">
-              {this.props.t("org")}
-            </Form.Label>
-            <Col sm="4">
-              <div className="d-flex align-items-start">
-                <p className="form-control-plaintext flex-grow-1">
-                  {this.org?.name} (
-                  {this.org?.language
-                    ? this.props.t("language-" + this.org.language)
-                    : "—"}
-                  )
-                  <br />
-                  {this.org?.contactFirstname} {this.org?.contactLastname} (
-                  {this.org?.contactEmail})
-                </p>
-                <Button
-                  as={Link as any}
-                  href="/admin/settings/org"
-                  variant="outline-secondary"
-                  size="sm"
-                  title={this.props.t("edit")}
-                  aria-label={this.props.t("edit")}
-                  style={{
-                    marginLeft: "5px",
-                    marginTop: "6px",
-                    padding: "4px 4px",
-                    lineHeight: 1,
-                  }}
-                >
-                  <IconEdit
-                    className="feather"
-                    style={{ width: "14px", height: "14px" }}
-                  />
-                </Button>
-              </div>
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label column sm="2">
-              {this.props.t("orgId")}
-            </Form.Label>
-            <Col sm="4">
-              <div className="d-flex align-items-center">
-                <Form.Control
-                  plaintext={true}
-                  readOnly={true}
-                  value={
-                    RuntimeConfig.INFOS.cloudHosted || !this.state.installId
-                      ? this.org?.id
-                      : this.state.installId
-                  }
-                  className="flex-grow-1"
-                />
-                <CopyToClipboardButton
-                  text={
-                    RuntimeConfig.INFOS.cloudHosted || !this.state.installId
-                      ? this.org
-                        ? this.org.id
-                        : ""
-                      : this.state.installId
-                  }
-                  small={true}
-                />
-              </div>
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row} hidden={RuntimeConfig.INFOS.cloudHosted}>
-            <Form.Label column sm="2">
-              Version
-            </Form.Label>
-            <Col sm="4">{updateHint}</Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label column sm="2" htmlFor="input-customLogoUrl">
-              {this.props.t("customLogoUrl")}
-              <HintTooltip hint={this.props.t("customLogoUrlHint")} />
-            </Form.Label>
-            <Col sm="4">
-              <InputGroup>
-                <UrlInput
-                  id="input-customLogoUrl"
-                  httpsOnly={true}
-                  placeholder="https://…"
-                  value={this.state.customLogoUrl}
-                  onChange={(e: any) =>
-                    this.setState({ customLogoUrl: e.target.value })
-                  }
-                />
-                <Button
-                  variant="outline-secondary"
-                  title={this.props.t("preview")}
-                  aria-label={this.props.t("preview")}
-                  disabled={
-                    !Validation.isHttpsUrl(this.state.customLogoUrl.trim())
-                  }
-                  onClick={() => this.setState({ showLogoPreview: true })}
-                >
-                  <IconEye className="feather" />
-                </Button>
-                <Button
-                  variant="outline-secondary"
-                  title={this.props.t("openInNewTab")}
-                  aria-label={this.props.t("openInNewTab")}
-                  href={this.state.customLogoUrl.trim()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  disabled={
-                    !Validation.isHttpsUrl(this.state.customLogoUrl.trim())
-                  }
-                >
-                  <IconExternalLink className="feather" />
-                </Button>
-              </InputGroup>
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label column sm="2" htmlFor="input-newDomain">
-              {this.props.t("domains")}
-              <PremiumFeatureIcon />
-            </Form.Label>
-            <Col sm="4">
-              <Table borderless size="sm" className="domain-table mb-2">
-                <tbody>{domains}</tbody>
-              </Table>
-              <InputGroup size="sm" hidden={!this.state.featureCustomDomains}>
-                <Form.Control
-                  id="input-newDomain"
-                  type="text"
-                  value={this.state.newDomain}
-                  onChange={(e: any) =>
-                    this.setState({ newDomain: e.target.value })
-                  }
-                  placeholder={this.props.t("yourDomainPlaceholder")}
-                  onKeyDown={this.handleNewDomainKeyDown}
-                />
-                <Button
-                  variant="outline-secondary"
-                  onClick={this.addDomain}
-                  disabled={!this.isValidDomain()}
-                >
-                  {this.props.t("addDomain")}
-                </Button>
-              </InputGroup>
-            </Col>
-          </Form.Group>
-
-          {/* USERS */}
-
-          <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-            <h4>{this.props.t("users")}</h4>
-          </div>
-          <Form.Group as={Row}>
-            <Col sm="6">
-              <Form.Check
-                type="checkbox"
-                id="check-newUserDefaultMailNotification"
-                label={this.props.t("newUserDefaultMailNotification")}
-                checked={this.state.newUserDefaultMailNotification}
-                onChange={(e: any) =>
-                  this.setState({
-                    newUserDefaultMailNotification: e.target.checked,
-                  })
-                }
-              />
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label column sm="2" htmlFor="input-enforceTOTP">
-              {this.props.t("enforceTOTP")}
-            </Form.Label>
-            <Col sm="4">
-              <Form.Select
-                id="input-enforceTOTP"
-                value={this.state.enforceTOTP}
-                onChange={(e: any) =>
-                  this.setState({
-                    enforceTOTP: window.parseInt(e.target.value),
-                  })
-                }
-              >
-                <option value={Organization.ENFORCE_TOTP_DISABLED}>
-                  {this.props.t("disabled")}
-                </option>
-                <option value={Organization.ENFORCE_TOTP_ALL_USERS}>
-                  {this.props.t("enforceTOTPAllUsers")}
-                </option>
-                <option value={Organization.ENFORCE_TOTP_ADMINS_ONLY}>
-                  {this.props.t("enforceTOTPAdminsOnly")}
-                </option>
-              </Form.Select>
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label column sm="2" htmlFor="input-defaultTimezone">
-              {this.props.t("defaultTimezone")}
-            </Form.Label>
-            <Col sm="4">
-              <Form.Select
-                id="input-defaultTimezone"
-                value={this.state.defaultTimezone}
-                onChange={(e: any) =>
-                  this.setState({ defaultTimezone: e.target.value })
-                }
-              >
-                {this.timezones.map((tz) => (
-                  <option key={tz}>{tz}</option>
-                ))}
-              </Form.Select>
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label column sm="2" htmlFor="input-defaultTimeFormat">
-              {this.props.t("defaultTimeFormat")}
-            </Form.Label>
-            <Col sm="4">
-              <Form.Select
-                id="input-defaultTimeFormat"
-                value={this.state.default24HourTime ? "1" : "0"}
-                onChange={(e: any) =>
-                  this.setState({ default24HourTime: e.target.value === "1" })
-                }
-              >
-                <option value="1">{this.props.t("timeFormat24h")}</option>
-                <option value="0">{this.props.t("timeFormat12h")}</option>
-              </Form.Select>
-            </Col>
-          </Form.Group>
-
-          {/* BOOKINGS */}
-
-          <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-            <h4>{this.props.t("bookings")}</h4>
-          </div>
-          <Form.Group as={Row}>
-            <Form.Label column sm="2" htmlFor="select-bookerNames">
-              {this.props.t("bookerNames")}
-            </Form.Label>
-            <Col sm="4">
-              <Form.Select
-                id="select-bookerNames"
-                value={
-                  !this.state.showNames
-                    ? "hide"
-                    : this.state.disableBuddies
-                      ? "showWithoutBuddies"
-                      : "showWithBuddies"
-                }
-                onChange={(e: any) =>
-                  this.setState({
-                    showNames: e.target.value !== "hide",
-                    disableBuddies:
-                      e.target.value === "hide"
-                        ? this.state.disableBuddies
-                        : e.target.value === "showWithoutBuddies",
-                  })
-                }
-              >
-                <option value="hide">{this.props.t("bookerNamesHide")}</option>
-                <optgroup label={this.props.t("bookerNamesPrivacyHint")}>
-                  <option value="showWithBuddies">
-                    {this.props.t("bookerNamesShowWithBuddies")}
-                  </option>
-                  <option value="showWithoutBuddies">
-                    {this.props.t("bookerNamesShowWithoutBuddies")}
-                  </option>
-                </optgroup>
-              </Form.Select>
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label column sm="2" htmlFor="select-defaultBookingView">
-              {this.props.t("defaultBookingView")}
-            </Form.Label>
-            <Col sm="4">
-              <Form.Select
-                id="select-defaultBookingView"
-                value={this.state.defaultBookingView}
-                onChange={(e: any) =>
-                  this.setState({ defaultBookingView: e.target.value })
-                }
-              >
-                <option value="map">{this.props.t("map")}</option>
-                <option value="list">{this.props.t("list")}</option>
-              </Form.Select>
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label column sm="2" htmlFor="input-maxBookingsPerUser">
-              {this.props.t("maxBookingsPerUser")}
-            </Form.Label>
-            <Col sm="4">
-              <Form.Control
-                id="input-maxBookingsPerUser"
-                type="number"
-                value={this.state.maxBookingsPerUser}
-                onChange={(e: any) =>
-                  this.setState({ maxBookingsPerUser: e.target.value })
-                }
-                required={true}
-                min="1"
-                max="9999"
-              />
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label
-              column
-              sm="2"
-              htmlFor="input-maxConcurrentBookingsPerUser"
-            >
-              {this.props.t("maxConcurrentBookingsPerUser")}
-            </Form.Label>
-            <Col sm="4">
-              <InputGroup>
-                <InputGroup.Text>
-                  <Form.Check.Input
-                    type="checkbox"
-                    id="check-maxConcurrentBookingsPerUserUnlimited"
-                    checked={this.state.maxConcurrentBookingsPerUser === 0}
-                    onChange={(e: any) => {
-                      if (!e.target.checked) {
-                        this.setState({
-                          maxConcurrentBookingsPerUser:
-                            this.maxConcurrentBookingsPerUserLastValue,
-                        });
-                        return;
-                      }
-                      if (this.state.maxConcurrentBookingsPerUser > 0) {
-                        this.maxConcurrentBookingsPerUserLastValue =
-                          this.state.maxConcurrentBookingsPerUser;
-                      }
-                      this.setState({ maxConcurrentBookingsPerUser: 0 });
-                    }}
-                    className="mt-0 me-2"
-                  />
-                  <Form.Check.Label htmlFor="check-maxConcurrentBookingsPerUserUnlimited">
-                    {this.props.t("unlimited")}
-                  </Form.Check.Label>
-                </InputGroup.Text>
-                <Form.Control
-                  id="input-maxConcurrentBookingsPerUser"
-                  type="number"
-                  value={
-                    this.state.maxConcurrentBookingsPerUser === 0
-                      ? ""
-                      : this.state.maxConcurrentBookingsPerUser
-                  }
-                  onChange={(e: any) => {
-                    const value = window.parseInt(e.target.value);
-                    if (value > 0) {
-                      this.maxConcurrentBookingsPerUserLastValue = value;
-                    }
-                    this.setState({
-                      maxConcurrentBookingsPerUser: window.parseInt(
-                        e.target.value,
-                      ),
-                    });
-                  }}
-                  min="1"
-                  max="9999"
-                  disabled={this.state.maxConcurrentBookingsPerUser === 0}
-                />
-              </InputGroup>
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label column sm="2" htmlFor="input-maxDaysInAdvance">
-              {this.props.t("maxDaysInAdvance")}
-              <HintTooltip hint={this.props.t("maxDaysInAdvanceHint")} />
-            </Form.Label>
-            <Col sm="4">
-              <InputGroup>
-                <Form.Control
-                  id="input-maxDaysInAdvance"
-                  type="number"
-                  value={this.state.maxDaysInAdvance}
-                  onChange={(e: any) =>
-                    this.setState({ maxDaysInAdvance: e.target.value })
-                  }
-                  required={true}
-                  min="0"
-                  max="9999"
-                />
-                <InputGroup.Text>{this.props.t("days")}</InputGroup.Text>
-              </InputGroup>
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label column sm="2" htmlFor="input-bookingRetentionDays">
-              {this.props.t("bookingRetention")}
-            </Form.Label>
-            <Col sm="4">
-              <InputGroup>
-                <InputGroup.Checkbox
-                  id="check-bookingRetentionDays"
-                  checked={this.state.bookingRetentionEnabled}
-                  onChange={(e: any) =>
-                    this.setState({
-                      bookingRetentionEnabled: e.target.checked,
-                    })
-                  }
-                />
-                <Form.Control
-                  id="input-bookingRetentionDays"
-                  type="number"
-                  value={this.state.bookingRetentionDays}
-                  onChange={(e: any) =>
-                    this.setState({ bookingRetentionDays: e.target.value })
-                  }
-                  min="30"
-                  max="999"
-                  disabled={!this.state.bookingRetentionEnabled}
-                />
-                <InputGroup.Text>{this.props.t("days")}</InputGroup.Text>
-              </InputGroup>
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label column sm="2" htmlFor="input-maxHoursBeforeDelete">
-              {this.props.t("maxHoursBeforeDelete")}
-            </Form.Label>
-            <Col sm="4">
-              <InputGroup>
-                <InputGroup.Checkbox
-                  id="check-maxHoursBeforeDelete"
-                  checked={this.state.enableMaxHoursBeforeDelete}
-                  onChange={(e: any) =>
-                    this.setState({
-                      enableMaxHoursBeforeDelete: e.target.checked,
-                    })
-                  }
-                />
-                <Form.Control
-                  id="input-maxHoursBeforeDelete"
-                  type="number"
-                  value={this.state.maxHoursBeforeDelete}
-                  onChange={(e: any) =>
-                    this.setState({ maxHoursBeforeDelete: e.target.value })
-                  }
-                  min="0"
-                  max="9999"
-                  disabled={!this.state.enableMaxHoursBeforeDelete}
-                />
-              </InputGroup>
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label column sm="2" htmlFor="input-maxHoursPartiallyBooked">
-              {this.props.t("maxHoursPartiallyBooked")}
-            </Form.Label>
-            <Col sm="4">
-              <InputGroup>
-                <InputGroup.Checkbox
-                  checked={this.state.maxHoursPartiallyBookedEnabled}
-                  onChange={(e: any) =>
-                    this.setState({
-                      maxHoursPartiallyBookedEnabled: e.target.checked,
-                    })
-                  }
-                />
-                <Form.Control
-                  id="input-maxHoursPartiallyBooked"
-                  type="number"
-                  value={this.state.maxHoursPartiallyBooked}
-                  onChange={(e: any) =>
-                    this.setState({ maxHoursPartiallyBooked: e.target.value })
-                  }
-                  min="0"
-                  max="9999"
-                  disabled={!this.state.maxHoursPartiallyBookedEnabled}
-                />
-                <InputGroup.Text>{this.props.t("hours")}</InputGroup.Text>
-              </InputGroup>
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Col sm="6">
-              <Form.Check
-                type="checkbox"
-                id="check-noAdminRestrictions"
-                label={this.props.t("noAdminRestrictions")}
-                checked={this.state.noAdminRestrictions}
-                onChange={(e: any) =>
-                  this.setState({ noAdminRestrictions: e.target.checked })
-                }
-              />
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row} hidden={!RuntimeConfig.INFOS.featureGroups}>
-            <Col sm="6">
-              <Form.Check
-                type="checkbox"
-                id="check-hideDisallowedLocations"
-                label={this.props.t("hideDisallowedLocations")}
-                checked={this.state.hideDisallowedLocations}
-                onChange={(e: any) =>
-                  this.setState({ hideDisallowedLocations: e.target.checked })
-                }
-              />
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Col sm="6">
-              <Form.Check
-                type="checkbox"
-                id="check-dailyBasisBooking"
-                label={this.props.t("dailyBasisBooking")}
-                checked={this.state.dailyBasisBooking}
-                onChange={(e: any) =>
-                  this.onDailyBasisBookingChange(e.target.checked)
-                }
-              />
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label column sm="2" htmlFor="input-minBookingDuration">
-              {this.props.t("minBookingDuration")}
-            </Form.Label>
-            <Col sm="4">
-              <InputGroup>
-                <Form.Control
-                  id="input-minBookingDuration"
-                  type="number"
-                  value={Math.round(this.state.minBookingDuration)}
-                  onChange={(e: any) =>
-                    this.setState({ minBookingDuration: e.target.value })
-                  }
-                  required={true}
-                  min="0"
-                  max="9999"
-                />
-                <InputGroup.Text>
-                  {this.state.dailyBasisBooking
-                    ? this.props.t("days")
-                    : this.props.t("hours")}
-                </InputGroup.Text>
-              </InputGroup>
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label column sm="2" htmlFor="input-maxBookingDuration">
-              {this.props.t("maxBookingDuration")}
-            </Form.Label>
-            <Col sm="4">
-              <InputGroup>
-                <Form.Control
-                  id="input-maxBookingDuration"
-                  type="number"
-                  value={Math.max(Math.round(this.state.maxBookingDuration), 1)}
-                  onChange={(e: any) =>
-                    this.setState({ maxBookingDuration: e.target.value })
-                  }
-                  required={true}
-                  min="0"
-                  max="9999"
-                />
-                <InputGroup.Text>
-                  {this.state.dailyBasisBooking
-                    ? this.props.t("days")
-                    : this.props.t("hours")}
-                </InputGroup.Text>
-              </InputGroup>
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label
-              column
-              sm="2"
-              htmlFor="input-targetUtilizationHoursPerWeek"
-            >
-              {this.props.t("targetUtilizationHoursPerWeek")}
-            </Form.Label>
-            <Col sm="4">
-              <InputGroup>
-                <Form.Control
-                  id="input-targetUtilizationHoursPerWeek"
-                  type="number"
-                  value={Math.max(
-                    Math.round(this.state.targetUtilizationHoursPerWeek),
-                    1,
-                  )}
-                  onChange={(e: any) =>
-                    this.setState({
-                      targetUtilizationHoursPerWeek: e.target.value,
-                    })
-                  }
-                  min="0"
-                  max="168"
-                />
-                <InputGroup.Text>
-                  {this.state.dailyBasisBooking
-                    ? this.props.t("days")
-                    : this.props.t("hours")}
-                </InputGroup.Text>
-              </InputGroup>
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label column sm="2" htmlFor="input-subjectDefault">
-              {this.props.t("subjectDefault")}
-            </Form.Label>
-            <Col sm="4">
-              <Form.Select
-                id="input-subjectDefault"
-                value={this.state.subjectDefault}
-                onChange={(e: any) =>
-                  this.setState({ subjectDefault: e.target.value })
-                }
-              >
-                <option value="1">{this.props.t("disabled")}</option>
-                <option value="2">{this.props.t("optional")}</option>
-                <option value="3">{this.props.t("required")}</option>
-              </Form.Select>
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Col sm="6">
-              <Form.Check
-                type="checkbox"
-                id="check-allowRecurringBookings"
-                label={this.props.t("allowRecurringBookings")}
-                checked={this.state.allowRecurringBookings}
-                onChange={(e: any) =>
-                  this.setState({ allowRecurringBookings: e.target.checked })
-                }
-              />
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Col sm="6">
-              <Form.Check
-                type="checkbox"
-                id="check-allowBookingNonExistUsers"
-                label={this.props.t("allowBookingNonExistUsers")}
-                checked={this.state.allowBookingNonExistUsers}
-                onChange={(e: any) =>
-                  this.setState({ allowBookingNonExistUsers: e.target.checked })
-                }
-              />
-            </Col>
-          </Form.Group>
-
-          {/* REPORTS */}
-
-          <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-            <h4>{this.props.t("reportSettings")}</h4>
-          </div>
-          <Form.Group as={Row}>
-            <Col sm="6">
-              <Form.Check
-                type="checkbox"
-                id="check-hideReports"
-                label={this.props.t("hideReports")}
-                checked={this.state.hideReports}
-                onChange={(e: any) =>
-                  this.setState({ hideReports: e.target.checked })
-                }
-              />
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Col sm="6">
-              <Form.Check
-                type="checkbox"
-                id="check-hideStats"
-                label={this.props.t("hideStats")}
-                checked={this.state.hideStats}
-                onChange={(e: any) =>
-                  this.setState({ hideStats: e.target.checked })
-                }
-              />
-            </Col>
-          </Form.Group>
-
-          {/* KIOSK MODE */}
-
-          <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-            <h4>
-              {this.props.t("kioskMode")}
-              <PremiumFeatureIcon />
-            </h4>
-          </div>
-          <Form.Group as={Row}>
-            <Col sm="6">
-              <Form.Check
-                type="checkbox"
-                id="check-kioskModeEnabled"
-                label={
-                  <>
-                    {this.props.t("kioskModeAvailable")}
-                    <HintTooltip
-                      hint={this.props.t("kioskModeAvailableHint")}
-                    />
-                  </>
-                }
-                checked={
-                  this.state.kioskModeEnabled &&
-                  RuntimeConfig.INFOS.featureKioskMode
-                }
-                disabled={!RuntimeConfig.INFOS.featureKioskMode}
-                onChange={(e: any) =>
-                  this.setState({ kioskModeEnabled: e.target.checked })
-                }
-              />
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label column sm="2" htmlFor="input-kioskSecret">
-              {this.props.t("kioskSecret")}
-            </Form.Label>
-            <Col sm="4">
-              <InputGroup>
-                <Form.Control
-                  id="input-kioskSecret"
-                  type="text"
-                  value={this.state.kioskSecret}
-                  disabled={true}
-                />
-                <Button
-                  variant="outline-secondary"
-                  onClick={this.generateKioskSecret}
-                  title={this.props.t("generatePassword")}
-                  disabled={!RuntimeConfig.INFOS.featureKioskMode}
-                >
-                  <IconRefresh className="feather" />
-                </Button>
-                <CopyToClipboardButton
-                  text={this.state.kioskSecret}
-                  disabled={
-                    !this.state.kioskSecret ||
-                    this.state.kioskSecret === RendererUtils.SECRET_PLACEHOLDER
-                  }
-                />
-              </InputGroup>
-            </Col>
-            <Col sm="2">
-              <Button
-                variant="outline-secondary"
-                onClick={this.saveKioskSecret}
-                disabled={
-                  !RuntimeConfig.INFOS.featureKioskMode ||
-                  !this.state.kioskSecret ||
-                  this.state.kioskSecret === RendererUtils.SECRET_PLACEHOLDER
-                }
-              >
-                {this.props.t("save")}
-              </Button>
-            </Col>
-          </Form.Group>
-
-          {/* PUBLIC BOOKING */}
-
-          <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-            <h4>
-              {this.props.t("publicBooking")}
-              <PremiumFeatureIcon />
-            </h4>
-          </div>
-          {publicBookingHint ?? (
-            <>
-              <Form.Group as={Row}>
-                <Col sm="6">
-                  <Form.Check
-                    type="checkbox"
-                    id="check-publicBookingEnabled"
-                    label={
-                      <>
-                        {this.props.t("publicBookingAvailable")}
-                        <HintTooltip
-                          hint={this.props.t("publicBookingAvailableHint")}
-                        />
-                      </>
-                    }
-                    checked={
-                      this.state.publicBookingEnabled &&
-                      RuntimeConfig.INFOS.featurePublicBooking
-                    }
-                    disabled={!RuntimeConfig.INFOS.featurePublicBooking}
-                    onChange={(e: any) =>
-                      this.setState({ publicBookingEnabled: e.target.checked })
-                    }
-                  />
-                </Col>
-              </Form.Group>
-              <Form.Group as={Row}>
-                <Col sm="6">
-                  <Form.Check
-                    type="checkbox"
-                    id="check-publicBookingShowMap"
-                    label={
-                      <>
-                        {this.props.t("publicBookingShowMap")}
-                        <HintTooltip
-                          hint={this.props.t("publicBookingShowMapHint")}
-                        />
-                      </>
-                    }
-                    checked={
-                      this.state.publicBookingShowMap &&
-                      RuntimeConfig.INFOS.featurePublicBooking
-                    }
-                    disabled={
-                      !RuntimeConfig.INFOS.featurePublicBooking ||
-                      !this.state.publicBookingEnabled
-                    }
-                    onChange={(e: any) =>
-                      this.setState({ publicBookingShowMap: e.target.checked })
-                    }
-                  />
-                </Col>
-              </Form.Group>
-              <Form.Group as={Row}>
-                <Col sm="6">
-                  <Form.Check
-                    type="checkbox"
-                    id="check-publicBookingShowAvailability"
-                    label={
-                      <>
-                        {this.props.t("publicBookingShowAvailability")}
-                        <HintTooltip
-                          hint={this.props.t(
-                            "publicBookingShowAvailabilityHint",
-                          )}
-                        />
-                      </>
-                    }
-                    checked={
-                      this.state.publicBookingShowAvailability &&
-                      RuntimeConfig.INFOS.featurePublicBooking
-                    }
-                    disabled={
-                      !RuntimeConfig.INFOS.featurePublicBooking ||
-                      !this.state.publicBookingEnabled
-                    }
-                    onChange={(e: any) =>
-                      this.setState({
-                        publicBookingShowAvailability: e.target.checked,
-                      })
-                    }
-                  />
-                </Col>
-              </Form.Group>
-              <Form.Group as={Row}>
-                <Form.Label
-                  column
-                  sm="2"
-                  htmlFor="input-publicBookingMinDurationHours"
-                >
-                  {this.props.t("minBookingDuration")}
-                  <HintTooltip
-                    hint={this.props.t("publicBookingDurationHint")}
-                  />
-                </Form.Label>
-                <Col sm="4">
-                  <InputGroup>
-                    <InputGroup.Checkbox
-                      id="check-publicBookingMinDurationHours"
-                      checked={this.state.publicBookingMinDurationEnabled}
-                      onChange={(e: any) =>
-                        this.setState({
-                          publicBookingMinDurationEnabled: e.target.checked,
-                        })
-                      }
-                      disabled={
-                        !RuntimeConfig.INFOS.featurePublicBooking ||
-                        !this.state.publicBookingEnabled
-                      }
-                    />
-                    <Form.Control
-                      id="input-publicBookingMinDurationHours"
-                      type="number"
-                      value={
-                        Number.isNaN(this.state.publicBookingMinDurationHours)
-                          ? ""
-                          : this.state.publicBookingMinDurationHours
-                      }
-                      onChange={(e: any) =>
-                        this.setState({
-                          publicBookingMinDurationHours: window.parseInt(
-                            e.target.value,
-                          ),
-                        })
-                      }
-                      required={this.state.publicBookingMinDurationEnabled}
-                      min="1"
-                      max={
-                        this.state.publicBookingMaxDurationEnabled
-                          ? this.state.publicBookingMaxDurationHours
-                          : 24
-                      }
-                      disabled={
-                        !RuntimeConfig.INFOS.featurePublicBooking ||
-                        !this.state.publicBookingEnabled ||
-                        !this.state.publicBookingMinDurationEnabled
-                      }
-                    />
-                    <InputGroup.Text>{this.props.t("hours")}</InputGroup.Text>
-                  </InputGroup>
-                </Col>
-              </Form.Group>
-              <Form.Group as={Row}>
-                <Form.Label
-                  column
-                  sm="2"
-                  htmlFor="input-publicBookingMaxDurationHours"
-                >
-                  {this.props.t("maxBookingDuration")}
-                  <HintTooltip
-                    hint={this.props.t("publicBookingDurationHint")}
-                  />
-                </Form.Label>
-                <Col sm="4">
-                  <InputGroup>
-                    <InputGroup.Checkbox
-                      id="check-publicBookingMaxDurationHours"
-                      checked={this.state.publicBookingMaxDurationEnabled}
-                      onChange={(e: any) =>
-                        this.setState({
-                          publicBookingMaxDurationEnabled: e.target.checked,
-                        })
-                      }
-                      disabled={
-                        !RuntimeConfig.INFOS.featurePublicBooking ||
-                        !this.state.publicBookingEnabled
-                      }
-                    />
-                    <Form.Control
-                      id="input-publicBookingMaxDurationHours"
-                      type="number"
-                      value={
-                        Number.isNaN(this.state.publicBookingMaxDurationHours)
-                          ? ""
-                          : this.state.publicBookingMaxDurationHours
-                      }
-                      onChange={(e: any) =>
-                        this.setState({
-                          publicBookingMaxDurationHours: window.parseInt(
-                            e.target.value,
-                          ),
-                        })
-                      }
-                      required={this.state.publicBookingMaxDurationEnabled}
-                      min={
-                        this.state.publicBookingMinDurationEnabled
-                          ? this.state.publicBookingMinDurationHours
-                          : 1
-                      }
-                      max="24"
-                      disabled={
-                        !RuntimeConfig.INFOS.featurePublicBooking ||
-                        !this.state.publicBookingEnabled ||
-                        !this.state.publicBookingMaxDurationEnabled
-                      }
-                    />
-                    <InputGroup.Text>{this.props.t("hours")}</InputGroup.Text>
-                  </InputGroup>
-                </Col>
-              </Form.Group>
-              <BookingAttributesEditor
-                disabled={!RuntimeConfig.INFOS.featurePublicBooking}
-              />
-              {this.state.publicBookingEnabled && (
-                <Form.Group as={Row}>
-                  <Form.Label column sm="2" htmlFor="input-publicBookingUrl">
-                    {this.props.t("publicBookingUrl")}
-                  </Form.Label>
-                  <Col sm="4">
-                    <InputGroup>
-                      <Form.Select
-                        id="select-publicBookingSpace"
-                        aria-label={this.props.t("space")}
-                        className="flex-grow-0 w-25"
-                        value={this.state.publicBookingSpaceId}
-                        disabled={
-                          !this.state.publicBookingEnabledSaved ||
-                          !RuntimeConfig.INFOS.featurePublicBooking
-                        }
-                        onChange={(e: any) =>
-                          this.setState({
-                            publicBookingSpaceId: e.target.value,
-                          })
-                        }
-                      >
-                        <option value="">
-                          {this.props.t("publicBookingAllSpaces")}
-                        </option>
-                        {this.getPublicBookingLocations().flatMap((l) =>
-                          this.publicBookingSpaces
-                            .filter((s) => s.locationId === l.id)
-                            .map((s) => (
-                              <option key={s.spaceId} value={s.spaceId}>
-                                {l.name} / {s.spaceName}
-                              </option>
-                            )),
-                        )}
-                      </Form.Select>
-                      <Form.Control
-                        id="input-publicBookingUrl"
-                        type="text"
-                        value={
-                          this.getPublicBookingUrl() +
-                          (this.state.publicBookingEnabledSaved
-                            ? ""
-                            : " (" + this.props.t("availableAfterSaving") + ")")
-                        }
-                        readOnly={true}
-                        disabled={
-                          !this.state.publicBookingEnabledSaved ||
-                          !RuntimeConfig.INFOS.featurePublicBooking
-                        }
+          <Tab.Container
+            id="settings-tabs"
+            activeKey={activeTab}
+            onSelect={(key) => key && this.selectTab(key)}
+            transition={false}
+          >
+            <Row className="settings-layout">
+              <Col xs="12" md="auto" className="settings-nav-col">
+                <Nav variant="pills" className="flex-column settings-nav">
+                  {tabs.map((tab) => (
+                    <Nav.Item key={tab.key}>
+                      <Nav.Link
+                        eventKey={tab.key}
                         className={
-                          this.state.publicBookingEnabledSaved
-                            ? ""
-                            : "fst-italic"
-                        }
-                      />
-                      <CopyToClipboardButton
-                        text={this.getPublicBookingUrl()}
-                        disabled={
-                          !this.state.publicBookingEnabledSaved ||
-                          !RuntimeConfig.INFOS.featurePublicBooking
-                        }
-                      />
-                      <Button
-                        title={this.props.t("openInNewTab")}
-                        aria-label={this.props.t("openInNewTab")}
-                        variant="outline-secondary"
-                        href={this.getPublicBookingUrl()}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        disabled={
-                          !this.state.publicBookingEnabledSaved ||
-                          !RuntimeConfig.INFOS.featurePublicBooking
+                          tab.key === "dangerZone" ? "settings-nav-danger" : ""
                         }
                       >
-                        <IconExternalLink className="feather" />
-                      </Button>
-                    </InputGroup>
-                  </Col>
-                </Form.Group>
-              )}
-            </>
-          )}
-
-          {/* AUTH PROVIDERS */}
-
-          {RuntimeConfig.hasPermission(
-            Permission.AuthProviders,
-            PermissionLevel.Admin,
-          ) && (
-            <>
-              <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                <h4>
-                  {this.props.t("authProviders")}
-                  <PremiumFeatureIcon />
-                </h4>
-                <div className="btn-toolbar mb-2 mb-md-0">
-                  <div className="btn-group me-2">
-                    <Link
-                      href="/admin/settings/auth-providers/add"
-                      className={
-                        "btn btn-sm btn-outline-secondary" +
-                        (RuntimeConfig.INFOS.featureAuthProviders
-                          ? ""
-                          : " disabled")
-                      }
+                        {tab.icon}
+                        <span>{tab.title}</span>
+                      </Nav.Link>
+                    </Nav.Item>
+                  ))}
+                </Nav>
+              </Col>
+              <Col xs="12" md className="settings-content-col">
+                <Tab.Content>
+                  <Tab.Pane eventKey="general" data-settings-tab="general">
+                    <Card className="settings-card mb-4">
+                      <Card.Header className="settings-card-header">
+                        <span>{this.props.t("org")}</span>
+                      </Card.Header>
+                      <Card.Body>
+                        <Form.Group as={Row}>
+                          <Form.Label column md="4" xl="3">
+                            {this.props.t("name")}
+                          </Form.Label>
+                          <Col md="8" xl="6">
+                            <div className="d-flex align-items-start">
+                              <p className="form-control-plaintext flex-grow-1">
+                                {this.org?.name} (
+                                {this.org?.language
+                                  ? this.props.t(
+                                      "language-" + this.org.language,
+                                    )
+                                  : "—"}
+                                )
+                                <br />
+                                {this.org?.contactFirstname}{" "}
+                                {this.org?.contactLastname} (
+                                {this.org?.contactEmail})
+                              </p>
+                              <Button
+                                as={Link as any}
+                                href="/admin/settings/org"
+                                variant="outline-secondary"
+                                size="sm"
+                                title={this.props.t("edit")}
+                                aria-label={this.props.t("edit")}
+                                className="settings-org-edit-btn"
+                              >
+                                <IconEdit className="feather" />
+                              </Button>
+                            </div>
+                          </Col>
+                        </Form.Group>
+                        <Form.Group as={Row}>
+                          <Form.Label column md="4" xl="3">
+                            {this.props.t("orgId")}
+                          </Form.Label>
+                          <Col md="8" xl="6">
+                            <div className="d-flex align-items-center">
+                              <Form.Control
+                                plaintext={true}
+                                readOnly={true}
+                                value={
+                                  RuntimeConfig.INFOS.cloudHosted ||
+                                  !this.state.installId
+                                    ? this.org?.id
+                                    : this.state.installId
+                                }
+                                className="flex-grow-1"
+                              />
+                              <CopyToClipboardButton
+                                text={
+                                  RuntimeConfig.INFOS.cloudHosted ||
+                                  !this.state.installId
+                                    ? this.org
+                                      ? this.org.id
+                                      : ""
+                                    : this.state.installId
+                                }
+                                small={true}
+                              />
+                            </div>
+                          </Col>
+                        </Form.Group>
+                        <Form.Group
+                          as={Row}
+                          hidden={RuntimeConfig.INFOS.cloudHosted}
+                        >
+                          <Form.Label column md="4" xl="3">
+                            Version
+                          </Form.Label>
+                          <Col md="8" xl="6">
+                            {updateHint}
+                          </Col>
+                        </Form.Group>
+                      </Card.Body>
+                    </Card>
+                    <Card className="settings-card mb-4">
+                      <Card.Header className="settings-card-header">
+                        <span>{this.props.t("settingsSectionBranding")}</span>
+                      </Card.Header>
+                      <Card.Body>
+                        <Form.Group as={Row}>
+                          <Form.Label
+                            column
+                            md="4"
+                            xl="3"
+                            htmlFor="input-customLogoUrl"
+                          >
+                            {this.props.t("customLogoUrl")}
+                            <HintTooltip
+                              hint={this.props.t("customLogoUrlHint")}
+                            />
+                          </Form.Label>
+                          <Col md="8" xl="6">
+                            <InputGroup>
+                              <UrlInput
+                                id="input-customLogoUrl"
+                                httpsOnly={true}
+                                placeholder="https://…"
+                                value={this.state.customLogoUrl}
+                                onChange={(e: any) =>
+                                  this.setState({
+                                    customLogoUrl: e.target.value,
+                                  })
+                                }
+                              />
+                              <Button
+                                variant="outline-secondary"
+                                title={this.props.t("preview")}
+                                aria-label={this.props.t("preview")}
+                                disabled={
+                                  !Validation.isHttpsUrl(
+                                    this.state.customLogoUrl.trim(),
+                                  )
+                                }
+                                onClick={() =>
+                                  this.setState({ showLogoPreview: true })
+                                }
+                              >
+                                <IconEye className="feather" />
+                              </Button>
+                              <Button
+                                variant="outline-secondary"
+                                title={this.props.t("openInNewTab")}
+                                aria-label={this.props.t("openInNewTab")}
+                                href={this.state.customLogoUrl.trim()}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                disabled={
+                                  !Validation.isHttpsUrl(
+                                    this.state.customLogoUrl.trim(),
+                                  )
+                                }
+                              >
+                                <IconExternalLink className="feather" />
+                              </Button>
+                            </InputGroup>
+                          </Col>
+                        </Form.Group>
+                      </Card.Body>
+                    </Card>
+                    <Card className="settings-card mb-4">
+                      <Card.Header className="settings-card-header">
+                        <span>
+                          {this.props.t("domains")}
+                          <PremiumFeatureIcon />
+                        </span>
+                      </Card.Header>
+                      <Card.Body>
+                        <Form.Group as={Row}>
+                          <Form.Label
+                            column
+                            md="4"
+                            xl="3"
+                            htmlFor="input-newDomain"
+                          >
+                            {this.props.t("domains")}
+                            <PremiumFeatureIcon />
+                          </Form.Label>
+                          <Col md="8" xl="6">
+                            <Table
+                              borderless
+                              size="sm"
+                              className="domain-table mb-2"
+                            >
+                              <tbody>{domains}</tbody>
+                            </Table>
+                            <InputGroup
+                              size="sm"
+                              hidden={!this.state.featureCustomDomains}
+                            >
+                              <Form.Control
+                                id="input-newDomain"
+                                type="text"
+                                value={this.state.newDomain}
+                                onChange={(e: any) =>
+                                  this.setState({ newDomain: e.target.value })
+                                }
+                                placeholder={this.props.t(
+                                  "yourDomainPlaceholder",
+                                )}
+                                onKeyDown={this.handleNewDomainKeyDown}
+                              />
+                              <Button
+                                variant="outline-secondary"
+                                onClick={this.addDomain}
+                                disabled={!this.isValidDomain()}
+                              >
+                                {this.props.t("addDomain")}
+                              </Button>
+                            </InputGroup>
+                          </Col>
+                        </Form.Group>
+                      </Card.Body>
+                    </Card>
+                    <Card className="settings-card mb-4">
+                      <Card.Header className="settings-card-header">
+                        <span>{this.props.t("settingsSectionDateTime")}</span>
+                      </Card.Header>
+                      <Card.Body>
+                        <Form.Group as={Row}>
+                          <Form.Label
+                            column
+                            md="4"
+                            xl="3"
+                            htmlFor="input-defaultTimezone"
+                          >
+                            {this.props.t("defaultTimezone")}
+                          </Form.Label>
+                          <Col md="8" xl="6">
+                            <Form.Select
+                              id="input-defaultTimezone"
+                              value={this.state.defaultTimezone}
+                              onChange={(e: any) =>
+                                this.setState({
+                                  defaultTimezone: e.target.value,
+                                })
+                              }
+                            >
+                              {this.timezones.map((tz) => (
+                                <option key={tz}>{tz}</option>
+                              ))}
+                            </Form.Select>
+                          </Col>
+                        </Form.Group>
+                        <Form.Group as={Row}>
+                          <Form.Label
+                            column
+                            md="4"
+                            xl="3"
+                            htmlFor="input-defaultTimeFormat"
+                          >
+                            {this.props.t("defaultTimeFormat")}
+                          </Form.Label>
+                          <Col md="8" xl="6">
+                            <Form.Select
+                              id="input-defaultTimeFormat"
+                              value={this.state.default24HourTime ? "1" : "0"}
+                              onChange={(e: any) =>
+                                this.setState({
+                                  default24HourTime: e.target.value === "1",
+                                })
+                              }
+                            >
+                              <option value="1">
+                                {this.props.t("timeFormat24h")}
+                              </option>
+                              <option value="0">
+                                {this.props.t("timeFormat12h")}
+                              </option>
+                            </Form.Select>
+                          </Col>
+                        </Form.Group>
+                      </Card.Body>
+                    </Card>
+                  </Tab.Pane>
+                  <Tab.Pane eventKey="users" data-settings-tab="users">
+                    <Card className="settings-card mb-4">
+                      <Card.Header className="settings-card-header">
+                        <span>{this.props.t("security")}</span>
+                      </Card.Header>
+                      <Card.Body>
+                        <Form.Group as={Row}>
+                          <Form.Label
+                            column
+                            md="4"
+                            xl="3"
+                            htmlFor="input-enforceTOTP"
+                          >
+                            {this.props.t("enforceTOTP")}
+                          </Form.Label>
+                          <Col md="8" xl="6">
+                            <Form.Select
+                              id="input-enforceTOTP"
+                              value={this.state.enforceTOTP}
+                              onChange={(e: any) =>
+                                this.setState({
+                                  enforceTOTP: window.parseInt(e.target.value),
+                                })
+                              }
+                            >
+                              <option
+                                value={Organization.ENFORCE_TOTP_DISABLED}
+                              >
+                                {this.props.t("disabled")}
+                              </option>
+                              <option
+                                value={Organization.ENFORCE_TOTP_ALL_USERS}
+                              >
+                                {this.props.t("enforceTOTPAllUsers")}
+                              </option>
+                              <option
+                                value={Organization.ENFORCE_TOTP_ADMINS_ONLY}
+                              >
+                                {this.props.t("enforceTOTPAdminsOnly")}
+                              </option>
+                            </Form.Select>
+                          </Col>
+                        </Form.Group>
+                      </Card.Body>
+                    </Card>
+                    <Card className="settings-card mb-4">
+                      <Card.Header className="settings-card-header">
+                        <span>
+                          {this.props.t("settingsSectionNotifications")}
+                        </span>
+                      </Card.Header>
+                      <Card.Body>
+                        <Form.Group as={Row}>
+                          <Col xs="12">
+                            <Form.Check
+                              type="checkbox"
+                              id="check-newUserDefaultMailNotification"
+                              label={this.props.t(
+                                "newUserDefaultMailNotification",
+                              )}
+                              checked={
+                                this.state.newUserDefaultMailNotification
+                              }
+                              onChange={(e: any) =>
+                                this.setState({
+                                  newUserDefaultMailNotification:
+                                    e.target.checked,
+                                })
+                              }
+                            />
+                          </Col>
+                        </Form.Group>
+                      </Card.Body>
+                    </Card>
+                  </Tab.Pane>
+                  <Tab.Pane eventKey="bookings" data-settings-tab="bookings">
+                    <Card className="settings-card mb-4">
+                      <Card.Header className="settings-card-header">
+                        <span>
+                          {this.props.t("settingsSectionBookingDisplay")}
+                        </span>
+                      </Card.Header>
+                      <Card.Body>
+                        <Form.Group as={Row}>
+                          <Form.Label
+                            column
+                            md="4"
+                            xl="3"
+                            htmlFor="select-bookerNames"
+                          >
+                            {this.props.t("bookerNames")}
+                          </Form.Label>
+                          <Col md="8" xl="6">
+                            <Form.Select
+                              id="select-bookerNames"
+                              value={
+                                !this.state.showNames
+                                  ? "hide"
+                                  : this.state.disableBuddies
+                                    ? "showWithoutBuddies"
+                                    : "showWithBuddies"
+                              }
+                              onChange={(e: any) =>
+                                this.setState({
+                                  showNames: e.target.value !== "hide",
+                                  disableBuddies:
+                                    e.target.value === "hide"
+                                      ? this.state.disableBuddies
+                                      : e.target.value === "showWithoutBuddies",
+                                })
+                              }
+                            >
+                              <option value="hide">
+                                {this.props.t("bookerNamesHide")}
+                              </option>
+                              <optgroup
+                                label={this.props.t("bookerNamesPrivacyHint")}
+                              >
+                                <option value="showWithBuddies">
+                                  {this.props.t("bookerNamesShowWithBuddies")}
+                                </option>
+                                <option value="showWithoutBuddies">
+                                  {this.props.t(
+                                    "bookerNamesShowWithoutBuddies",
+                                  )}
+                                </option>
+                              </optgroup>
+                            </Form.Select>
+                          </Col>
+                        </Form.Group>
+                        <Form.Group as={Row}>
+                          <Form.Label
+                            column
+                            md="4"
+                            xl="3"
+                            htmlFor="select-defaultBookingView"
+                          >
+                            {this.props.t("defaultBookingView")}
+                          </Form.Label>
+                          <Col md="8" xl="6">
+                            <Form.Select
+                              id="select-defaultBookingView"
+                              value={this.state.defaultBookingView}
+                              onChange={(e: any) =>
+                                this.setState({
+                                  defaultBookingView: e.target.value,
+                                })
+                              }
+                            >
+                              <option value="map">{this.props.t("map")}</option>
+                              <option value="list">
+                                {this.props.t("list")}
+                              </option>
+                            </Form.Select>
+                          </Col>
+                        </Form.Group>
+                        <Form.Group
+                          as={Row}
+                          hidden={!RuntimeConfig.INFOS.featureGroups}
+                        >
+                          <Col xs="12">
+                            <Form.Check
+                              type="checkbox"
+                              id="check-hideDisallowedLocations"
+                              label={this.props.t("hideDisallowedLocations")}
+                              checked={this.state.hideDisallowedLocations}
+                              onChange={(e: any) =>
+                                this.setState({
+                                  hideDisallowedLocations: e.target.checked,
+                                })
+                              }
+                            />
+                          </Col>
+                        </Form.Group>
+                        <Form.Group as={Row}>
+                          <Form.Label
+                            column
+                            md="4"
+                            xl="3"
+                            htmlFor="input-subjectDefault"
+                          >
+                            {this.props.t("subjectDefault")}
+                          </Form.Label>
+                          <Col md="8" xl="6">
+                            <Form.Select
+                              id="input-subjectDefault"
+                              value={this.state.subjectDefault}
+                              onChange={(e: any) =>
+                                this.setState({
+                                  subjectDefault: e.target.value,
+                                })
+                              }
+                            >
+                              <option value="1">
+                                {this.props.t("disabled")}
+                              </option>
+                              <option value="2">
+                                {this.props.t("optional")}
+                              </option>
+                              <option value="3">
+                                {this.props.t("required")}
+                              </option>
+                            </Form.Select>
+                          </Col>
+                        </Form.Group>
+                      </Card.Body>
+                    </Card>
+                    <Card className="settings-card mb-4">
+                      <Card.Header className="settings-card-header">
+                        <span>
+                          {this.props.t("settingsSectionBookingLimits")}
+                        </span>
+                      </Card.Header>
+                      <Card.Body>
+                        <Form.Group as={Row}>
+                          <Form.Label
+                            column
+                            md="4"
+                            xl="3"
+                            htmlFor="input-maxBookingsPerUser"
+                          >
+                            {this.props.t("maxBookingsPerUser")}
+                          </Form.Label>
+                          <Col md="8" xl="6">
+                            <Form.Control
+                              id="input-maxBookingsPerUser"
+                              type="number"
+                              value={this.state.maxBookingsPerUser}
+                              onChange={(e: any) =>
+                                this.setState({
+                                  maxBookingsPerUser: e.target.value,
+                                })
+                              }
+                              required={true}
+                              min="1"
+                              max="9999"
+                            />
+                          </Col>
+                        </Form.Group>
+                        <Form.Group as={Row}>
+                          <Form.Label
+                            column
+                            md="4"
+                            xl="3"
+                            htmlFor="input-maxConcurrentBookingsPerUser"
+                          >
+                            {this.props.t("maxConcurrentBookingsPerUser")}
+                          </Form.Label>
+                          <Col md="8" xl="6">
+                            <InputGroup>
+                              <InputGroup.Text>
+                                <Form.Check.Input
+                                  type="checkbox"
+                                  id="check-maxConcurrentBookingsPerUserUnlimited"
+                                  checked={
+                                    this.state.maxConcurrentBookingsPerUser ===
+                                    0
+                                  }
+                                  onChange={(e: any) => {
+                                    if (!e.target.checked) {
+                                      this.setState({
+                                        maxConcurrentBookingsPerUser:
+                                          this
+                                            .maxConcurrentBookingsPerUserLastValue,
+                                      });
+                                      return;
+                                    }
+                                    if (
+                                      this.state.maxConcurrentBookingsPerUser >
+                                      0
+                                    ) {
+                                      this.maxConcurrentBookingsPerUserLastValue =
+                                        this.state.maxConcurrentBookingsPerUser;
+                                    }
+                                    this.setState({
+                                      maxConcurrentBookingsPerUser: 0,
+                                    });
+                                  }}
+                                  className="mt-0 me-2"
+                                />
+                                <Form.Check.Label htmlFor="check-maxConcurrentBookingsPerUserUnlimited">
+                                  {this.props.t("unlimited")}
+                                </Form.Check.Label>
+                              </InputGroup.Text>
+                              <Form.Control
+                                id="input-maxConcurrentBookingsPerUser"
+                                type="number"
+                                value={
+                                  this.state.maxConcurrentBookingsPerUser === 0
+                                    ? ""
+                                    : this.state.maxConcurrentBookingsPerUser
+                                }
+                                onChange={(e: any) => {
+                                  const value = window.parseInt(e.target.value);
+                                  if (value > 0) {
+                                    this.maxConcurrentBookingsPerUserLastValue =
+                                      value;
+                                  }
+                                  this.setState({
+                                    maxConcurrentBookingsPerUser:
+                                      window.parseInt(e.target.value),
+                                  });
+                                }}
+                                min="1"
+                                max="9999"
+                                disabled={
+                                  this.state.maxConcurrentBookingsPerUser === 0
+                                }
+                              />
+                            </InputGroup>
+                          </Col>
+                        </Form.Group>
+                        <Form.Group as={Row}>
+                          <Form.Label
+                            column
+                            md="4"
+                            xl="3"
+                            htmlFor="input-maxDaysInAdvance"
+                          >
+                            {this.props.t("maxDaysInAdvance")}
+                            <HintTooltip
+                              hint={this.props.t("maxDaysInAdvanceHint")}
+                            />
+                          </Form.Label>
+                          <Col md="8" xl="6">
+                            <InputGroup>
+                              <Form.Control
+                                id="input-maxDaysInAdvance"
+                                type="number"
+                                value={this.state.maxDaysInAdvance}
+                                onChange={(e: any) =>
+                                  this.setState({
+                                    maxDaysInAdvance: e.target.value,
+                                  })
+                                }
+                                required={true}
+                                min="0"
+                                max="9999"
+                              />
+                              <InputGroup.Text>
+                                {this.props.t("days")}
+                              </InputGroup.Text>
+                            </InputGroup>
+                          </Col>
+                        </Form.Group>
+                        <Form.Group as={Row}>
+                          <Col xs="12">
+                            <Form.Check
+                              type="checkbox"
+                              id="check-dailyBasisBooking"
+                              label={this.props.t("dailyBasisBooking")}
+                              checked={this.state.dailyBasisBooking}
+                              onChange={(e: any) =>
+                                this.onDailyBasisBookingChange(e.target.checked)
+                              }
+                            />
+                          </Col>
+                        </Form.Group>
+                        <Form.Group as={Row}>
+                          <Form.Label
+                            column
+                            md="4"
+                            xl="3"
+                            htmlFor="input-minBookingDuration"
+                          >
+                            {this.props.t("minBookingDuration")}
+                          </Form.Label>
+                          <Col md="8" xl="6">
+                            <InputGroup>
+                              <Form.Control
+                                id="input-minBookingDuration"
+                                type="number"
+                                value={Math.round(
+                                  this.state.minBookingDuration,
+                                )}
+                                onChange={(e: any) =>
+                                  this.setState({
+                                    minBookingDuration: e.target.value,
+                                  })
+                                }
+                                required={true}
+                                min="0"
+                                max="9999"
+                              />
+                              <InputGroup.Text>
+                                {this.state.dailyBasisBooking
+                                  ? this.props.t("days")
+                                  : this.props.t("hours")}
+                              </InputGroup.Text>
+                            </InputGroup>
+                          </Col>
+                        </Form.Group>
+                        <Form.Group as={Row}>
+                          <Form.Label
+                            column
+                            md="4"
+                            xl="3"
+                            htmlFor="input-maxBookingDuration"
+                          >
+                            {this.props.t("maxBookingDuration")}
+                          </Form.Label>
+                          <Col md="8" xl="6">
+                            <InputGroup>
+                              <Form.Control
+                                id="input-maxBookingDuration"
+                                type="number"
+                                value={Math.max(
+                                  Math.round(this.state.maxBookingDuration),
+                                  1,
+                                )}
+                                onChange={(e: any) =>
+                                  this.setState({
+                                    maxBookingDuration: e.target.value,
+                                  })
+                                }
+                                required={true}
+                                min="0"
+                                max="9999"
+                              />
+                              <InputGroup.Text>
+                                {this.state.dailyBasisBooking
+                                  ? this.props.t("days")
+                                  : this.props.t("hours")}
+                              </InputGroup.Text>
+                            </InputGroup>
+                          </Col>
+                        </Form.Group>
+                        <Form.Group as={Row}>
+                          <Form.Label
+                            column
+                            md="4"
+                            xl="3"
+                            htmlFor="input-maxHoursPartiallyBooked"
+                          >
+                            {this.props.t("maxHoursPartiallyBooked")}
+                          </Form.Label>
+                          <Col md="8" xl="6">
+                            <InputGroup>
+                              <InputGroup.Checkbox
+                                checked={
+                                  this.state.maxHoursPartiallyBookedEnabled
+                                }
+                                onChange={(e: any) =>
+                                  this.setState({
+                                    maxHoursPartiallyBookedEnabled:
+                                      e.target.checked,
+                                  })
+                                }
+                              />
+                              <Form.Control
+                                id="input-maxHoursPartiallyBooked"
+                                type="number"
+                                value={this.state.maxHoursPartiallyBooked}
+                                onChange={(e: any) =>
+                                  this.setState({
+                                    maxHoursPartiallyBooked: e.target.value,
+                                  })
+                                }
+                                min="0"
+                                max="9999"
+                                disabled={
+                                  !this.state.maxHoursPartiallyBookedEnabled
+                                }
+                              />
+                              <InputGroup.Text>
+                                {this.props.t("hours")}
+                              </InputGroup.Text>
+                            </InputGroup>
+                          </Col>
+                        </Form.Group>
+                      </Card.Body>
+                    </Card>
+                    <Card className="settings-card mb-4">
+                      <Card.Header className="settings-card-header">
+                        <span>
+                          {this.props.t("settingsSectionBookingRules")}
+                        </span>
+                      </Card.Header>
+                      <Card.Body>
+                        <Form.Group as={Row}>
+                          <Col xs="12">
+                            <Form.Check
+                              type="checkbox"
+                              id="check-allowRecurringBookings"
+                              label={this.props.t("allowRecurringBookings")}
+                              checked={this.state.allowRecurringBookings}
+                              onChange={(e: any) =>
+                                this.setState({
+                                  allowRecurringBookings: e.target.checked,
+                                })
+                              }
+                            />
+                          </Col>
+                        </Form.Group>
+                        <Form.Group as={Row}>
+                          <Col xs="12">
+                            <Form.Check
+                              type="checkbox"
+                              id="check-allowBookingNonExistUsers"
+                              label={this.props.t("allowBookingNonExistUsers")}
+                              checked={this.state.allowBookingNonExistUsers}
+                              onChange={(e: any) =>
+                                this.setState({
+                                  allowBookingNonExistUsers: e.target.checked,
+                                })
+                              }
+                            />
+                          </Col>
+                        </Form.Group>
+                        <Form.Group as={Row}>
+                          <Col xs="12">
+                            <Form.Check
+                              type="checkbox"
+                              id="check-noAdminRestrictions"
+                              label={this.props.t("noAdminRestrictions")}
+                              checked={this.state.noAdminRestrictions}
+                              onChange={(e: any) =>
+                                this.setState({
+                                  noAdminRestrictions: e.target.checked,
+                                })
+                              }
+                            />
+                          </Col>
+                        </Form.Group>
+                        <Form.Group as={Row}>
+                          <Form.Label
+                            column
+                            md="4"
+                            xl="3"
+                            htmlFor="input-maxHoursBeforeDelete"
+                          >
+                            {this.props.t("maxHoursBeforeDelete")}
+                          </Form.Label>
+                          <Col md="8" xl="6">
+                            <InputGroup>
+                              <InputGroup.Checkbox
+                                id="check-maxHoursBeforeDelete"
+                                checked={this.state.enableMaxHoursBeforeDelete}
+                                onChange={(e: any) =>
+                                  this.setState({
+                                    enableMaxHoursBeforeDelete:
+                                      e.target.checked,
+                                  })
+                                }
+                              />
+                              <Form.Control
+                                id="input-maxHoursBeforeDelete"
+                                type="number"
+                                value={this.state.maxHoursBeforeDelete}
+                                onChange={(e: any) =>
+                                  this.setState({
+                                    maxHoursBeforeDelete: e.target.value,
+                                  })
+                                }
+                                min="0"
+                                max="9999"
+                                disabled={
+                                  !this.state.enableMaxHoursBeforeDelete
+                                }
+                              />
+                            </InputGroup>
+                          </Col>
+                        </Form.Group>
+                      </Card.Body>
+                    </Card>
+                    <Card className="settings-card mb-4">
+                      <Card.Header className="settings-card-header">
+                        <span>
+                          {this.props.t("settingsSectionBookingData")}
+                        </span>
+                      </Card.Header>
+                      <Card.Body>
+                        <Form.Group as={Row}>
+                          <Form.Label
+                            column
+                            md="4"
+                            xl="3"
+                            htmlFor="input-bookingRetentionDays"
+                          >
+                            {this.props.t("bookingRetention")}
+                          </Form.Label>
+                          <Col md="8" xl="6">
+                            <InputGroup>
+                              <InputGroup.Checkbox
+                                id="check-bookingRetentionDays"
+                                checked={this.state.bookingRetentionEnabled}
+                                onChange={(e: any) =>
+                                  this.setState({
+                                    bookingRetentionEnabled: e.target.checked,
+                                  })
+                                }
+                              />
+                              <Form.Control
+                                id="input-bookingRetentionDays"
+                                type="number"
+                                value={this.state.bookingRetentionDays}
+                                onChange={(e: any) =>
+                                  this.setState({
+                                    bookingRetentionDays: e.target.value,
+                                  })
+                                }
+                                min="30"
+                                max="999"
+                                disabled={!this.state.bookingRetentionEnabled}
+                              />
+                              <InputGroup.Text>
+                                {this.props.t("days")}
+                              </InputGroup.Text>
+                            </InputGroup>
+                          </Col>
+                        </Form.Group>
+                        <Form.Group as={Row}>
+                          <Form.Label
+                            column
+                            md="4"
+                            xl="3"
+                            htmlFor="input-targetUtilizationHoursPerWeek"
+                          >
+                            {this.props.t("targetUtilizationHoursPerWeek")}
+                          </Form.Label>
+                          <Col md="8" xl="6">
+                            <InputGroup>
+                              <Form.Control
+                                id="input-targetUtilizationHoursPerWeek"
+                                type="number"
+                                value={Math.max(
+                                  Math.round(
+                                    this.state.targetUtilizationHoursPerWeek,
+                                  ),
+                                  1,
+                                )}
+                                onChange={(e: any) =>
+                                  this.setState({
+                                    targetUtilizationHoursPerWeek:
+                                      e.target.value,
+                                  })
+                                }
+                                min="0"
+                                max="168"
+                              />
+                              <InputGroup.Text>
+                                {this.state.dailyBasisBooking
+                                  ? this.props.t("days")
+                                  : this.props.t("hours")}
+                              </InputGroup.Text>
+                            </InputGroup>
+                          </Col>
+                        </Form.Group>
+                      </Card.Body>
+                    </Card>
+                  </Tab.Pane>
+                  <Tab.Pane eventKey="reports" data-settings-tab="reports">
+                    <Card className="settings-card mb-4">
+                      <Card.Header className="settings-card-header">
+                        <span>{this.props.t("reportSettings")}</span>
+                      </Card.Header>
+                      <Card.Body>
+                        <Form.Group as={Row}>
+                          <Col xs="12">
+                            <Form.Check
+                              type="checkbox"
+                              id="check-hideReports"
+                              label={this.props.t("hideReports")}
+                              checked={this.state.hideReports}
+                              onChange={(e: any) =>
+                                this.setState({ hideReports: e.target.checked })
+                              }
+                            />
+                          </Col>
+                        </Form.Group>
+                        <Form.Group as={Row}>
+                          <Col xs="12">
+                            <Form.Check
+                              type="checkbox"
+                              id="check-hideStats"
+                              label={this.props.t("hideStats")}
+                              checked={this.state.hideStats}
+                              onChange={(e: any) =>
+                                this.setState({ hideStats: e.target.checked })
+                              }
+                            />
+                          </Col>
+                        </Form.Group>
+                      </Card.Body>
+                    </Card>
+                  </Tab.Pane>
+                  <Tab.Pane eventKey="kiosk" data-settings-tab="kiosk">
+                    <Card className="settings-card mb-4">
+                      <Card.Header className="settings-card-header">
+                        <span>
+                          {this.props.t("kioskMode")}
+                          <PremiumFeatureIcon />
+                        </span>
+                      </Card.Header>
+                      <Card.Body>
+                        <Form.Group as={Row}>
+                          <Col xs="12">
+                            <Form.Check
+                              type="checkbox"
+                              id="check-kioskModeEnabled"
+                              label={
+                                <>
+                                  {this.props.t("kioskModeAvailable")}
+                                  <HintTooltip
+                                    hint={this.props.t(
+                                      "kioskModeAvailableHint",
+                                    )}
+                                  />
+                                </>
+                              }
+                              checked={
+                                this.state.kioskModeEnabled &&
+                                RuntimeConfig.INFOS.featureKioskMode
+                              }
+                              disabled={!RuntimeConfig.INFOS.featureKioskMode}
+                              onChange={(e: any) =>
+                                this.setState({
+                                  kioskModeEnabled: e.target.checked,
+                                })
+                              }
+                            />
+                          </Col>
+                        </Form.Group>
+                        <Form.Group as={Row}>
+                          <Form.Label
+                            column
+                            md="4"
+                            xl="3"
+                            htmlFor="input-kioskSecret"
+                          >
+                            {this.props.t("kioskSecret")}
+                          </Form.Label>
+                          <Col md="8" xl="6">
+                            <InputGroup>
+                              <Form.Control
+                                id="input-kioskSecret"
+                                type="text"
+                                value={this.state.kioskSecret}
+                                disabled={true}
+                              />
+                              <Button
+                                variant="outline-secondary"
+                                onClick={this.generateKioskSecret}
+                                title={this.props.t("generatePassword")}
+                                disabled={!RuntimeConfig.INFOS.featureKioskMode}
+                              >
+                                <IconRefresh className="feather" />
+                              </Button>
+                              <CopyToClipboardButton
+                                text={this.state.kioskSecret}
+                                disabled={
+                                  !this.state.kioskSecret ||
+                                  this.state.kioskSecret ===
+                                    RendererUtils.SECRET_PLACEHOLDER
+                                }
+                              />
+                              <Button
+                                variant="outline-primary"
+                                onClick={this.saveKioskSecret}
+                                disabled={
+                                  !RuntimeConfig.INFOS.featureKioskMode ||
+                                  !this.state.kioskSecret ||
+                                  this.state.kioskSecret ===
+                                    RendererUtils.SECRET_PLACEHOLDER
+                                }
+                              >
+                                {this.props.t("save")}
+                              </Button>
+                            </InputGroup>
+                          </Col>
+                        </Form.Group>
+                      </Card.Body>
+                    </Card>
+                  </Tab.Pane>
+                  <Tab.Pane
+                    eventKey="publicBooking"
+                    data-settings-tab="publicBooking"
+                  >
+                    <Card className="settings-card mb-4">
+                      <Card.Header className="settings-card-header">
+                        <span>
+                          {this.props.t("publicBooking")}
+                          <PremiumFeatureIcon />
+                        </span>
+                      </Card.Header>
+                      <Card.Body>
+                        {publicBookingHint ?? (
+                          <>
+                            <Form.Group as={Row}>
+                              <Col xs="12">
+                                <Form.Check
+                                  type="checkbox"
+                                  id="check-publicBookingEnabled"
+                                  label={
+                                    <>
+                                      {this.props.t("publicBookingAvailable")}
+                                      <HintTooltip
+                                        hint={this.props.t(
+                                          "publicBookingAvailableHint",
+                                        )}
+                                      />
+                                    </>
+                                  }
+                                  checked={
+                                    this.state.publicBookingEnabled &&
+                                    RuntimeConfig.INFOS.featurePublicBooking
+                                  }
+                                  disabled={
+                                    !RuntimeConfig.INFOS.featurePublicBooking
+                                  }
+                                  onChange={(e: any) =>
+                                    this.setState({
+                                      publicBookingEnabled: e.target.checked,
+                                    })
+                                  }
+                                />
+                              </Col>
+                            </Form.Group>
+                            <Form.Group as={Row}>
+                              <Col xs="12">
+                                <Form.Check
+                                  type="checkbox"
+                                  id="check-publicBookingShowMap"
+                                  label={
+                                    <>
+                                      {this.props.t("publicBookingShowMap")}
+                                      <HintTooltip
+                                        hint={this.props.t(
+                                          "publicBookingShowMapHint",
+                                        )}
+                                      />
+                                    </>
+                                  }
+                                  checked={
+                                    this.state.publicBookingShowMap &&
+                                    RuntimeConfig.INFOS.featurePublicBooking
+                                  }
+                                  disabled={
+                                    !RuntimeConfig.INFOS.featurePublicBooking ||
+                                    !this.state.publicBookingEnabled
+                                  }
+                                  onChange={(e: any) =>
+                                    this.setState({
+                                      publicBookingShowMap: e.target.checked,
+                                    })
+                                  }
+                                />
+                              </Col>
+                            </Form.Group>
+                            <Form.Group as={Row}>
+                              <Col xs="12">
+                                <Form.Check
+                                  type="checkbox"
+                                  id="check-publicBookingShowAvailability"
+                                  label={
+                                    <>
+                                      {this.props.t(
+                                        "publicBookingShowAvailability",
+                                      )}
+                                      <HintTooltip
+                                        hint={this.props.t(
+                                          "publicBookingShowAvailabilityHint",
+                                        )}
+                                      />
+                                    </>
+                                  }
+                                  checked={
+                                    this.state.publicBookingShowAvailability &&
+                                    RuntimeConfig.INFOS.featurePublicBooking
+                                  }
+                                  disabled={
+                                    !RuntimeConfig.INFOS.featurePublicBooking ||
+                                    !this.state.publicBookingEnabled
+                                  }
+                                  onChange={(e: any) =>
+                                    this.setState({
+                                      publicBookingShowAvailability:
+                                        e.target.checked,
+                                    })
+                                  }
+                                />
+                              </Col>
+                            </Form.Group>
+                            <Form.Group as={Row}>
+                              <Form.Label
+                                column
+                                md="4"
+                                xl="3"
+                                htmlFor="input-publicBookingMinDurationHours"
+                              >
+                                {this.props.t("minBookingDuration")}
+                                <HintTooltip
+                                  hint={this.props.t(
+                                    "publicBookingDurationHint",
+                                  )}
+                                />
+                              </Form.Label>
+                              <Col md="8" xl="6">
+                                <InputGroup>
+                                  <InputGroup.Checkbox
+                                    id="check-publicBookingMinDurationHours"
+                                    checked={
+                                      this.state.publicBookingMinDurationEnabled
+                                    }
+                                    onChange={(e: any) =>
+                                      this.setState({
+                                        publicBookingMinDurationEnabled:
+                                          e.target.checked,
+                                      })
+                                    }
+                                    disabled={
+                                      !RuntimeConfig.INFOS
+                                        .featurePublicBooking ||
+                                      !this.state.publicBookingEnabled
+                                    }
+                                  />
+                                  <Form.Control
+                                    id="input-publicBookingMinDurationHours"
+                                    type="number"
+                                    value={
+                                      Number.isNaN(
+                                        this.state
+                                          .publicBookingMinDurationHours,
+                                      )
+                                        ? ""
+                                        : this.state
+                                            .publicBookingMinDurationHours
+                                    }
+                                    onChange={(e: any) =>
+                                      this.setState({
+                                        publicBookingMinDurationHours:
+                                          window.parseInt(e.target.value),
+                                      })
+                                    }
+                                    required={
+                                      this.state.publicBookingMinDurationEnabled
+                                    }
+                                    min="1"
+                                    max={
+                                      this.state.publicBookingMaxDurationEnabled
+                                        ? this.state
+                                            .publicBookingMaxDurationHours
+                                        : 24
+                                    }
+                                    disabled={
+                                      !RuntimeConfig.INFOS
+                                        .featurePublicBooking ||
+                                      !this.state.publicBookingEnabled ||
+                                      !this.state
+                                        .publicBookingMinDurationEnabled
+                                    }
+                                  />
+                                  <InputGroup.Text>
+                                    {this.props.t("hours")}
+                                  </InputGroup.Text>
+                                </InputGroup>
+                              </Col>
+                            </Form.Group>
+                            <Form.Group as={Row}>
+                              <Form.Label
+                                column
+                                md="4"
+                                xl="3"
+                                htmlFor="input-publicBookingMaxDurationHours"
+                              >
+                                {this.props.t("maxBookingDuration")}
+                                <HintTooltip
+                                  hint={this.props.t(
+                                    "publicBookingDurationHint",
+                                  )}
+                                />
+                              </Form.Label>
+                              <Col md="8" xl="6">
+                                <InputGroup>
+                                  <InputGroup.Checkbox
+                                    id="check-publicBookingMaxDurationHours"
+                                    checked={
+                                      this.state.publicBookingMaxDurationEnabled
+                                    }
+                                    onChange={(e: any) =>
+                                      this.setState({
+                                        publicBookingMaxDurationEnabled:
+                                          e.target.checked,
+                                      })
+                                    }
+                                    disabled={
+                                      !RuntimeConfig.INFOS
+                                        .featurePublicBooking ||
+                                      !this.state.publicBookingEnabled
+                                    }
+                                  />
+                                  <Form.Control
+                                    id="input-publicBookingMaxDurationHours"
+                                    type="number"
+                                    value={
+                                      Number.isNaN(
+                                        this.state
+                                          .publicBookingMaxDurationHours,
+                                      )
+                                        ? ""
+                                        : this.state
+                                            .publicBookingMaxDurationHours
+                                    }
+                                    onChange={(e: any) =>
+                                      this.setState({
+                                        publicBookingMaxDurationHours:
+                                          window.parseInt(e.target.value),
+                                      })
+                                    }
+                                    required={
+                                      this.state.publicBookingMaxDurationEnabled
+                                    }
+                                    min={
+                                      this.state.publicBookingMinDurationEnabled
+                                        ? this.state
+                                            .publicBookingMinDurationHours
+                                        : 1
+                                    }
+                                    max="24"
+                                    disabled={
+                                      !RuntimeConfig.INFOS
+                                        .featurePublicBooking ||
+                                      !this.state.publicBookingEnabled ||
+                                      !this.state
+                                        .publicBookingMaxDurationEnabled
+                                    }
+                                  />
+                                  <InputGroup.Text>
+                                    {this.props.t("hours")}
+                                  </InputGroup.Text>
+                                </InputGroup>
+                              </Col>
+                            </Form.Group>
+                            <BookingAttributesEditor
+                              disabled={
+                                !RuntimeConfig.INFOS.featurePublicBooking
+                              }
+                            />
+                            {this.state.publicBookingEnabled && (
+                              <Form.Group as={Row}>
+                                <Form.Label
+                                  column
+                                  md="4"
+                                  xl="3"
+                                  htmlFor="input-publicBookingUrl"
+                                >
+                                  {this.props.t("publicBookingUrl")}
+                                </Form.Label>
+                                <Col md="8" xl="6">
+                                  <InputGroup>
+                                    <Form.Select
+                                      id="select-publicBookingSpace"
+                                      aria-label={this.props.t("space")}
+                                      className="flex-grow-0 w-25"
+                                      value={this.state.publicBookingSpaceId}
+                                      disabled={
+                                        !this.state.publicBookingEnabledSaved ||
+                                        !RuntimeConfig.INFOS
+                                          .featurePublicBooking
+                                      }
+                                      onChange={(e: any) =>
+                                        this.setState({
+                                          publicBookingSpaceId: e.target.value,
+                                        })
+                                      }
+                                    >
+                                      <option value="">
+                                        {this.props.t("publicBookingAllSpaces")}
+                                      </option>
+                                      {this.getPublicBookingLocations().flatMap(
+                                        (l) =>
+                                          this.publicBookingSpaces
+                                            .filter(
+                                              (s) => s.locationId === l.id,
+                                            )
+                                            .map((s) => (
+                                              <option
+                                                key={s.spaceId}
+                                                value={s.spaceId}
+                                              >
+                                                {l.name} / {s.spaceName}
+                                              </option>
+                                            )),
+                                      )}
+                                    </Form.Select>
+                                    <Form.Control
+                                      id="input-publicBookingUrl"
+                                      type="text"
+                                      value={
+                                        this.getPublicBookingUrl() +
+                                        (this.state.publicBookingEnabledSaved
+                                          ? ""
+                                          : " (" +
+                                            this.props.t(
+                                              "availableAfterSaving",
+                                            ) +
+                                            ")")
+                                      }
+                                      readOnly={true}
+                                      disabled={
+                                        !this.state.publicBookingEnabledSaved ||
+                                        !RuntimeConfig.INFOS
+                                          .featurePublicBooking
+                                      }
+                                      className={
+                                        this.state.publicBookingEnabledSaved
+                                          ? ""
+                                          : "fst-italic"
+                                      }
+                                    />
+                                    <CopyToClipboardButton
+                                      text={this.getPublicBookingUrl()}
+                                      disabled={
+                                        !this.state.publicBookingEnabledSaved ||
+                                        !RuntimeConfig.INFOS
+                                          .featurePublicBooking
+                                      }
+                                    />
+                                    <Button
+                                      title={this.props.t("openInNewTab")}
+                                      aria-label={this.props.t("openInNewTab")}
+                                      variant="outline-secondary"
+                                      href={this.getPublicBookingUrl()}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      disabled={
+                                        !this.state.publicBookingEnabledSaved ||
+                                        !RuntimeConfig.INFOS
+                                          .featurePublicBooking
+                                      }
+                                    >
+                                      <IconExternalLink className="feather" />
+                                    </Button>
+                                  </InputGroup>
+                                </Col>
+                              </Form.Group>
+                            )}
+                          </>
+                        )}
+                      </Card.Body>
+                    </Card>
+                  </Tab.Pane>
+                  {canManageAuthProviders && (
+                    <Tab.Pane
+                      eventKey="authProviders"
+                      data-settings-tab="authProviders"
                     >
-                      <IconPlus className="feather" /> {this.props.t("add")}
-                    </Link>
-                  </div>
-                </div>
-              </div>
-              <Form.Group as={Row}>
-                <Col sm="6">
-                  <Form.Check
-                    type="checkbox"
-                    id="check-allowAnyUser"
-                    label={
-                      <>
-                        {this.props.t("allowAnyUser")}
-                        <HintTooltip
-                          hint={this.props.t("allowAnyUserTooltip")}
-                        />
-                      </>
-                    }
-                    checked={this.state.allowAnyUser}
-                    disabled={this.authProviders.length === 0}
-                    onChange={(e: any) =>
-                      this.setState({ allowAnyUser: e.target.checked })
-                    }
-                  />
-                </Col>
-              </Form.Group>
-              {authProviderTable}
-            </>
-          )}
-          {dangerZone}
+                      <Card className="settings-card mb-4">
+                        <Card.Header className="settings-card-header">
+                          <span>
+                            {this.props.t("authProviders")}
+                            <PremiumFeatureIcon />
+                          </span>
+                          <Link
+                            href="/admin/settings/auth-providers/add"
+                            className={
+                              "btn btn-sm btn-outline-secondary" +
+                              (RuntimeConfig.INFOS.featureAuthProviders
+                                ? ""
+                                : " disabled")
+                            }
+                          >
+                            <IconPlus className="feather" />{" "}
+                            {this.props.t("add")}
+                          </Link>
+                        </Card.Header>
+                        <Card.Body>
+                          <Form.Group as={Row}>
+                            <Col xs="12">
+                              <Form.Check
+                                type="checkbox"
+                                id="check-allowAnyUser"
+                                label={
+                                  <>
+                                    {this.props.t("allowAnyUser")}
+                                    <HintTooltip
+                                      hint={this.props.t("allowAnyUserTooltip")}
+                                    />
+                                  </>
+                                }
+                                checked={this.state.allowAnyUser}
+                                disabled={this.authProviders.length === 0}
+                                onChange={(e: any) =>
+                                  this.setState({
+                                    allowAnyUser: e.target.checked,
+                                  })
+                                }
+                              />
+                            </Col>
+                          </Form.Group>
+                          {authProviderTable}
+                        </Card.Body>
+                      </Card>
+                    </Tab.Pane>
+                  )}
+                  {this.state.allowOrgDelete && (
+                    <Tab.Pane
+                      eventKey="dangerZone"
+                      data-settings-tab="dangerZone"
+                    >
+                      <Card className="settings-card settings-card-danger mb-4">
+                        <Card.Header className="settings-card-header">
+                          <span>{this.props.t("dangerZone")}</span>
+                        </Card.Header>
+                        <Card.Body className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                          <span>{this.props.t("deleteOrgHint")}</span>
+                          <Button variant="danger" onClick={this.deleteOrg}>
+                            {this.props.t("deleteOrg")}
+                          </Button>
+                        </Card.Body>
+                      </Card>
+                    </Tab.Pane>
+                  )}
+                </Tab.Content>
+              </Col>
+            </Row>
+          </Tab.Container>
         </Form>
         <LogoPreviewModal
           show={this.state.showLogoPreview}
