@@ -89,7 +89,7 @@ func (router *AuthProviderRouter) getOne(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	user := GetRequestUser(r)
-	if !HasPermission(user, e.OrganizationID, PermissionAuthProviders, PermissionLevelAdmin) {
+	if !HasPermission(user, e.OrganizationID, PermissionOrgSettings, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -99,7 +99,7 @@ func (router *AuthProviderRouter) getOne(w http.ResponseWriter, r *http.Request)
 
 func (router *AuthProviderRouter) getAll(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
-	if !HasPermission(user, user.OrganizationID, PermissionAuthProviders, PermissionLevelAdmin) {
+	if !HasPermission(user, user.OrganizationID, PermissionOrgSettings, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -157,7 +157,7 @@ func (router *AuthProviderRouter) update(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	user := GetRequestUser(r)
-	if !HasPermission(user, e.OrganizationID, PermissionAuthProviders, PermissionLevelAdmin) {
+	if !HasPermission(user, e.OrganizationID, PermissionOrgSettings, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -201,7 +201,7 @@ func (router *AuthProviderRouter) delete(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	user := GetRequestUser(r)
-	if !HasPermission(user, e.OrganizationID, PermissionAuthProviders, PermissionLevelAdmin) {
+	if !HasPermission(user, e.OrganizationID, PermissionOrgSettings, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -243,7 +243,7 @@ func (router *AuthProviderRouter) create(w http.ResponseWriter, r *http.Request)
 	}
 
 	user := GetRequestUser(r)
-	if !HasPermission(user, user.OrganizationID, PermissionAuthProviders, PermissionLevelAdmin) {
+	if !HasPermission(user, user.OrganizationID, PermissionOrgSettings, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -419,7 +419,7 @@ func (router *AuthProviderRouter) setMappings(w http.ResponseWriter, r *http.Req
 }
 
 // loadProvider resolves the provider named in the path, enforcing the
-// auth_providers permission and organization scoping.
+// org_settings permission and organization scoping.
 func (router *AuthProviderRouter) loadProvider(w http.ResponseWriter, r *http.Request) *AuthProvider {
 	user := GetRequestUser(r)
 	vars := mux.Vars(r)
@@ -428,7 +428,7 @@ func (router *AuthProviderRouter) loadProvider(w http.ResponseWriter, r *http.Re
 		SendNotFound(w)
 		return nil
 	}
-	if !HasPermission(user, e.OrganizationID, PermissionAuthProviders, PermissionLevelAdmin) {
+	if !HasPermission(user, e.OrganizationID, PermissionOrgSettings, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return nil
 	}

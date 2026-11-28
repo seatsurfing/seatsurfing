@@ -47,7 +47,7 @@ class Users extends React.Component<Props, State> {
 
   loadItems = async () => {
     // Uses the public (id + name only) listing so that displaying a user's
-    // auth provider doesn't require the separate auth_providers permission.
+    // auth provider doesn't require the org_settings permission.
     const providers = await AuthProvider.listPublicForOrg(
       RuntimeConfig.INFOS.organizationId,
     );

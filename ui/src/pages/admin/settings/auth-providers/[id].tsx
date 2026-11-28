@@ -773,7 +773,7 @@ export default withTranslation(
   withReadyRouter(
     withPermission(
       EditAuthProvider as any,
-      Permission.AuthProviders,
+      Permission.OrgSettings,
       PermissionLevel.Admin,
     ) as any,
   ),

@@ -418,7 +418,6 @@
   "permission_approvals": "Varausten hyväksyntä",
   "permission_areas": "Alueet, pohjapiirrokset ja tilat",
   "permission_audit_log": "Tapahtumaloki",
-  "permission_auth_providers": "Tunnistautumispalvelut",
   "permission_bookings": "Muiden käyttäjien varaukset",
   "permission_groups": "Ryhmät",
   "permission_org_settings": "Organisaation asetukset",

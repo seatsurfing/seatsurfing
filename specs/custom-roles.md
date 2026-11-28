@@ -163,21 +163,20 @@ Only the Organization Administrator role is marked `system`. The other three are
 
 Levels: `none = 0`, `read = 10`, `write = 20`, `admin = 30`.
 
-| Key                | Levels                   | Functionality                                                             |
-| ------------------ | ------------------------ | ------------------------------------------------------------------------- |
-| `areas`            | none, admin              | Locations, floor plans, maps, spaces, approvers, allowed bookers          |
-| `space_attributes` | none, admin              | Space and location attributes                                             |
-| `bookings`         | none, read, admin        | Other users' bookings; `read` grants visibility without modification      |
-| `approvals`        | none, admin              | Approving pending bookings (further narrowed by approver groups)          |
-| `analytics`        | none, read               | Aggregate utilization statistics and dashboard tiles                      |
-| `presence_report`  | none, read               | Who was present and when - personal data, hence separate from `analytics` |
-| `users`            | none, read, admin        | User CRUD, password / TOTP / passkey reset                                |
-| `groups`           | none, read, write, admin | `write` grants membership management only; `admin` adds create and delete |
-| `roles`            | none, read, admin        | Managing roles and their assignment                                       |
-| `service_accounts` | none, admin              | Service accounts and API tokens                                           |
-| `auth_providers`   | none, admin              | OAuth2 / OIDC authentication providers                                    |
-| `org_settings`     | none, admin              | Booking settings, organization profile, domains, feature toggles          |
-| `audit_log`        | none, read               | Authentication attempts                                                   |
+| Key                | Levels                   | Functionality                                                                                            |
+| ------------------ | ------------------------ | -------------------------------------------------------------------------------------------------------- |
+| `areas`            | none, admin              | Locations, floor plans, maps, spaces, approvers, allowed bookers                                         |
+| `space_attributes` | none, admin              | Space and location attributes                                                                            |
+| `bookings`         | none, read, admin        | Other users' bookings; `read` grants visibility without modification                                     |
+| `approvals`        | none, admin              | Approving pending bookings (further narrowed by approver groups)                                         |
+| `analytics`        | none, read               | Aggregate utilization statistics and dashboard tiles                                                     |
+| `presence_report`  | none, read               | Who was present and when - personal data, hence separate from `analytics`                                |
+| `users`            | none, read, admin        | User CRUD, password / TOTP / passkey reset                                                               |
+| `groups`           | none, read, write, admin | `write` grants membership management only; `admin` adds create and delete                                |
+| `roles`            | none, read, admin        | Managing roles and their assignment                                                                      |
+| `service_accounts` | none, admin              | Service accounts and API tokens                                                                          |
+| `org_settings`     | none, admin              | Booking settings, organization profile, domains, feature toggles, OAuth2 / OIDC authentication providers |
+| `audit_log`        | none, read               | Authentication attempts                                                                                  |
 
 Plugins register additional keys under a `plugin.` prefix.
 
