@@ -20,9 +20,13 @@ import Ajax from "@/util/Ajax";
 import LanguageSelector from "./LanguageSelector";
 import ThemeSelector from "./ThemeSelector";
 import RendererUtils from "@/util/RendererUtils";
+import PreferencesModal from "./PreferencesModal";
+import Navigation, { PreferencesTab } from "@/util/Navigation";
 
 interface State {
   allowAdmin: boolean;
+  showPreferences: boolean;
+  preferencesTab: PreferencesTab | null;
 }
 
 interface Props {
@@ -39,6 +43,8 @@ class NavBar extends React.Component<Props, State> {
     super(props);
     this.state = {
       allowAdmin: false,
+      showPreferences: false,
+      preferencesTab: null,
     };
   }
 
@@ -47,6 +53,42 @@ class NavBar extends React.Component<Props, State> {
       return;
     }
     this.loadData();
+    this.openPreferencesFromQuery();
+  };
+
+  componentDidUpdate = (prevProps: Props) => {
+    if (
+      prevProps.router.query[Navigation.QUERY_PREFERENCES] !==
+      this.props.router.query[Navigation.QUERY_PREFERENCES]
+    ) {
+      this.openPreferencesFromQuery();
+    }
+  };
+
+  openPreferencesFromQuery = () => {
+    const param = this.props.router.query[Navigation.QUERY_PREFERENCES];
+    if (param === undefined) {
+      return;
+    }
+    const tab = typeof param === "string" && param ? param : null;
+    this.setState({
+      showPreferences: true,
+      preferencesTab: tab as PreferencesTab | null,
+    });
+    const query = { ...this.props.router.query };
+    delete query[Navigation.QUERY_PREFERENCES];
+    this.props.router.replace(
+      { pathname: this.props.router.pathname, query },
+      undefined,
+      {
+        shallow: true,
+      },
+    );
+  };
+
+  openPreferences = (e: React.MouseEvent) => {
+    e.preventDefault();
+    this.setState({ showPreferences: true, preferencesTab: null });
   };
 
   loadData = () => {
@@ -166,16 +208,6 @@ class NavBar extends React.Component<Props, State> {
             )}
           </Nav.Link>
           {buddies}
-          <Nav.Link as={Link} eventKey="/preferences" href="/preferences">
-            {RuntimeConfig.EMBEDDED ? (
-              <IconSettings className="feather feather-lg" />
-            ) : (
-              <>
-                <IconSettings className="feather" />{" "}
-                {this.props.t("preferences")}
-              </>
-            )}
-          </Nav.Link>
           {bookingUIIntegrationItems}
           {adminButton}
         </Nav>
@@ -192,6 +224,20 @@ class NavBar extends React.Component<Props, State> {
                 RuntimeConfig.INFOS.username,
               )}
             </span>
+          </Nav.Link>
+          <Nav.Link
+            href="#"
+            onClick={this.openPreferences}
+            className="d-flex align-items-center nav-icon-link"
+            title={this.props.t("preferences")}
+            aria-label={this.props.t("preferences")}
+          >
+            <IconSettings className="feather" />
+            {!RuntimeConfig.EMBEDDED && (
+              <span className="d-lg-none ms-2">
+                {this.props.t("preferences")}
+              </span>
+            )}
           </Nav.Link>
           <ThemeSelector inNavbar={true} compactBreakpoint="lg" align="end" />
           <LanguageSelector
@@ -235,6 +281,11 @@ class NavBar extends React.Component<Props, State> {
             {collapsable}
           </Container>
         </Navbar>
+        <PreferencesModal
+          show={this.state.showPreferences}
+          initialTab={this.state.preferencesTab}
+          onHide={() => this.setState({ showPreferences: false })}
+        />
       </>
     );
   }

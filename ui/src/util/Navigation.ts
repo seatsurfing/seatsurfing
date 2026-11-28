@@ -15,7 +15,7 @@ export default class Navigation {
 
   // Pages
   static readonly PATH_PAGE_SEARCH: string = "/search";
-  static readonly PATH_PAGE_PREFERENCES: string = "/preferences";
+  static readonly QUERY_PREFERENCES: string = "preferences";
 
   static isAdminPath(url: string): boolean {
     return url.startsWith("/admin/");
@@ -62,7 +62,7 @@ export default class Navigation {
   }
 
   static preferences(tab: PreferencesTab | null = null) {
-    return `${this.PATH_PAGE_PREFERENCES}${tab ? `?tab=${tab}` : ""}`;
+    return `${this.PATH_PAGE_SEARCH}/?${this.QUERY_PREFERENCES}=${tab ?? ""}`;
   }
 
   // ----------

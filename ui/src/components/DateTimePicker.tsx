@@ -4,6 +4,7 @@ import Flatpickr from "react-flatpickr";
 import { TranslationFunc, withTranslation } from "./withTranslation";
 import RuntimeConfig from "./RuntimeConfig";
 import { CustomLocale } from "flatpickr/dist/types/locale";
+import { Instance } from "flatpickr/dist/types/instance";
 import { english as DefaultLocale } from "flatpickr/dist/l10n/default.js";
 
 interface State {
@@ -22,6 +23,9 @@ interface Props {
   minDate?: Date | undefined;
   maxDate?: Date | undefined;
   isDateDisabled?: (date: Date) => boolean;
+  // Element the popup is appended to instead of document.body, e.g. a
+  // container inside a modal so the popup stays within its focus trap.
+  appendTo?: HTMLElement | null;
   onChange: (value: Date) => void;
 }
 
@@ -55,6 +59,33 @@ class DateTimePicker extends React.Component<Props, State> {
       this.setState({ locale: DefaultLocale });
     }
   }
+
+  // Flatpickr positions its popup in document coordinates, which is wrong
+  // once it is appended to a positioned container (e.g. inside a modal).
+  // Position it relative to the viewport instead.
+  positionPopup = (fp: Instance, customElement: HTMLElement | undefined) => {
+    const popup = fp.calendarContainer;
+    const anchor = customElement ?? fp._positionElement;
+    if (!popup || !anchor) {
+      return;
+    }
+    const rect = anchor.getBoundingClientRect();
+    const height = popup.offsetHeight;
+    const showOnTop =
+      window.innerHeight - rect.bottom < height && rect.top > height;
+    popup.style.position = "fixed";
+    popup.style.top =
+      (showOnTop ? rect.top - height - 2 : rect.bottom + 2) + "px";
+    popup.style.left =
+      Math.max(
+        0,
+        Math.min(rect.left, window.innerWidth - popup.offsetWidth - 2),
+      ) + "px";
+    popup.style.right = "auto";
+    popup.classList.toggle("arrowTop", !showOnTop);
+    popup.classList.toggle("arrowBottom", showOnTop);
+    popup.classList.add("arrowLeft");
+  };
 
   render() {
     if (!this.state.locale) {
@@ -95,6 +126,9 @@ class DateTimePicker extends React.Component<Props, State> {
             firstDayOfWeek: RuntimeConfig.INFOS.weekStartDay,
           },
           noCalendar: this.props.noCalendar,
+          ...(this.props.appendTo
+            ? { appendTo: this.props.appendTo, position: this.positionPopup }
+            : {}),
         }}
       />
     );

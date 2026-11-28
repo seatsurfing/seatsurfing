@@ -172,3 +172,95 @@ test("direct link reloads availability when the date changes", async ({
 
   await cancelAllBookings(page);
 });
+
+test("preferences modal via navbar gear icon", async ({ page }) => {
+  await expect(
+    page.getByRole("navigation").getByText("Preferences", { exact: true }),
+  ).toBeHidden();
+  await page.getByRole("button", { name: "Preferences" }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByText("Preferences", { exact: true })).toBeVisible();
+  await expect(dialog.getByLabel("Preferred area")).toBeVisible();
+  await dialog.getByRole("button", { name: "Style" }).click();
+  await expect(dialog.getByText("Booking colors")).toBeVisible();
+  await dialog.getByRole("button", { name: "Security" }).click();
+  await expect(
+    dialog.getByRole("heading", { name: "Active sessions" }),
+  ).toBeVisible();
+  await dialog.getByRole("button", { name: "Close" }).click();
+  await expect(dialog).toBeHidden();
+  await expect(page).toHaveURL(/search\/(\?.*)?$/);
+});
+
+test("arrow keys in preferences modal do not change booking search", async ({
+  page,
+}) => {
+  await expect(page.getByText("Loading …")).not.toBeVisible();
+  const areaSelect = page.getByRole("combobox");
+  await areaSelect.selectOption({ label: "Sample Floor" });
+  await expect(page.getByText("Loading …")).not.toBeVisible();
+  const enterDate = page
+    .getByLabel("Reservation start date")
+    .first()
+    .locator("input")
+    .first();
+  const dateBefore = await enterDate.inputValue();
+  const areaBefore = await areaSelect.inputValue();
+
+  await page.getByRole("button", { name: "Preferences" }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByLabel("Preferred area")).toBeVisible();
+  const styleNav = dialog.getByRole("button", { name: "Style" });
+  await styleNav.focus();
+  for (const key of ["ArrowRight", "ArrowLeft", "ArrowDown", "ArrowUp"]) {
+    await page.keyboard.press(key);
+  }
+  await dialog.getByRole("button", { name: "Close" }).focus();
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("ArrowDown");
+  await dialog.getByRole("button", { name: "Close" }).click();
+  await expect(dialog).toBeHidden();
+
+  await expect(enterDate).toHaveValue(dateBefore);
+  await expect(areaSelect).toHaveValue(areaBefore);
+});
+
+test("working hours in preferences modal can be edited by keyboard", async ({
+  page,
+}) => {
+  await page.getByRole("button", { name: "Preferences" }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByLabel("Preferred area")).toBeVisible();
+  const workdayStart = dialog.locator("#workdayStart");
+  const valueBefore = await workdayStart.inputValue();
+  await workdayStart.click();
+
+  // The picker popup must be rendered inside the dialog's focus trap.
+  const hour = dialog.getByRole("spinbutton", { name: "Hour" }).first();
+  await expect(hour).toBeVisible();
+  await hour.click();
+  await expect(hour).toBeFocused();
+  await page.keyboard.press("ArrowUp");
+  await expect(hour).toBeFocused();
+  await page.keyboard.press("ControlOrMeta+a");
+  await page.keyboard.type("6");
+  await expect(hour).toBeFocused();
+  await expect(hour).toHaveValue(/^0?6$/);
+
+  // Close the popup without saving the preferences.
+  await dialog.getByText("Working hours").click();
+  await expect(workdayStart).not.toHaveValue(valueBefore);
+  await expect(workdayStart).toHaveValue(/^0?6:/);
+  await dialog.getByRole("button", { name: "Close" }).click();
+  await expect(dialog).toBeHidden();
+});
+
+test("legacy preferences page opens preferences modal", async ({ page }) => {
+  const uiURL = process.env.UI_URL
+    ? process.env.UI_URL
+    : "http://localhost:8080";
+  await page.goto(uiURL + "/ui/preferences/?tab=style");
+  await expect(page).toHaveURL(/search\/(\?.*)?$/);
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByText("Booking colors")).toBeVisible();
+});

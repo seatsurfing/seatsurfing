@@ -10,6 +10,7 @@ import Formatting from "@/util/Formatting";
 import RuntimeConfig from "./RuntimeConfig";
 import RendererUtils from "@/util/RendererUtils";
 import ConfirmModal from "./ConfirmModal";
+import Navigation from "@/util/Navigation";
 
 interface State {
   passkeys: PasskeyListItem[];
@@ -140,8 +141,8 @@ class PasskeySettings extends React.Component<Props, State> {
     const primaryDomain = RuntimeConfig.INFOS.orgPrimaryDomain;
     const prefsUrl =
       typeof window !== "undefined"
-        ? `${window.location.protocol}//${primaryDomain}/ui/preferences`
-        : `//${primaryDomain}/ui/preferences`;
+        ? `${window.location.protocol}//${primaryDomain}/ui${Navigation.preferences("security")}`
+        : `//${primaryDomain}/ui${Navigation.preferences("security")}`;
     return (
       <div hidden={this.props.hidden}>
         <h5 className="mt-5">{this.props.t("passkeys")}</h5>
