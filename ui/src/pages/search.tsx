@@ -1178,7 +1178,10 @@ class Search extends React.Component<Props, State> {
         )}
         <div style={innerStyle}>
           {(item.approvalRequired || hasImage) && (
-            <div style={{ display: "flex", gap: "4px" }}>
+            <div
+              className="space-icons"
+              style={{ display: "flex", gap: "4px" }}
+            >
               {item.approvalRequired && <SpaceApprovalIcon />}
               {hasImage && <SpacePhotoIcon />}
             </div>
