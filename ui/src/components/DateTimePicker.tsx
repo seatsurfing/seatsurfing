@@ -76,7 +76,11 @@ class DateTimePicker extends React.Component<Props, State> {
     popup.style.position = "fixed";
     popup.style.top =
       (showOnTop ? rect.top - height - 2 : rect.bottom + 2) + "px";
-    popup.style.left = rect.left + "px";
+    popup.style.left =
+      Math.max(
+        0,
+        Math.min(rect.left, window.innerWidth - popup.offsetWidth - 2),
+      ) + "px";
     popup.style.right = "auto";
     popup.classList.toggle("arrowTop", !showOnTop);
     popup.classList.toggle("arrowBottom", showOnTop);
