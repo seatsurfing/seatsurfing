@@ -1156,3 +1156,50 @@ func TestLocationsForeignOrgAllowedBookerGroup(t *testing.T) {
 	CheckTestInt(t, 1, len(allowedBookers))
 	CheckTestString(t, ownGroup.ID, allowedBookers[0].GroupID)
 }
+
+func TestLocationsMapNoDarkInvert(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	// Defaults to false
+	payload := `{"name": "Location 1"}`
+	req := NewHTTPRequest("POST", "/location/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+	location, _ := GetLocationRepository().GetOne(id)
+	CheckTestBool(t, false, location.MapNoDarkInvert)
+
+	// Enable on update
+	payload = `{"name": "Location 1", "mapNoDarkInvert": true}`
+	req = NewHTTPRequest("PUT", "/location/"+id, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// Regular users can read the flag
+	regularUser := CreateTestUserInOrg(org)
+	req = NewHTTPRequest("GET", "/location/"+id, regularUser.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *GetLocationResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestBool(t, true, resBody.MapNoDarkInvert)
+
+	// Disable again
+	payload = `{"name": "Location 1", "mapNoDarkInvert": false}`
+	req = NewHTTPRequest("PUT", "/location/"+id, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+	location, _ = GetLocationRepository().GetOne(id)
+	CheckTestBool(t, false, location.MapNoDarkInvert)
+
+	// Create with flag set
+	payload = `{"name": "Location 2", "mapNoDarkInvert": true}`
+	req = NewHTTPRequest("POST", "/location/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	location, _ = GetLocationRepository().GetOne(res.Header().Get("X-Object-Id"))
+	CheckTestBool(t, true, location.MapNoDarkInvert)
+}

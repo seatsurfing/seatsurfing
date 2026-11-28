@@ -702,5 +702,6 @@
   "customLogoPreviewError": "The URL does not point to an image or the image could not be loaded.",
   "imageDimensions": "{{width}} × {{height}} pixels",
   "openInNewTab": "Open in new tab",
-  "noSpacesAvailable": "There are no spaces available at this location."
+  "noSpacesAvailable": "There are no spaces available at this location.",
+  "mapNoDarkInvert": "No dark mode inversion"
 }

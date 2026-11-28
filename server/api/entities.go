@@ -115,6 +115,7 @@ type Location struct {
 	BlockedFrom           *time.Time
 	BlockedUntil          *time.Time
 	Announcement          string
+	MapNoDarkInvert       bool
 }
 
 // ─── Space ───────────────────────────────────────────────────────────────────

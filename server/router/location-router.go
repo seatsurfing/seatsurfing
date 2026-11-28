@@ -36,6 +36,7 @@ type CreateLocationRequest struct {
 	BlockedFrom           string   `json:"blockedFrom"`
 	BlockedUntil          string   `json:"blockedUntil"`
 	Announcement          string   `json:"announcement" validate:"max=512"`
+	MapNoDarkInvert       bool     `json:"mapNoDarkInvert"`
 }
 
 type GetLocationResponse struct {
@@ -61,6 +62,8 @@ type GetMapResponse struct {
 	Scale    float64 `json:"scale"`
 	MimeType string  `json:"mimeType"`
 	Data     string  `json:"data"`
+	// NoDarkInvert tells the client not to invert the image in dark mode
+	NoDarkInvert bool `json:"noDarkInvert"`
 }
 
 type SetSpaceAttributeValueRequest struct {
@@ -484,11 +487,12 @@ func buildLocationMapResponse(e *Location) (*GetMapResponse, error) {
 			return nil, err
 		}
 		return &GetMapResponse{
-			Width:    width,
-			Height:   height,
-			MimeType: "svg+xml",
-			Scale:    1.0,
-			Data:     base64.StdEncoding.EncodeToString(svgData),
+			Width:        width,
+			Height:       height,
+			MimeType:     "svg+xml",
+			Scale:        1.0,
+			Data:         base64.StdEncoding.EncodeToString(svgData),
+			NoDarkInvert: e.MapNoDarkInvert,
 		}, nil
 	}
 	locationMap, err := GetLocationRepository().GetMap(e)
@@ -496,11 +500,12 @@ func buildLocationMapResponse(e *Location) (*GetMapResponse, error) {
 		return nil, err
 	}
 	return &GetMapResponse{
-		Width:    locationMap.Width,
-		Height:   locationMap.Height,
-		MimeType: locationMap.MimeType,
-		Scale:    locationMap.Scale,
-		Data:     base64.StdEncoding.EncodeToString(locationMap.Data),
+		Width:        locationMap.Width,
+		Height:       locationMap.Height,
+		MimeType:     locationMap.MimeType,
+		Scale:        locationMap.Scale,
+		Data:         base64.StdEncoding.EncodeToString(locationMap.Data),
+		NoDarkInvert: e.MapNoDarkInvert,
 	}, nil
 }
 
@@ -708,6 +713,7 @@ func (router *LocationRouter) copyFromRestModel(m *CreateLocationRequest) *Locat
 	e.MapType = m.MapType
 	e.BookableDays = weekdaysToString(m.BookableDays)
 	e.Announcement = m.Announcement
+	e.MapNoDarkInvert = m.MapNoDarkInvert
 	return e
 }
 
@@ -729,6 +735,7 @@ func (router *LocationRouter) copyToRestModel(e *Location, allowedBookers []*Loc
 	m.BlockedFrom = formatDateOnly(e.BlockedFrom)
 	m.BlockedUntil = formatDateOnly(e.BlockedUntil)
 	m.Announcement = e.Announcement
+	m.MapNoDarkInvert = e.MapNoDarkInvert
 
 	if allowedBookers != nil {
 		m.AllowedBookerGroupIDs = []string{}

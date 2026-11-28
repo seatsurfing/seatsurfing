@@ -777,6 +777,27 @@ func TestPublicBookingGetMap(t *testing.T) {
 	CheckTestUint(t, 50, resBody.Height)
 	CheckTestString(t, "png", resBody.MimeType)
 	CheckTestString(t, "AQID", resBody.Data)
+	CheckTestBool(t, false, resBody.NoDarkInvert)
+}
+
+func TestPublicBookingGetMapNoDarkInvert(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	location, space := CreateTestLocationAndSpace(org)
+	enablePublicBookingForOrgAndSpace(org, space)
+	GetSettingsRepository().Set(org.ID, SettingPublicBookingShowMap.Name, "1")
+	setTestLocationMap(t, location)
+	location.MapNoDarkInvert = true
+	if err := GetLocationRepository().Update(location); err != nil {
+		t.Fatal(err)
+	}
+
+	req := NewHTTPRequest("GET", "/public-booking/"+org.ID+"/location/"+location.ID+"/map", "", nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *GetMapResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestBool(t, true, resBody.NoDarkInvert)
 }
 
 func TestPublicBookingGetMapShowMapDisabled(t *testing.T) {

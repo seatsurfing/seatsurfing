@@ -41,6 +41,7 @@ interface PublicLocationMap {
   scale: number;
   mimeType: string;
   data: string;
+  noDarkInvert?: boolean;
 }
 
 interface State {
@@ -742,6 +743,13 @@ class PublicBooking extends React.Component<Props, State> {
       height: mapHeight + "px",
       transform: `scale(${fitScale})`,
       transformOrigin: "top left",
+    };
+    // Separate layer so the dark theme can invert the image without
+    // inverting the spaces drawn on top of it
+    const floorPlanImageStyle: React.CSSProperties = {
+      position: "absolute",
+      inset: 0,
+      pointerEvents: "none",
       backgroundSize: "contain",
       backgroundRepeat: "no-repeat",
       backgroundImage:
@@ -758,6 +766,14 @@ class PublicBooking extends React.Component<Props, State> {
       >
         <div style={scaledStyle}>
           <div style={floorPlanStyle}>
+            <div
+              className={
+                mapData.noDarkInvert
+                  ? "floor-plan-bg floor-plan-bg-no-invert"
+                  : "floor-plan-bg"
+              }
+              style={floorPlanImageStyle}
+            ></div>
             {spaces.map((s) => this.renderMapSpace(s))}
           </div>
         </div>

@@ -451,6 +451,7 @@ interface State {
   name: string;
   description: string;
   announcement: string;
+  mapNoDarkInvert: boolean;
   limitConcurrentBookings: boolean;
   maxConcurrentBookings: number;
   timezone: string;
@@ -512,6 +513,7 @@ class EditLocation extends React.Component<Props, State> {
       name: "",
       description: "",
       announcement: "",
+      mapNoDarkInvert: false,
       limitConcurrentBookings: false,
       maxConcurrentBookings: 0,
       timezone: "",
@@ -612,6 +614,7 @@ class EditLocation extends React.Component<Props, State> {
                       name: location.name,
                       description: location.description,
                       announcement: location.announcement,
+                      mapNoDarkInvert: location.mapNoDarkInvert,
                       limitConcurrentBookings:
                         location.maxConcurrentBookings > 0,
                       maxConcurrentBookings: location.maxConcurrentBookings,
@@ -799,6 +802,7 @@ class EditLocation extends React.Component<Props, State> {
     this.entity.name = this.state.name;
     this.entity.description = this.state.description;
     this.entity.announcement = this.state.announcement;
+    this.entity.mapNoDarkInvert = this.state.mapNoDarkInvert;
     this.entity.maxConcurrentBookings = this.state.limitConcurrentBookings
       ? this.state.maxConcurrentBookings
       : 0;
@@ -2248,7 +2252,14 @@ class EditLocation extends React.Component<Props, State> {
                   this.setState({ selectedSpace: null });
               }}
             >
-              <div className="floor-plan-bg" style={floorPlanImageStyle}></div>
+              <div
+                className={
+                  this.state.mapNoDarkInvert
+                    ? "floor-plan-bg floor-plan-bg-no-invert"
+                    : "floor-plan-bg"
+                }
+                style={floorPlanImageStyle}
+              ></div>
               {this.state.gridEnabled && (
                 <div
                   className="floorplan-grid-overlay"
@@ -2720,6 +2731,22 @@ class EditLocation extends React.Component<Props, State> {
                 />
                 <InputGroup.Text>%</InputGroup.Text>
               </InputGroup>
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2" htmlFor="location-map-no-dark-invert">
+              {this.props.t("mapNoDarkInvert")}
+            </Form.Label>
+            <Col sm="4">
+              <Form.Check
+                type="checkbox"
+                id="location-map-no-dark-invert"
+                label={RendererUtils.capitalize(this.props.t("yes"))}
+                checked={this.state.mapNoDarkInvert}
+                onChange={(e: any) =>
+                  this.setState({ mapNoDarkInvert: e.target.checked })
+                }
+              />
             </Col>
           </Form.Group>
           <Form.Group as={Row}>

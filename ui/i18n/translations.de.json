@@ -705,5 +705,6 @@
   "preview": "Vorschau",
   "imageDimensions": "{{width}} × {{height}} Pixel",
   "openInNewTab": "In neuem Tab öffnen",
-  "noSpacesAvailable": "An diesem Standort sind keine Plätze verfügbar."
+  "noSpacesAvailable": "An diesem Standort sind keine Plätze verfügbar.",
+  "mapNoDarkInvert": "Im Dark Mode nicht invertieren"
 }
