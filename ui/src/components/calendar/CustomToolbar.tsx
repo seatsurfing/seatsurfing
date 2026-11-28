@@ -110,7 +110,7 @@ const CustomToolbar: React.FC<Props> = ({
       <div className="toolbar-group">
         {timezone && (
           <span
-            className="toolbar-timezone"
+            className="toolbar-timezone d-none d-md-inline-flex"
             title={t("timezone")}
             data-testid="calendar-timezone"
           >
