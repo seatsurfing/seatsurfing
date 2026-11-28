@@ -80,6 +80,31 @@ export default class Formatting {
     };
   }
 
+  static formatRange(
+    enter: Date,
+    leave: Date,
+    withWeekday: boolean = false,
+    local?: boolean,
+  ): string {
+    const datePart = (d: Date) =>
+      withWeekday
+        ? `${Formatting.getWeekdayFormatter(local).format(d)}, ${Formatting.formatDatePart(d, local)}`
+        : Formatting.formatDatePart(d, local);
+    const sameDay =
+      Formatting.formatDatePart(enter, local) ===
+      Formatting.formatDatePart(leave, local);
+    if (RuntimeConfig.INFOS.dailyBasisBooking) {
+      return sameDay
+        ? datePart(enter)
+        : `${datePart(enter)} – ${datePart(leave)}`;
+    }
+    const time = Formatting.getTimeFormatter(local);
+    if (sameDay) {
+      return `${datePart(enter)}, ${time.format(enter)} – ${time.format(leave)}`;
+    }
+    return `${datePart(enter)}, ${time.format(enter)} – ${datePart(leave)}, ${time.format(leave)}`;
+  }
+
   static getFormatterDate(local?: boolean): DateFormatter {
     return {
       format: (date?: Date | number) => Formatting.formatDatePart(date, local),
