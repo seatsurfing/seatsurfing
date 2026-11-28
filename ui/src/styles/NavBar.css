@@ -184,3 +184,9 @@
     padding: 0.25rem 1rem 1rem;
   }
 }
+
+/* Wrapper around the preferences dialogs that only exists to scope keyboard
+   events (see PreferencesModal.onKeyDown); it must not affect layout. */
+.preferences-modal-keyboard-scope {
+  display: contents;
+}

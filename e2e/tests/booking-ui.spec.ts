@@ -192,6 +192,39 @@ test("preferences modal via navbar gear icon", async ({ page }) => {
   await expect(page).toHaveURL(/search\/(\?.*)?$/);
 });
 
+test("arrow keys in preferences modal do not change booking search", async ({
+  page,
+}) => {
+  await expect(page.getByText("Loading …")).not.toBeVisible();
+  const areaSelect = page.getByRole("combobox");
+  await areaSelect.selectOption({ label: "Sample Floor" });
+  await expect(page.getByText("Loading …")).not.toBeVisible();
+  const enterDate = page
+    .getByLabel("Reservation start date")
+    .first()
+    .locator("input")
+    .first();
+  const dateBefore = await enterDate.inputValue();
+  const areaBefore = await areaSelect.inputValue();
+
+  await page.getByRole("button", { name: "Preferences" }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByLabel("Preferred area")).toBeVisible();
+  const styleNav = dialog.getByRole("button", { name: "Style" });
+  await styleNav.focus();
+  for (const key of ["ArrowRight", "ArrowLeft", "ArrowDown", "ArrowUp"]) {
+    await page.keyboard.press(key);
+  }
+  await dialog.getByRole("button", { name: "Close" }).focus();
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("ArrowDown");
+  await dialog.getByRole("button", { name: "Close" }).click();
+  await expect(dialog).toBeHidden();
+
+  await expect(enterDate).toHaveValue(dateBefore);
+  await expect(areaSelect).toHaveValue(areaBefore);
+});
+
 test("legacy preferences page opens preferences modal", async ({ page }) => {
   const uiURL = process.env.UI_URL
     ? process.env.UI_URL

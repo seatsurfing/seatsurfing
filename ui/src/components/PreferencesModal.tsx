@@ -1142,6 +1142,22 @@ class PreferencesModal extends React.Component<Props, State> {
     );
   }
 
+  // The search page listens for arrow keys on window to change the booking
+  // date and area. React-Bootstrap renders this dialog in a portal, but its
+  // synthetic events still bubble through the React tree, so stopping them
+  // here keeps them from reaching that window listener. Handlers inside the
+  // dialog (e.g. arrow key navigation in Nav) still run, since they fire first.
+  onKeyDown = (e: React.KeyboardEvent) => {
+    if (
+      e.key === "ArrowLeft" ||
+      e.key === "ArrowRight" ||
+      e.key === "ArrowUp" ||
+      e.key === "ArrowDown"
+    ) {
+      e.stopPropagation();
+    }
+  };
+
   render() {
     const credentials = Ajax.PERSISTER.readCredentialsFromLocalStorage();
     const profilePageUrl = credentials.profilePageUrl;
@@ -1151,7 +1167,10 @@ class PreferencesModal extends React.Component<Props, State> {
       !this.state.showPasswordChangedModal;
 
     return (
-      <>
+      <div
+        className="preferences-modal-keyboard-scope"
+        onKeyDown={this.onKeyDown}
+      >
         <Modal
           show={showDialog}
           onHide={this.props.onHide}
@@ -1232,7 +1251,7 @@ class PreferencesModal extends React.Component<Props, State> {
             this.state.activeTab === "style" ? "style" : "bookings",
           )}
         />
-      </>
+      </div>
     );
   }
 }
